@@ -24,5 +24,3 @@ pgvector/
 skills-lock.json
 *.md
 !README.md
-
-api/
