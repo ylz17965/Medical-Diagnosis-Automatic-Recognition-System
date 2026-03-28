@@ -1,8 +1,0 @@
-{
-  "name": "zhiliao-api",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "@prisma/client": "^5.22.0"
-  }
-}

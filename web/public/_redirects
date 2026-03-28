@@ -1,5 +1,0 @@
-# API 代理到后端
-/api/*  https://zhiliao-server.onrender.com/api/:splat  200
-
-# SPA 路由支持
-/*      /index.html   200
