@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api'
+const API_BASE_URL = '/api/v1'
 
 interface ApiResponse<T> {
   success: boolean
