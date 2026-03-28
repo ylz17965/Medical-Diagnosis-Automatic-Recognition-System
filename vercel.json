@@ -3,11 +3,6 @@
   "buildCommand": "cd web && npm install && npm run build",
   "outputDirectory": "web/dist",
   "framework": "vue",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
     { "source": "/api/v1/chat/stream", "destination": "/api/chat/stream" },
     { "source": "/api/v1/chat/health", "destination": "/api/chat/health" },
