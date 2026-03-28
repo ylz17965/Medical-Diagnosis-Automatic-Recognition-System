@@ -1,0 +1,33 @@
+{
+  "name": "zhi-liao-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "description": "智疗助手 - AI健康咨询平台",
+  "workspaces": [
+    "web",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
+    "dev:web": "npm run dev --workspace=web",
+    "dev:server": "npm run dev --workspace=server",
+    "build": "npm run build --workspace=web && npm run build --workspace=server",
+    "build:web": "npm run build --workspace=web",
+    "build:server": "npm run build --workspace=server",
+    "lint": "npm run lint --workspace=web && npm run lint --workspace=server",
+    "typecheck": "npm run typecheck --workspace=web && npm run typecheck --workspace=server",
+    "test": "npm run test --workspace=server",
+    "db:migrate": "npm run db:migrate --workspace=server",
+    "db:studio": "npm run db:studio --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@fastify/multipart": "^8.3.1",
+    "fastify-type-provider-zod": "^1.1.0"
+  }
+}

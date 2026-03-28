@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+
+web/node_modules
+web/dist
+server/node_modules
+server/dist
+
+.trea/skills/*/node_modules
