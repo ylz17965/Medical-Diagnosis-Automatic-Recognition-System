@@ -12,4 +12,6 @@ web/dist
 server/node_modules
 server/dist
 
-.trea/skills/*/node_modules
+.trae
+.vscode
+*.bak
