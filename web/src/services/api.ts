@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
+const API_BASE_URL = '/api'
 
 interface ApiResponse<T> {
   success: boolean
@@ -151,7 +151,7 @@ export const chatApi = {
         content,
         conversationId,
         type,
-        useRAG: true,
+        useRAG: false,
       }),
     })
 
