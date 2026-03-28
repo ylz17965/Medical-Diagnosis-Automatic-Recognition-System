@@ -4,10 +4,6 @@
   "outputDirectory": "web/dist",
   "framework": "vue",
   "rewrites": [
-    { "source": "/api/v1/chat/stream", "destination": "/api/chat/stream" },
-    { "source": "/api/v1/chat/health", "destination": "/api/chat/health" },
-    { "source": "/api/v1/auth/login", "destination": "/api/auth/login" },
-    { "source": "/api/v1/auth/register", "destination": "/api/auth/login" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
