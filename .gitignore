@@ -17,3 +17,10 @@ server/dist
 *.bak
 
 .vercel
+
+*.bat
+docker-compose.yml
+pgvector/
+skills-lock.json
+*.md
+!README.md
