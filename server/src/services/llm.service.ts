@@ -50,7 +50,15 @@ export class LLMService {
     this.ragService = ragService || null
   }
 
+  private hasApiKey(): boolean {
+    return !!this.apiKey && this.apiKey.length > 0
+  }
+
   async chat(options: ChatCompletionOptions): Promise<string> {
+    if (!this.hasApiKey()) {
+      return this.getDemoResponse()
+    }
+
     const messages = await this.buildMessages(options)
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -78,6 +86,16 @@ export class LLMService {
   }
 
   async *chatStream(options: ChatCompletionOptions): AsyncGenerator<StreamChunk> {
+    if (!this.hasApiKey()) {
+      const demoText = this.getDemoResponse()
+      for (const char of demoText) {
+        yield { content: char, done: false }
+        await new Promise(resolve => setTimeout(resolve, 20))
+      }
+      yield { content: '', done: true }
+      return
+    }
+
     const messages = await this.buildMessages(options)
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -195,5 +213,20 @@ export class LLMService {
 
   getModel(): string {
     return this.model
+  }
+
+  private getDemoResponse(): string {
+    return `⚠️ **演示模式**
+
+此项目已部署到 GitHub，但未配置 LLM API Key。
+
+如果您是开发者，请按以下步骤配置：
+
+1. 复制 \`server/.env.example\` 为 \`server/.env\`
+2. 在阿里云百炼平台获取 API Key：https://bailian.console.aliyun.com/
+3. 在 \`.env\` 中设置 \`QWEN_API_KEY=your-api-key\`
+4. 重启后端服务
+
+如果您是访客，这是一个 AI 健康咨询平台的演示项目，完整功能需要配置 LLM API。`
   }
 }

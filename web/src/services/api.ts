@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://karlee-insides-cellularly.ngrok-free.dev/api/v1'
+const API_BASE_URL = '/api/v1'
 
 interface ApiResponse<T> {
   success: boolean
