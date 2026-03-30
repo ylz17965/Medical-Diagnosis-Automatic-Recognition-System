@@ -42,23 +42,6 @@
 | qwen3-vl-plus | 视觉理解 | 药盒识别 |
 | qwen-vl-ocr | OCR 文字提取 | 体检报告图片文字提取 |
 
-## 功能流程
-
-### 深度搜索 / 健康问答 / 智能健康咨询
-```
-用户输入文本问题 → text-embedding-v3 向量化 → 检索知识库 → qwen3-rerank 重排序 → 根据问题复杂度选择 qwen-max 或 qwen3.5-flash 生成答案
-```
-
-### 报告解读
-```
-用户上传体检报告图片 → qwen-vl-ocr 提取文字 → 结构化解析 → 异常指标作为查询 → RAG 流程 → qwen-max 生成解读
-```
-
-### 药盒识别
-```
-用户上传药盒图片 → qwen3-vl-plus 识别药品名称、成分等 → 将药品名作为查询 → RAG 检索药品说明书库 → qwen-max 生成用药指导
-```
-
 ## 环境要求
 
 - **Node.js** >= 20.0.0
@@ -67,28 +50,71 @@
 
 ## 快速开始
 
-### 1. 克隆仓库
+### 方式一：一键部署（推荐）
+
+#### 1. 克隆仓库
 
 ```bash
 git clone https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System.git
 cd Medical-Diagnosis-Automatic-Recognition-System
 ```
 
-### 2. 安装依赖
+#### 2. 运行部署脚本
+
+**Windows (PowerShell):**
+```powershell
+.\setup.ps1
+```
+
+**Linux/Mac:**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+脚本会自动完成：
+- ✅ 检查 Node.js 环境
+- ✅ 安装项目依赖
+- ✅ 创建环境变量文件
+- ✅ 初始化数据库
+- ✅ 构建项目
+
+#### 3. 配置 API Key
+
+编辑 `server/.env` 文件，填入你的阿里云百炼 API Key：
+
+```env
+QWEN_API_KEY="your-api-key-here"
+```
+
+#### 4. 启动服务
+
+```bash
+npm run dev
+```
+
+### 方式二：手动部署
+
+#### 1. 克隆仓库
+
+```bash
+git clone https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System.git
+cd Medical-Diagnosis-Automatic-Recognition-System
+```
+
+#### 2. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 3. 配置环境变量
-
-复制环境变量示例文件：
+#### 3. 配置环境变量
 
 ```bash
 cp server/.env.example server/.env
 ```
 
-编辑 `server/.env`，填入你的配置：
+编辑 `server/.env`：
 
 ```env
 # 服务配置
@@ -132,66 +158,73 @@ RAG_CHUNK_OVERLAP=128
 RAG_SIMILARITY_THRESHOLD=0.7
 ```
 
-### 4. 初始化数据库
+#### 4. 初始化数据库
 
 确保 PostgreSQL 已安装 pgvector 扩展：
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
-```
-
-创建数据库：
-
-```sql
 CREATE DATABASE zhiliao;
 ```
 
-运行数据库迁移：
+运行迁移：
 
 ```bash
 npm run db:migrate
 ```
 
-或使用 Prisma Studio 可视化管理：
+#### 5. 启动项目
 
 ```bash
-npm run db:studio
-```
-
-### 5. 启动项目
-
-```bash
-# 同时启动前端和后端
 npm run dev
 ```
 
-或分别启动：
-
-```bash
-# 终端 1 - 启动后端
-npm run dev:server
-
-# 终端 2 - 启动前端
-npm run dev:web
-```
-
-### 6. 访问应用
+#### 6. 访问应用
 
 - **前端**: http://localhost:5173
 - **后端 API**: http://localhost:3001
 - **API 文档**: http://localhost:3001/docs
 
-## 演示模式
+## 团队协作
 
-⚠️ **重要说明**：此项目默认运行在演示模式下。
+详细请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-如果没有配置 `QWEN_API_KEY`，AI 聊天功能将返回演示提示，不会调用真实的 LLM API。这样可以：
+### 快速协作流程
 
-- ✅ 安全地分享代码到 GitHub
-- ✅ 让其他人克隆项目并运行
-- ✅ 保护你的 API Key 不被泄露
+```bash
+# 1. Fork 仓库后克隆
+git clone https://github.com/你的用户名/Medical-Diagnosis-Automatic-Recognition-System.git
 
-要启用完整的 AI 功能，请配置 `QWEN_API_KEY`。
+# 2. 添加上游仓库
+git remote add upstream https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System.git
+
+# 3. 创建功能分支
+git checkout -b feature/你的功能名称
+
+# 4. 提交代码
+git add .
+git commit -m "feat: 功能描述"
+
+# 5. 推送并创建 PR
+git push origin feature/你的功能名称
+```
+
+## 功能流程
+
+### 深度搜索 / 健康问答 / 智能健康咨询
+```
+用户输入文本问题 → text-embedding-v3 向量化 → 检索知识库 → qwen3-rerank 重排序 → 根据问题复杂度选择 qwen-max 或 qwen3.5-flash 生成答案
+```
+
+### 报告解读
+```
+用户上传体检报告图片 → qwen-vl-ocr 提取文字 → 结构化解析 → 异常指标作为查询 → RAG 流程 → qwen-max 生成解读
+```
+
+### 药盒识别
+```
+用户上传药盒图片 → qwen3-vl-plus 识别药品名称、成分等 → 将药品名作为查询 → RAG 检索药品说明书库 → qwen-max 生成用药指导
+```
 
 ## 项目结构
 
@@ -206,7 +239,6 @@ npm run dev:web
 │   │   ├── stores/         # Pinia 状态
 │   │   ├── styles/         # 样式文件
 │   │   └── views/          # 页面视图
-│   ├── vite.config.ts
 │   └── package.json
 │
 ├── server/                 # 后端项目
@@ -219,10 +251,11 @@ npm run dev:web
 │   │   └── app.ts          # 入口文件
 │   ├── prisma/
 │   │   └── schema.prisma   # 数据库模型
-│   ├── .env.example
 │   └── package.json
 │
-├── package.json            # 根配置 (workspaces)
+├── setup.sh                # Linux/Mac 部署脚本
+├── setup.ps1               # Windows 部署脚本
+├── CONTRIBUTING.md         # 团队协作指南
 └── README.md
 ```
 
@@ -327,7 +360,7 @@ MIT License
 
 ## 贡献
 
-欢迎提交 Issue 和 Pull Request！
+欢迎提交 Issue 和 Pull Request！请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解协作流程。
 
 ## 致谢
 

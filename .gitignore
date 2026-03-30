@@ -77,8 +77,9 @@ prisma/*.db
 *.msi
 skills-lock.json
 
-# Documentation (keep only README.md)
+# Documentation (keep only main docs)
 *.md
 !README.md
+!CONTRIBUTING.md
 !server/README.md
 !web/README.md
