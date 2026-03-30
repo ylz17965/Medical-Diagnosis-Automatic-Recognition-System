@@ -1,23 +1,36 @@
 import { PrismaClient } from '@prisma/client'
-import type { User, RefreshToken } from '@prisma/client'
+
+interface RefreshToken {
+  id: string
+  token: string
+  userId: string
+  expiresAt: Date
+  revoked: boolean
+  createdAt: Date
+}
+
+interface CreateRefreshTokenData {
+  token: string
+  userId: string
+  expiresAt: Date
+}
 
 export class TokenRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async createRefreshToken(data: {
-    token: string
-    userId: string
-    expiresAt: Date
-  }): Promise<RefreshToken> {
+  async createRefreshToken(data: CreateRefreshTokenData): Promise<RefreshToken> {
     return this.prisma.refreshToken.create({
-      data,
+      data: {
+        token: data.token,
+        userId: data.userId,
+        expiresAt: data.expiresAt,
+      },
     })
   }
 
   async findRefreshToken(token: string): Promise<RefreshToken | null> {
     return this.prisma.refreshToken.findUnique({
       where: { token },
-      include: { user: true },
     })
   }
 
@@ -35,14 +48,26 @@ export class TokenRepository {
     })
   }
 
-  async deleteExpiredTokens(): Promise<void> {
-    await this.prisma.refreshToken.deleteMany({
+  async deleteExpiredTokens(): Promise<number> {
+    const result = await this.prisma.refreshToken.deleteMany({
       where: {
         OR: [
           { expiresAt: { lt: new Date() } },
           { revoked: true },
         ],
       },
+    })
+    return result.count
+  }
+
+  async findActiveTokensByUser(userId: string): Promise<RefreshToken[]> {
+    return this.prisma.refreshToken.findMany({
+      where: {
+        userId,
+        revoked: false,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
     })
   }
 }

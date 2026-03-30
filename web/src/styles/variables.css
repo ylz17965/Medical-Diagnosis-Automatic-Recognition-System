@@ -106,6 +106,13 @@
   --input-height: 44px;
   --button-height: 44px;
   --max-content-width: 1200px;
+  
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
 }
 
 @media (prefers-reduced-motion: reduce) {

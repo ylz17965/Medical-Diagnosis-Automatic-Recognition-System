@@ -81,56 +81,74 @@ const cancelDelete = () => {
 </script>
 
 <template>
-  <aside :class="sidebarClasses">
+  <aside 
+    :class="sidebarClasses"
+    :aria-expanded="!collapsed"
+    :aria-label="collapsed ? '侧边栏已收起' : '侧边栏'"
+  >
     <div class="sidebar-header">
       <div v-if="!collapsed" class="user-info">
-        <div class="user-avatar">
+        <div class="user-avatar" role="img" :aria-label="user?.nickname || '用户头像'">
           <img v-if="user?.avatar" :src="user.avatar" :alt="user.nickname" />
           <span v-else class="avatar-placeholder">{{ user?.nickname?.charAt(0) }}</span>
         </div>
         <div class="user-details">
           <span class="user-nickname">{{ user?.nickname }}</span>
-          <button class="edit-profile-btn" @click="$emit('settings')">编辑资料</button>
+          <button class="edit-profile-btn" aria-label="编辑个人资料" @click="$emit('settings')">编辑资料</button>
         </div>
       </div>
-      <button class="collapse-btn" @click="toggleCollapse" :title="collapsed ? '展开' : '收起'">
-        <IconSidebar />
+      <button 
+        class="collapse-btn" 
+        :aria-label="collapsed ? '展开侧边栏' : '收起侧边栏'"
+        :aria-expanded="!collapsed"
+        @click="toggleCollapse"
+      >
+        <IconSidebar aria-hidden="true" />
       </button>
     </div>
 
-    <div class="sidebar-content">
-      <button class="new-chat-btn" @click="$emit('newChat')">
-        <IconPlus />
+    <div class="sidebar-content" :aria-hidden="collapsed">
+      <button class="new-chat-btn" aria-label="新建对话" @click="$emit('newChat')">
+        <IconPlus aria-hidden="true" />
         <span v-if="!collapsed">新建对话</span>
       </button>
 
-      <div v-if="!collapsed && conversations.length > 0" class="conversations-list">
-        <TransitionGroup name="conv-list">
+      <div 
+        v-if="!collapsed && conversations.length > 0" 
+        class="conversations-list" 
+        role="list"
+        aria-label="对话列表"
+      >
+        <TransitionGroup name="conv-list" tag="div">
           <div
             v-for="conv in conversations"
             :key="conv.id"
             :class="['conversation-item', { active: conv.id === activeId, hovering: hoverId === conv.id }]"
+            role="listitem"
+            :aria-selected="conv.id === activeId"
+            tabindex="0"
             @mouseenter="hoverId = conv.id"
             @mouseleave="hoverId = null"
             @click="$emit('selectChat', conv.id)"
+            @keydown.enter="$emit('selectChat', conv.id)"
           >
-            <IconMessage class="conv-icon" />
+            <IconMessage class="conv-icon" aria-hidden="true" />
             <span class="conv-title">{{ conv.title }}</span>
             
             <div class="conv-actions">
               <Transition name="fade" mode="out-in">
                 <div v-if="deletingId === conv.id" class="delete-confirm" @click.stop>
-                  <button class="confirm-yes" @click="confirmDelete(conv.id)">删除</button>
-                  <button class="confirm-no" @click="cancelDelete">取消</button>
+                  <button class="confirm-yes" aria-label="确认删除对话" @click="confirmDelete(conv.id)">删除</button>
+                  <button class="confirm-no" aria-label="取消删除" @click="cancelDelete">取消</button>
                 </div>
-                <span v-else-if="hoverId !== conv.id" class="conv-date">{{ formatDate(conv.updatedAt) }}</span>
+                <span v-else-if="hoverId !== conv.id" class="conv-date" aria-label="更新时间">{{ formatDate(conv.updatedAt) }}</span>
                 <button
                   v-else
                   class="delete-btn"
-                  title="删除对话"
+                  :aria-label="`删除对话: ${conv.title}`"
                   @click="handleDelete(conv.id, $event)"
                 >
-                  <IconClose />
+                  <IconClose aria-hidden="true" />
                 </button>
               </Transition>
             </div>
@@ -138,23 +156,35 @@ const cancelDelete = () => {
         </TransitionGroup>
       </div>
 
-      <div v-if="!collapsed && conversations.length === 0" class="empty-state">
+      <div v-if="!collapsed && conversations.length === 0" class="empty-state" role="status">
         <p>暂无对话记录</p>
         <p class="empty-hint">点击上方按钮开始新对话</p>
       </div>
     </div>
 
-    <div class="sidebar-footer">
-      <button class="footer-btn" @click="$emit('settings')" :title="collapsed ? '设置' : ''">
-        <IconSettings />
+    <div class="sidebar-footer" :aria-hidden="collapsed">
+      <button 
+        class="footer-btn" 
+        :aria-label="collapsed ? '设置' : ''"
+        @click="$emit('settings')"
+      >
+        <IconSettings aria-hidden="true" />
         <span v-if="!collapsed">设置</span>
       </button>
-      <button class="footer-btn" @click="$emit('help')" :title="collapsed ? '帮助' : ''">
-        <IconHelp />
+      <button 
+        class="footer-btn" 
+        :aria-label="collapsed ? '帮助' : ''"
+        @click="$emit('help')"
+      >
+        <IconHelp aria-hidden="true" />
         <span v-if="!collapsed">帮助</span>
       </button>
-      <button class="footer-btn logout" @click="$emit('logout')" :title="collapsed ? '退出登录' : ''">
-        <IconLogout />
+      <button 
+        class="footer-btn logout" 
+        :aria-label="collapsed ? '退出登录' : ''"
+        @click="$emit('logout')"
+      >
+        <IconLogout aria-hidden="true" />
         <span v-if="!collapsed">退出登录</span>
       </button>
     </div>

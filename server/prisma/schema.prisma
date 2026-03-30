@@ -224,7 +224,7 @@ model DocumentChunk {
   healthRecord   HealthRecord? @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
   content        String
   chunkIndex     Int
-  embedding      Unsupported("Vector(768)")?
+  embedding      Unsupported("Vector(1024)")?
   tokenCount     Int      @default(0)
   metadata       Json     @default("{}")
   createdAt      DateTime @default(now())

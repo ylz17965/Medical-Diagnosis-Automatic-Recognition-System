@@ -19,6 +19,7 @@ import conversationRoutes from './routes/conversation.routes.js'
 import chatRoutes from './routes/chat.routes.js'
 import uploadRoutes from './routes/upload.routes.js'
 import knowledgeRoutes from './routes/knowledge.routes.js'
+import imageRoutes from './routes/image.routes.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -47,7 +48,7 @@ await fastify.register(helmet, {
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", config.corsOrigin, config.llm.ollama.baseUrl],
+        connectSrc: ["'self'", config.corsOrigin, config.qwen.baseUrl],
       },
     }
     : false,
@@ -94,6 +95,7 @@ await fastify.register(swagger, {
       { name: 'chat', description: '对话相关' },
       { name: 'upload', description: '文件上传' },
       { name: 'knowledge', description: '知识库管理' },
+      { name: 'image', description: '图片识别' },
     ],
   },
 })
@@ -125,14 +127,19 @@ fastify.register(conversationRoutes, { prefix: '/api/v1/conversations' })
 fastify.register(chatRoutes, { prefix: '/api/v1/chat' })
 fastify.register(uploadRoutes, { prefix: '/api/v1/upload' })
 fastify.register(knowledgeRoutes, { prefix: '/api/v1/knowledge' })
+fastify.register(imageRoutes, { prefix: '/api/v1/image' })
 
 fastify.get('/health', async () => ({
   status: 'ok',
   timestamp: new Date().toISOString(),
   uptime: process.uptime(),
-  llm: {
-    provider: config.llm.provider,
-    model: config.llm.ollama.model,
+  models: {
+    complex: config.qwen.models.complex,
+    simple: config.qwen.models.simple,
+    embedding: config.qwen.models.embedding,
+    rerank: config.qwen.models.rerank,
+    vision: config.qwen.models.vision,
+    ocr: config.qwen.models.ocr,
   },
 }))
 
@@ -141,8 +148,9 @@ const start = async () => {
     await fastify.listen({ port: config.port, host: '0.0.0.0' })
     console.log(`🚀 Server running on http://localhost:${config.port}`)
     console.log(`📚 API Docs: http://localhost:${config.port}/docs`)
-    console.log(`🤖 LLM Provider: ${config.llm.provider}`)
-    console.log(`📝 RAG Model: ${config.llm.ollama.model}`)
+    console.log(`🤖 LLM Models: ${config.qwen.models.complex} / ${config.qwen.models.simple}`)
+    console.log(`🔍 Embedding: ${config.qwen.models.embedding}`)
+    console.log(`👁️ Vision: ${config.qwen.models.vision} / ${config.qwen.models.ocr}`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)

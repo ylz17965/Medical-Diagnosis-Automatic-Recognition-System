@@ -12,13 +12,17 @@ export class EmbeddingService {
   private dimension: number
 
   constructor() {
-    this.apiKey = config.llm.qwen.apiKey
-    this.baseUrl = config.llm.qwen.baseUrl
-    this.model = 'text-embedding-v3'
+    this.apiKey = config.qwen.apiKey
+    this.baseUrl = config.qwen.baseUrl
+    this.model = config.qwen.models.embedding
     this.dimension = config.rag.embeddingDimension
   }
 
   async generateEmbedding(text: string): Promise<EmbeddingResult> {
+    if (!this.apiKey) {
+      throw new Error('QWEN_API_KEY is not configured')
+    }
+
     try {
       const response = await fetch(`${this.baseUrl}/embeddings`, {
         method: 'POST',
@@ -35,7 +39,7 @@ export class EmbeddingService {
 
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(`Qwen embedding failed: ${response.status} ${errorText}`)
+        throw new Error(`Embedding API failed: ${response.status} ${errorText}`)
       }
 
       const data = await response.json()
@@ -56,6 +60,7 @@ export class EmbeddingService {
     for (const text of texts) {
       const result = await this.generateEmbedding(text)
       results.push(result)
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
     
     return results

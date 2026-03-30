@@ -7,12 +7,15 @@ import IconSend from '@/components/icons/IconSend.vue'
 import IconUpload from '@/components/icons/IconUpload.vue'
 import IconCamera from '@/components/icons/IconCamera.vue'
 import IconMic from '@/components/icons/IconMic.vue'
-import { useChat } from '@/composables'
+import { useChat, useToast } from '@/composables'
+import { useSpeechRecognition } from '@/composables/useSpeechRecognition'
 
 const {
   inputMessage,
   currentMode,
   isLoading,
+  isUploading,
+  uploadProgress,
   hasMessages,
   isEmpty,
   charCount,
@@ -27,9 +30,20 @@ const {
   conversationStore
 } = useChat()
 
+const toast = useToast()
+const {
+  isListening: isRecording,
+  isSupported: isSpeechSupported,
+  transcript,
+  start: startRecording,
+  stop: stopRecording,
+  error: speechError
+} = useSpeechRecognition()
+
 const messagesContainer = ref<HTMLDivElement>()
 const fileInput = ref<HTMLInputElement>()
 const textareaRef = ref<HTMLTextAreaElement>()
+const isDragging = ref(false)
 
 const handleFeatureClick = (type: FeatureType) => {
   setMode(type)
@@ -89,8 +103,60 @@ const resetTextareaHeight = () => {
   textarea.style.height = 'auto'
 }
 
+const toggleRecording = () => {
+  if (!isSpeechSupported.value) {
+    toast.warning('不支持语音输入', '您的浏览器不支持语音识别功能')
+    return
+  }
+  
+  if (isRecording.value) {
+    stopRecording()
+  } else {
+    startRecording()
+    toast.info('开始录音', '请说话...')
+  }
+}
+
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
+  isDragging.value = true
+}
+
+const handleDragLeave = (event: DragEvent) => {
+  event.preventDefault()
+  isDragging.value = false
+}
+
+const handleDrop = async (event: DragEvent) => {
+  event.preventDefault()
+  isDragging.value = false
+  
+  const files = event.dataTransfer?.files
+  if (files && files.length > 0) {
+    const file = files[0]
+    if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+      await handleFileUpload(file)
+      nextTick(() => scrollToBottom())
+    } else {
+      toast.error('不支持的文件格式', '请上传图片或PDF文件')
+    }
+  }
+}
+
 watch(inputMessage, () => {
   nextTick(autoResize)
+})
+
+watch(transcript, (newTranscript) => {
+  if (newTranscript) {
+    inputMessage.value = newTranscript
+  }
+})
+
+watch(speechError, (newError) => {
+  if (newError) {
+    toast.error('语音识别错误', newError)
+  }
 })
 
 onMounted(() => {
@@ -144,6 +210,7 @@ onMounted(() => {
                 :timestamp="message.timestamp"
                 :avatar="userStore.user?.avatar"
                 :sources="message.sources"
+                :image-url="message.imageUrl"
               />
             </TransitionGroup>
           </div>
@@ -156,18 +223,48 @@ onMounted(() => {
               hidden
               @change="handleFileChange"
             />
-            <button
-              class="upload-box"
-              type="button"
+            <div
+              :class="['upload-box', { 'is-dragging': isDragging, 'is-uploading': isUploading }]"
+              role="button"
+              :tabindex="isUploading ? -1 : 0"
               :aria-label="currentMode === 'report' ? '上传体检报告' : '上传药盒照片'"
-              @click="fileInput?.click()"
+              @click="!isUploading && fileInput?.click()"
+              @keydown.enter="!isUploading && fileInput?.click()"
+              @dragover="handleDragOver"
+              @dragleave="handleDragLeave"
+              @drop="handleDrop"
             >
-              <IconUpload class="upload-icon" aria-hidden="true" />
-              <p class="upload-text">
-                {{ currentMode === 'report' ? '点击或拖拽上传体检报告' : '点击或拖拽上传药盒照片' }}
-              </p>
-              <p class="upload-hint">支持 PDF、JPG、PNG 格式</p>
-            </button>
+              <template v-if="isUploading">
+                <div class="upload-progress">
+                  <div class="progress-ring">
+                    <svg viewBox="0 0 36 36">
+                      <path
+                        class="progress-bg"
+                        d="M18 2.0845
+                          a 15.9155 15.9155 0 0 1 0 31.831
+                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path
+                        class="progress-bar"
+                        :stroke-dasharray="`${uploadProgress}, 100`"
+                        d="M18 2.0845
+                          a 15.9155 15.9155 0 0 1 0 31.831
+                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <span class="progress-text">{{ uploadProgress }}%</span>
+                  </div>
+                  <p class="upload-status">正在识别中...</p>
+                </div>
+              </template>
+              <template v-else>
+                <IconUpload class="upload-icon" aria-hidden="true" />
+                <p class="upload-text">
+                  {{ isDragging ? '松开以上传文件' : (currentMode === 'report' ? '点击或拖拽上传体检报告' : '点击或拖拽上传药盒照片') }}
+                </p>
+                <p class="upload-hint">支持 PDF、JPG、PNG 格式</p>
+              </template>
+            </div>
           </div>
         </div>
       </Transition>
@@ -203,11 +300,13 @@ onMounted(() => {
               
               <button
                 type="button"
-                class="action-btn"
-                title="语音输入"
-                aria-label="语音输入"
+                :class="['action-btn', { 'is-recording': isRecording }]"
+                :title="isRecording ? '停止录音' : '语音输入'"
+                :aria-label="isRecording ? '停止录音' : '语音输入'"
+                :aria-pressed="isRecording"
+                @click="toggleRecording"
               >
-                <IconMic aria-hidden="true" />
+                <IconMic :class="{ 'recording-pulse': isRecording }" aria-hidden="true" />
               </button>
               
               <button
@@ -424,6 +523,65 @@ onMounted(() => {
 .upload-box:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.upload-box.is-dragging {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-bg);
+}
+
+.upload-box.is-uploading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.upload-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.progress-ring {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.progress-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-bg {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 3;
+}
+
+.progress-bar {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.upload-status {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 
 .upload-icon {

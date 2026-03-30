@@ -18,23 +18,22 @@ const configSchema = z.object({
   ALIYUN_SMS_SIGN_NAME: z.string().optional(),
   ALIYUN_SMS_TEMPLATE_CODE: z.string().optional(),
   
-  LLM_PROVIDER: z.enum(['qwen', 'zhipu', 'moonshot', 'openai', 'ollama']).default('qwen'),
-  
   QWEN_API_KEY: z.string().optional(),
-  ZHIPU_API_KEY: z.string().optional(),
-  MOONSHOT_API_KEY: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
-  OPENAI_BASE_URL: z.string().optional(),
+  QWEN_BASE_URL: z.string().default('https://dashscope.aliyuncs.com/compatible-mode/v1'),
   
-  OLLAMA_BASE_URL: z.string().default('http://localhost:11434'),
-  OLLAMA_MODEL: z.string().default('qwen2.5:7b'),
-  OLLAMA_EMBEDDING_MODEL: z.string().default('nomic-embed-text'),
+  QWEN_MODEL_COMPLEX: z.string().default('qwen-max'),
+  QWEN_MODEL_SIMPLE: z.string().default('qwen3.5-flash'),
+  QWEN_MODEL_EMBEDDING: z.string().default('text-embedding-v3'),
+  QWEN_MODEL_RERANK: z.string().default('qwen3-rerank'),
+  QWEN_MODEL_VISION: z.string().default('qwen3-vl-plus'),
+  QWEN_MODEL_OCR: z.string().default('qwen-vl-ocr'),
   
-  EMBEDDING_PROVIDER: z.enum(['qwen', 'zhipu', 'ollama']).default('qwen'),
-  EMBEDDING_DIMENSION: z.coerce.number().default(768),
+  EMBEDDING_DIMENSION: z.coerce.number().default(1024),
   RAG_TOP_K: z.coerce.number().default(5),
-  RAG_CHUNK_SIZE: z.coerce.number().default(500),
-  RAG_CHUNK_OVERLAP: z.coerce.number().default(50),
+  RAG_RERANK_TOP_K: z.coerce.number().default(20),
+  RAG_CHUNK_SIZE: z.coerce.number().default(512),
+  RAG_CHUNK_OVERLAP: z.coerce.number().default(128),
+  RAG_SIMILARITY_THRESHOLD: z.coerce.number().default(0.7),
 })
 
 const parsed = configSchema.safeParse(process.env)
@@ -70,38 +69,24 @@ export const config = {
       templateCode: env.ALIYUN_SMS_TEMPLATE_CODE,
     },
   },
-  llm: {
-    provider: env.LLM_PROVIDER,
-    qwen: {
-      apiKey: env.QWEN_API_KEY || env.OPENAI_API_KEY,
-      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-      model: 'qwen-turbo',
+  qwen: {
+    apiKey: env.QWEN_API_KEY,
+    baseUrl: env.QWEN_BASE_URL,
+    models: {
+      complex: env.QWEN_MODEL_COMPLEX,
+      simple: env.QWEN_MODEL_SIMPLE,
+      embedding: env.QWEN_MODEL_EMBEDDING,
+      rerank: env.QWEN_MODEL_RERANK,
+      vision: env.QWEN_MODEL_VISION,
+      ocr: env.QWEN_MODEL_OCR,
     },
-    zhipu: {
-      apiKey: env.ZHIPU_API_KEY,
-      baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
-      model: 'glm-4-flash',
-    },
-    moonshot: {
-      apiKey: env.MOONSHOT_API_KEY,
-      baseUrl: 'https://api.moonshot.cn/v1',
-      model: 'moonshot-v1-8k',
-    },
-    openai: {
-      apiKey: env.OPENAI_API_KEY,
-      baseUrl: env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
-    },
-    ollama: {
-      baseUrl: env.OLLAMA_BASE_URL,
-    model: env.OLLAMA_MODEL,
-    embeddingModel: env.OLLAMA_EMBEDDING_MODEL,
   },
-},
-rag: {
-  embeddingProvider: env.EMBEDDING_PROVIDER,
-  embeddingDimension: env.EMBEDDING_DIMENSION,
-  topK: env.RAG_TOP_K,
-  chunkSize: env.RAG_CHUNK_SIZE,
-  chunkOverlap: env.RAG_CHUNK_OVERLAP,
-},
+  rag: {
+    embeddingDimension: env.EMBEDDING_DIMENSION,
+    topK: env.RAG_TOP_K,
+    rerankTopK: env.RAG_RERANK_TOP_K,
+    chunkSize: env.RAG_CHUNK_SIZE,
+    chunkOverlap: env.RAG_CHUNK_OVERLAP,
+    similarityThreshold: env.RAG_SIMILARITY_THRESHOLD,
+  },
 }

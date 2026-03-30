@@ -48,12 +48,6 @@ ehthumbs.db
 # Trae IDE
 .trae/
 
-# Vercel
-.vercel/
-
-# Netlify (keep netlify.toml but ignore .netlify folder)
-.netlify/
-
 # Testing
 coverage/
 .nyc_output/
@@ -77,12 +71,6 @@ uploads/
 *.db-journal
 prisma/*.db
 
-# Docker (keep for reference but ignore local data)
-docker-compose.override.yml
-
-# pgvector source (install from official repo instead)
-pgvector/
-
 # Misc
 *.bat
 *.exe
@@ -94,8 +82,3 @@ skills-lock.json
 !README.md
 !server/README.md
 !web/README.md
-
-# Lock files (optional - uncomment if you want to ignore)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml

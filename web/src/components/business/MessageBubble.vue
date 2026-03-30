@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import IconAI from '@/components/icons/IconAI.vue'
+import IconCopy from '@/components/icons/IconCopy.vue'
+import { useToast } from '@/composables'
 
 interface Source {
   source: string
@@ -15,6 +18,8 @@ interface Props {
   sources?: Source[]
   loading?: boolean
   timestamp?: Date
+  messageId?: string
+  imageUrl?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,12 +27,17 @@ const props = withDefaults(defineProps<Props>(), {
   content: '',
   avatar: '',
   sources: () => [],
-  loading: false
+  loading: false,
+  messageId: '',
+  imageUrl: ''
 })
 
 defineEmits<{
   sourceClick: [source: Source]
 }>()
+
+const toast = useToast()
+const isCopied = ref(false)
 
 const bubbleClasses = computed(() => [
   'message-bubble',
@@ -36,12 +46,29 @@ const bubbleClasses = computed(() => [
 
 const renderedContent = computed(() => {
   if (props.loading) return ''
-  return marked.parse(props.content, { breaks: true }) as string
+  const rawHtml = marked.parse(props.content, { breaks: true }) as string
+  return DOMPurify.sanitize(rawHtml, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'code', 'pre', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  })
 })
 
 const formatTime = (date?: Date) => {
   if (!date) return ''
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+const copyContent = async () => {
+  try {
+    await navigator.clipboard.writeText(props.content)
+    isCopied.value = true
+    toast.success('复制成功', '消息已复制到剪贴板')
+    setTimeout(() => {
+      isCopied.value = false
+    }, 2000)
+  } catch {
+    toast.error('复制失败', '无法复制到剪贴板')
+  }
 }
 </script>
 
@@ -54,6 +81,9 @@ const formatTime = (date?: Date) => {
     </div>
     
     <div class="message-content-wrapper">
+      <div v-if="imageUrl && type === 'user'" class="message-image">
+        <img :src="imageUrl" alt="上传的图片" />
+      </div>
       <div class="message-content">
         <div v-if="loading" class="message-loading">
           <span class="typing-dot"></span>
@@ -74,6 +104,15 @@ const formatTime = (date?: Date) => {
             {{ source.source }}
           </button>
         </div>
+        
+        <button
+          v-if="type === 'ai' && !loading && content"
+          :class="['copy-btn', { 'is-copied': isCopied }]"
+          :aria-label="isCopied ? '已复制' : '复制消息'"
+          @click="copyContent"
+        >
+          <IconCopy aria-hidden="true" />
+        </button>
       </div>
       
       <div v-if="timestamp" class="message-time">
@@ -94,7 +133,7 @@ const formatTime = (date?: Date) => {
 .message-bubble {
   display: flex;
   gap: var(--spacing-3);
-  max-width: 60%;
+  max-width: min(680px, 60%);
   animation: slideUp 0.3s ease-out;
 }
 
@@ -162,9 +201,24 @@ const formatTime = (date?: Date) => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.message-image {
+  max-width: 240px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--spacing-2);
+}
+
+.message-image img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .message-content {
+  position: relative;
   padding: var(--spacing-3) var(--spacing-4);
   border-radius: var(--radius-xl);
   font-size: var(--font-size-base);
@@ -300,6 +354,39 @@ const formatTime = (date?: Date) => {
   color: var(--color-text-inverse);
 }
 
+.copy-btn {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-md);
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.copy-btn:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.copy-btn.is-copied {
+  color: var(--color-success);
+}
+
+.message-content:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn :deep(svg) {
+  width: 16px;
+  height: 16px;
+}
+
 .message-time {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
@@ -311,7 +398,21 @@ const formatTime = (date?: Date) => {
 
 @media (max-width: 767px) {
   .message-bubble {
-    max-width: 80%;
+    max-width: 85%;
+  }
+  
+  .copy-btn {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-bubble {
+    animation: none;
+  }
+  
+  .typing-dot {
+    animation: none;
   }
 }
 </style>

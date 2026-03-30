@@ -38,6 +38,58 @@ interface Conversation {
   updatedAt: string
 }
 
+interface DrugInfo {
+  name: string
+  genericName?: string
+  manufacturer?: string
+  approvalNumber?: string
+  specification?: string
+  ingredients?: string[]
+  indications?: string
+  contraindications?: string
+  sideEffects?: string
+  usage?: string
+  storage?: string
+}
+
+interface ReportItem {
+  name: string
+  value: string
+  unit?: string
+  referenceRange?: string
+  isAbnormal?: boolean
+  note?: string
+}
+
+interface ReportInfo {
+  patientName?: string
+  reportDate?: string
+  reportType?: string
+  items: ReportItem[]
+  abnormalItems: ReportItem[]
+  summary?: string
+}
+
+interface ImageAnalyzeResponse {
+  type: 'drug' | 'report'
+  result: DrugInfo | ReportInfo
+  interpretation?: string
+}
+
+interface RetryConfig {
+  maxRetries: number
+  baseDelay: number
+  maxDelay: number
+  retryableStatuses: number[]
+}
+
+const defaultRetryConfig: RetryConfig = {
+  maxRetries: 3,
+  baseDelay: 1000,
+  maxDelay: 10000,
+  retryableStatuses: [408, 429, 500, 502, 503, 504]
+}
+
 let accessToken: string | null = localStorage.getItem('accessToken')
 
 export function setAccessToken(token: string | null) {
@@ -51,6 +103,59 @@ export function setAccessToken(token: string | null) {
 
 export function getAccessToken() {
   return accessToken
+}
+
+async function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function calculateDelay(attempt: number, baseDelay: number, maxDelay: number): number {
+  const exponentialDelay = baseDelay * Math.pow(2, attempt)
+  const jitter = Math.random() * 0.1 * exponentialDelay
+  return Math.min(exponentialDelay + jitter, maxDelay)
+}
+
+async function fetchWithRetry<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  retryConfig: Partial<RetryConfig> = {}
+): Promise<ApiResponse<T>> {
+  const config = { ...defaultRetryConfig, ...retryConfig }
+  let lastError: { message: string; code?: string } = { message: '请求失败' }
+
+  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    try {
+      const result = await fetchApi<T>(endpoint, options)
+      
+      if (result.success) {
+        return result
+      }
+
+      const statusCode = (result.error as any)?.status
+      if (!config.retryableStatuses.includes(statusCode)) {
+        return result
+      }
+
+      lastError = result.error || lastError
+
+      if (attempt < config.maxRetries) {
+        const delayMs = calculateDelay(attempt, config.baseDelay, config.maxDelay)
+        await delay(delayMs)
+      }
+    } catch (error) {
+      lastError = { message: error instanceof Error ? error.message : '网络错误' }
+      
+      if (attempt < config.maxRetries) {
+        const delayMs = calculateDelay(attempt, config.baseDelay, config.maxDelay)
+        await delay(delayMs)
+      }
+    }
+  }
+
+  return {
+    success: false,
+    error: lastError
+  }
 }
 
 async function fetchApi<T>(
@@ -82,7 +187,7 @@ async function fetchApi<T>(
       }
       return {
         success: false,
-        error: data.error || { message: '请求失败' },
+        error: { ...data.error, message: data.error?.message || '请求失败', status: response.status },
       }
     }
 
@@ -100,30 +205,30 @@ async function fetchApi<T>(
 
 export const authApi = {
   login: (phone: string, password: string) =>
-    fetchApi<LoginResponse>('/auth/login', {
+    fetchWithRetry<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ phone, password }),
     }),
 
   register: (phone: string, password: string, code: string) =>
-    fetchApi<LoginResponse>('/auth/register', {
+    fetchWithRetry<LoginResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ phone, password, code }),
     }),
 
   sendCode: (phone: string) =>
-    fetchApi<void>('/auth/send-code', {
+    fetchWithRetry<void>('/auth/send-code', {
       method: 'POST',
       body: JSON.stringify({ phone }),
     }),
 
   logout: () =>
-    fetchApi<void>('/auth/logout', {
+    fetchWithRetry<void>('/auth/logout', {
       method: 'POST',
     }),
 
   refresh: () =>
-    fetchApi<{ accessToken: string; user: User }>('/auth/refresh', {
+    fetchWithRetry<{ accessToken: string; user: User }>('/auth/refresh', {
       method: 'POST',
     }),
 }
@@ -151,7 +256,7 @@ export const chatApi = {
         content,
         conversationId,
         type,
-        useRAG: false,
+        useRAG: true,
       }),
     })
 
@@ -199,52 +304,176 @@ export const chatApi = {
     }
   },
 
-  complete: (content: string) =>
-    fetchApi<{ content: string }>('/chat/complete', {
+  complete: (content: string, type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' = 'CHAT') =>
+    fetchWithRetry<{ content: string }>('/chat/complete', {
       method: 'POST',
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, type, useRAG: true }),
     }),
 
   health: () =>
-    fetchApi<{ llm: string; rag: { documents: number; chunks: number } }>('/chat/health'),
+    fetchWithRetry<{ llm: string; rag: { documents: number; chunks: number } }>('/chat/health'),
 }
 
 export const conversationApi = {
   list: (page = 1, limit = 20) =>
-    fetchApi<Conversation[]>(`/conversations?page=${page}&limit=${limit}`),
+    fetchWithRetry<Conversation[]>(`/conversations?page=${page}&limit=${limit}`),
 
   get: (id: string) =>
-    fetchApi<Conversation>(`/conversations/${id}`),
+    fetchWithRetry<Conversation>(`/conversations/${id}`),
 
   create: (type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' = 'CHAT', title?: string) =>
-    fetchApi<Conversation>('/conversations', {
+    fetchWithRetry<Conversation>('/conversations', {
       method: 'POST',
       body: JSON.stringify({ type, title }),
     }),
 
   delete: (id: string) =>
-    fetchApi<void>(`/conversations/${id}`, {
+    fetchWithRetry<void>(`/conversations/${id}`, {
       method: 'DELETE',
     }),
 }
 
 export const userApi = {
-  me: () => fetchApi<User>('/users/me'),
+  me: () => fetchWithRetry<User>('/users/me'),
 
   updateProfile: (data: { nickname?: string; email?: string }) =>
-    fetchApi<User>('/users/me', {
+    fetchWithRetry<User>('/users/me', {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   changePassword: (currentPassword: string, newPassword: string) =>
-    fetchApi<void>('/users/me/password', {
+    fetchWithRetry<void>('/users/me/password', {
       method: 'PUT',
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
 
   deleteAccount: () =>
-    fetchApi<void>('/users/me', {
+    fetchWithRetry<void>('/users/me', {
       method: 'DELETE',
     }),
 }
+
+export const imageApi = {
+  analyze: async (
+    file: File,
+    type: 'drug' | 'report',
+    onProgress?: (progress: number) => void
+  ): Promise<ApiResponse<ImageAnalyzeResponse>> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', type)
+
+    const headers: HeadersInit = {}
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/image/analyze`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: { message: data.error?.message || '图片分析失败' },
+        }
+      }
+
+      onProgress?.(100)
+      return {
+        success: true,
+        data: data.data,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: { message: error instanceof Error ? error.message : '网络错误' },
+      }
+    }
+  },
+
+  recognizeDrug: async (file: File): Promise<ApiResponse<DrugInfo>> => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const headers: HeadersInit = {}
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/image/recognize-drug`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: { message: data.error?.message || '药品识别失败' },
+        }
+      }
+
+      return {
+        success: true,
+        data: data.data,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: { message: error instanceof Error ? error.message : '网络错误' },
+      }
+    }
+  },
+
+  extractReport: async (file: File): Promise<ApiResponse<ReportInfo>> => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const headers: HeadersInit = {}
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/image/extract-report`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: { message: data.error?.message || '报告提取失败' },
+        }
+      }
+
+      return {
+        success: true,
+        data: data.data,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: { message: error instanceof Error ? error.message : '网络错误' },
+      }
+    }
+  },
+}
+
+export type { User, Message, Conversation, DrugInfo, ReportItem, ReportInfo, ImageAnalyzeResponse }

@@ -13,6 +13,22 @@ import {
 
 const SALT_ROUNDS = 12
 
+interface UserResponse {
+  id: string
+  phone: string
+  email?: string | null
+  nickname: string
+  avatarUrl?: string | null
+  status: string
+  createdAt: Date
+}
+
+interface TokenPayload {
+  userId: string
+  phone: string
+  email?: string
+}
+
 export class AuthService {
   private tokenRepo: TokenRepository
 
@@ -28,7 +44,11 @@ export class AuthService {
     password: string
     code: string
     nickname?: string
-  }) {
+  }): Promise<{
+    user: UserResponse
+    accessToken: string
+    refreshToken: string
+  }> {
     const existingUser = await this.userRepo.findByPhone(data.phone)
     if (existingUser) {
       throw new ConflictError('该手机号已注册')
@@ -48,7 +68,11 @@ export class AuthService {
       nickname,
     })
 
-    const { accessToken, refreshToken } = await this.generateTokens(user.id)
+    const { accessToken, refreshToken } = await this.generateTokens({
+      userId: user.id,
+      phone: user.phone,
+      email: user.email || undefined,
+    })
     
     await this.tokenRepo.createRefreshToken({
       token: refreshToken,
@@ -63,7 +87,11 @@ export class AuthService {
     }
   }
 
-  async login(data: { phone: string; password: string }) {
+  async login(data: { phone: string; password: string }): Promise<{
+    user: UserResponse
+    accessToken: string
+    refreshToken: string
+  }> {
     const user = await this.userRepo.findByPhone(data.phone)
     if (!user) {
       throw new UnauthorizedError('手机号或密码错误')
@@ -80,7 +108,11 @@ export class AuthService {
 
     await this.userRepo.updateLastLogin(user.id)
 
-    const { accessToken, refreshToken } = await this.generateTokens(user.id)
+    const { accessToken, refreshToken } = await this.generateTokens({
+      userId: user.id,
+      phone: user.phone,
+      email: user.email || undefined,
+    })
     
     await this.tokenRepo.createRefreshToken({
       token: refreshToken,
@@ -95,7 +127,11 @@ export class AuthService {
     }
   }
 
-  async loginWithCode(data: { phone: string; code: string }) {
+  async loginWithCode(data: { phone: string; code: string }): Promise<{
+    user: UserResponse
+    accessToken: string
+    refreshToken: string
+  }> {
     const user = await this.userRepo.findByPhone(data.phone)
     if (!user) {
       throw new NotFoundError('用户不存在')
@@ -112,7 +148,11 @@ export class AuthService {
 
     await this.userRepo.updateLastLogin(user.id)
 
-    const { accessToken, refreshToken } = await this.generateTokens(user.id)
+    const { accessToken, refreshToken } = await this.generateTokens({
+      userId: user.id,
+      phone: user.phone,
+      email: user.email || undefined,
+    })
     
     await this.tokenRepo.createRefreshToken({
       token: refreshToken,
@@ -127,14 +167,27 @@ export class AuthService {
     }
   }
 
-  async refreshAccessToken(refreshToken: string) {
+  async refreshAccessToken(refreshToken: string): Promise<{
+    accessToken: string
+    refreshToken: string
+    user: UserResponse
+  }> {
     const storedToken = await this.tokenRepo.findRefreshToken(refreshToken)
     
     if (!storedToken || storedToken.revoked || storedToken.expiresAt < new Date()) {
       throw new UnauthorizedError('Refresh token无效或已过期')
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = await this.generateTokens(storedToken.userId)
+    const user = await this.userRepo.findById(storedToken.userId)
+    if (!user) {
+      throw new NotFoundError('用户不存在')
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = await this.generateTokens({
+      userId: user.id,
+      phone: user.phone,
+      email: user.email || undefined,
+    })
     
     await this.tokenRepo.revokeRefreshToken(refreshToken)
     await this.tokenRepo.createRefreshToken({
@@ -146,10 +199,15 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: newRefreshToken,
+      user: this.sanitizeUser(user),
     }
   }
 
-  async sendVerificationCode(data: { target: string; type: 'PHONE' | 'EMAIL'; purpose: 'REGISTER' | 'LOGIN' | 'RESET_PASSWORD' }) {
+  async sendVerificationCode(data: { 
+    target: string
+    type: 'PHONE' | 'EMAIL'
+    purpose: 'REGISTER' | 'LOGIN' | 'RESET_PASSWORD' 
+  }): Promise<{ success: boolean; message: string }> {
     const code = Math.random().toString().slice(-6)
     
     await this.fastify.prisma.verificationCode.create({
@@ -169,7 +227,7 @@ export class AuthService {
     return { success: true, message: '验证码已发送' }
   }
 
-  async resetPassword(data: { phone: string; code: string; newPassword: string }) {
+  async resetPassword(data: { phone: string; code: string; newPassword: string }): Promise<{ success: boolean; message: string }> {
     const user = await this.userRepo.findByPhone(data.phone)
     if (!user) {
       throw new NotFoundError('用户不存在')
@@ -186,6 +244,14 @@ export class AuthService {
     await this.tokenRepo.revokeAllUserTokens(user.id)
 
     return { success: true, message: '密码重置成功' }
+  }
+
+  async logout(userId: string, refreshToken?: string): Promise<void> {
+    if (refreshToken) {
+      await this.tokenRepo.revokeRefreshToken(refreshToken)
+    } else {
+      await this.tokenRepo.revokeAllUserTokens(userId)
+    }
   }
 
   private async verifyCode(target: string, code: string, purpose: string): Promise<boolean> {
@@ -211,26 +277,42 @@ export class AuthService {
     return true
   }
 
-  private async generateTokens(userId: string): Promise<{ accessToken: string; refreshToken: string }> {
+  private async generateTokens(payload: TokenPayload): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = jwt.sign(
-      { userId },
+      { 
+        userId: payload.userId,
+        phone: payload.phone,
+        email: payload.email,
+      },
       config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
+      { expiresIn: '15m' }
     )
 
     const refreshToken = jwt.sign(
-      { userId, type: 'refresh' },
+      { 
+        userId: payload.userId, 
+        phone: payload.phone,
+        email: payload.email,
+        type: 'refresh' 
+      },
       config.jwt.secret,
-      { expiresIn: config.jwt.refreshExpiresIn }
+      { expiresIn: '7d' }
     )
 
     return { accessToken, refreshToken }
   }
 
-  private sanitizeUser(user: User) {
+  private sanitizeUser(user: { 
+    id: string
+    phone: string
+    email?: string | null
+    nickname: string
+    avatarUrl?: string | null
+    status: string
+    passwordHash: string
+    createdAt: Date
+  }): UserResponse {
     const { passwordHash, ...userWithoutPassword } = user
-    return userWithoutPassword
+    return userWithoutPassword as UserResponse
   }
 }
-
-import { User } from '@prisma/client'

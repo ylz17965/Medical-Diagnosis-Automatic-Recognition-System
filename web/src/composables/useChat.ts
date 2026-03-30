@@ -1,7 +1,8 @@
 import { ref, computed } from 'vue'
 import type { FeatureType } from '@/components/business'
 import { useConversationStore, useUserStore } from '@/stores'
-import { chatApi, getAccessToken } from '@/services/api'
+import { chatApi, imageApi, getAccessToken } from '@/services/api'
+import type { DrugInfo, ReportInfo } from '@/services/api'
 
 export function useChat() {
   const conversationStore = useConversationStore()
@@ -11,7 +12,9 @@ export function useChat() {
   const currentMode = ref<FeatureType | 'chat'>('chat')
   const isLoading = ref(false)
   const isUploading = ref(false)
+  const uploadProgress = ref(0)
   const serverConversationId = ref<string | undefined>(undefined)
+  const uploadedImage = ref<{ url: string; file: File } | null>(null)
 
   const hasMessages = computed(() => 
     conversationStore.activeConversation && 
@@ -43,6 +46,7 @@ export function useChat() {
   const setMode = (type: FeatureType) => {
     currentMode.value = type
     serverConversationId.value = undefined
+    uploadedImage.value = null
     conversationStore.createConversation(type)
     conversationStore.addMessage(conversationStore.activeId, {
       role: 'assistant',
@@ -133,15 +137,96 @@ export function useChat() {
     if (!file) return
 
     isUploading.value = true
+    uploadProgress.value = 0
+
+    const imageUrl = URL.createObjectURL(file)
+    uploadedImage.value = { url: imageUrl, file }
+
+    const isReportMode = currentMode.value === 'report'
+    const imageType = isReportMode ? 'report' : 'drug'
+    const modeLabel = isReportMode ? '体检报告' : '药盒'
 
     conversationStore.addMessage(conversationStore.activeId, {
       role: 'user',
-      content: `已上传报告：${file.name}`
+      content: `已上传${modeLabel}：${file.name}`,
+      imageUrl
     })
 
-    await sendToBackend(`分析体检报告：${file.name}`, 'report')
+    const loadingMessage = conversationStore.addMessage(conversationStore.activeId, {
+      role: 'assistant',
+      content: `正在识别${modeLabel}，请稍候...`,
+      loading: true
+    })
+
+    try {
+      const result = await imageApi.analyze(file, imageType, (progress) => {
+        uploadProgress.value = progress
+      })
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error?.message || `${modeLabel}识别失败`)
+      }
+
+      const { interpretation, result: analysisResult } = result.data
+
+      if (loadingMessage) {
+        conversationStore.updateMessage(conversationStore.activeId, loadingMessage.id, {
+          content: interpretation || `${modeLabel}识别完成`,
+          loading: false
+        })
+      }
+
+      if (isReportMode) {
+        const reportInfo = analysisResult as ReportInfo
+        if (reportInfo.abnormalItems && reportInfo.abnormalItems.length > 0) {
+          const abnormalList = reportInfo.abnormalItems
+            .map(item => `- ${item.name}: ${item.value}${item.unit || ''}（参考范围：${item.referenceRange || '未知'}）`)
+            .join('\n')
+          
+          conversationStore.addMessage(conversationStore.activeId, {
+            role: 'assistant',
+            content: `**检测到以下异常指标：**\n\n${abnormalList}\n\n---\n\n${interpretation || ''}`
+          })
+        }
+      } else {
+        const drugInfo = analysisResult as DrugInfo
+        if (drugInfo.name) {
+          const drugDetails = [
+            drugInfo.genericName ? `**通用名：** ${drugInfo.genericName}` : null,
+            drugInfo.manufacturer ? `**生产厂家：** ${drugInfo.manufacturer}` : null,
+            drugInfo.specification ? `**规格：** ${drugInfo.specification}` : null,
+            drugInfo.indications ? `**适应症：** ${drugInfo.indications}` : null,
+            drugInfo.usage ? `**用法用量：** ${drugInfo.usage}` : null,
+            drugInfo.contraindications ? `**禁忌症：** ${drugInfo.contraindications}` : null,
+            drugInfo.sideEffects ? `**副作用：** ${drugInfo.sideEffects}` : null,
+          ].filter(Boolean).join('\n\n')
+
+          conversationStore.addMessage(conversationStore.activeId, {
+            role: 'assistant',
+            content: `**识别结果：${drugInfo.name}**\n\n${drugDetails}\n\n---\n\n${interpretation || ''}`
+          })
+        }
+      }
+
+    } catch (error) {
+      console.error('Image analysis error:', error)
+      if (loadingMessage) {
+        conversationStore.updateMessage(conversationStore.activeId, loadingMessage.id, {
+          content: `抱歉，${modeLabel}识别失败：${error instanceof Error ? error.message : '未知错误'}`,
+          loading: false
+        })
+      }
+    }
 
     isUploading.value = false
+    uploadProgress.value = 0
+  }
+
+  const clearUploadedImage = () => {
+    if (uploadedImage.value) {
+      URL.revokeObjectURL(uploadedImage.value.url)
+      uploadedImage.value = null
+    }
   }
 
   const initAuth = () => {
@@ -156,6 +241,8 @@ export function useChat() {
     currentMode,
     isLoading,
     isUploading,
+    uploadProgress,
+    uploadedImage,
     hasMessages,
     isEmpty,
     charCount,
@@ -166,6 +253,7 @@ export function useChat() {
     sendMessage,
     simulateResponse,
     handleFileUpload,
+    clearUploadedImage,
     userStore,
     conversationStore,
     initAuth

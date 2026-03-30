@@ -8,6 +8,7 @@ export interface Message {
   timestamp: Date
   sources?: Source[]
   loading?: boolean
+  imageUrl?: string
 }
 
 export interface Source {
@@ -100,7 +101,14 @@ export const useConversationStore = defineStore('conversation', () => {
   }
 
   const saveToStorage = () => {
-    localStorage.setItem('conversations', JSON.stringify(conversations.value))
+    const dataToStore = conversations.value.map(c => ({
+      ...c,
+      messages: c.messages.map(m => {
+        const { imageUrl, ...rest } = m
+        return rest
+      })
+    }))
+    localStorage.setItem('conversations', JSON.stringify(dataToStore))
   }
 
   const loadFromStorage = () => {

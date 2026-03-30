@@ -1,5 +1,20 @@
 <script setup lang="ts">
+import { onErrorCaptured, ref } from 'vue'
 import { RouterView } from 'vue-router'
+import { ToastContainer } from '@/components/base'
+import { useToast } from '@/composables'
+
+const toast = useToast()
+const hasError = ref(false)
+const errorMessage = ref('')
+
+onErrorCaptured((error: Error) => {
+  console.error('Global error captured:', error)
+  hasError.value = true
+  errorMessage.value = error.message || '发生未知错误'
+  toast.error('应用错误', error.message || '发生未知错误，请刷新页面重试')
+  return false
+})
 </script>
 
 <template>
@@ -8,6 +23,7 @@ import { RouterView } from 'vue-router'
       <component :is="Component" :key="route.path" />
     </Transition>
   </RouterView>
+  <ToastContainer />
 </template>
 
 <style>

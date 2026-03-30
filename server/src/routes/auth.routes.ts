@@ -2,8 +2,33 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { z } from 'zod'
 import { AuthService } from '../services/auth.service.js'
 import { UserRepository } from '../repositories/user.repository.js'
-import { registerSchema, loginSchema, sendCodeSchema, resetPasswordSchema } from '../types/auth.types.js'
 import { config } from '../config/index.js'
+
+const registerSchema = z.object({
+  phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
+  password: z.string().min(8, '密码至少8位').max(32, '密码最多32位'),
+  code: z.string().length(6, '验证码为6位数字'),
+  nickname: z.string().min(2).max(20).optional(),
+})
+
+const loginSchema = z.object({
+  phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
+  password: z.string().optional(),
+  code: z.string().length(6).optional(),
+  email: z.string().email().optional(),
+})
+
+const sendCodeSchema = z.object({
+  phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
+  type: z.enum(['PHONE', 'EMAIL']).default('PHONE'),
+  purpose: z.enum(['REGISTER', 'LOGIN', 'RESET_PASSWORD']),
+})
+
+const resetPasswordSchema = z.object({
+  phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
+  code: z.string().length(6, '验证码为6位数字'),
+  newPassword: z.string().min(8, '密码至少8位').max(32, '密码最多32位'),
+})
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const userRepo = new UserRepository(fastify.prisma)
@@ -30,27 +55,21 @@ export default async function authRoutes(fastify: FastifyInstance) {
               },
             },
           },
-          400: {
-            description: '请求参数错误',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              error: { type: 'object' },
-            },
-          },
         },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof registerSchema>
       const result = await authService.register(body)
+      
       reply.setCookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: config.isProd,
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60,
         path: '/',
       })
+      
       return reply.status(201).send({
         success: true,
         data: {
@@ -82,14 +101,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
               },
             },
           },
-          401: {
-            description: '认证失败',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              error: { type: 'object' },
-            },
-          },
         },
       },
     },
@@ -101,19 +112,21 @@ export default async function authRoutes(fastify: FastifyInstance) {
         result = await authService.loginWithCode({ phone: body.phone, code: body.code })
       } else if (body.phone && body.password) {
         result = await authService.login({ phone: body.phone, password: body.password })
-      } else if (body.email && body.password) {
-        throw new Error('邮箱登录暂未实现')
       } else {
-        throw new Error('请提供有效的登录凭证')
+        return reply.status(400).send({
+          success: false,
+          error: { message: '请提供有效的登录凭证' },
+        })
       }
       
       reply.setCookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: config.isProd,
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60,
         path: '/',
       })
+      
       return reply.send({
         success: true,
         data: {
@@ -139,19 +152,17 @@ export default async function authRoutes(fastify: FastifyInstance) {
               message: { type: 'string' },
             },
           },
-          429: {
-            description: '请求过于频繁',
-            type: 'object',
-          },
         },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof sendCodeSchema>
-      return reply.send({
-        success: true,
-        message: '验证码已发送',
+      const result = await authService.sendVerificationCode({
+        target: body.phone,
+        type: body.type,
+        purpose: body.purpose,
       })
+      return reply.send(result)
     }
   )
 
@@ -175,10 +186,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof resetPasswordSchema>
-      return reply.send({
-        success: true,
-        message: '密码已重置',
-      })
+      const result = await authService.resetPassword(body)
+      return reply.send(result)
     }
   )
 
@@ -207,17 +216,29 @@ export default async function authRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const refreshToken = request.cookies.refreshToken
+      
       if (!refreshToken) {
         return reply.status(401).send({
           success: false,
           error: { message: '未提供刷新令牌' },
         })
       }
+      
+      const result = await authService.refreshAccessToken(refreshToken)
+      
+      reply.setCookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: config.isProd,
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
+      })
+      
       return reply.send({
         success: true,
         data: {
-          accessToken: 'new-access-token',
-          user: {},
+          accessToken: result.accessToken,
+          user: result.user,
         },
       })
     }
@@ -241,7 +262,19 @@ export default async function authRoutes(fastify: FastifyInstance) {
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
+      const refreshToken = request.cookies.refreshToken
+      
+      if (refreshToken) {
+        try {
+          const decoded = require('jsonwebtoken').verify(refreshToken, config.jwt.secret) as { userId: string }
+          await authService.logout(decoded.userId, refreshToken)
+        } catch {
+          // Ignore token verification errors during logout
+        }
+      }
+      
       reply.clearCookie('refreshToken')
+      
       return reply.send({
         success: true,
         message: '已登出',

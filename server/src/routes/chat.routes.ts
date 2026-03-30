@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { optionalAuth } from '../middleware/auth.middleware.js'
+import { optionalAuth, authenticate } from '../middleware/auth.middleware.js'
 import { z } from 'zod'
 import { LLMService } from '../services/llm.service.js'
 import { RAGService } from '../services/rag.service.js'
@@ -16,6 +16,13 @@ const RagCategories: Record<string, string> = {
   SEARCH: 'general',
   REPORT: 'medical_report',
   DRUG: 'drug_info',
+}
+
+const ModelTypes: Record<string, 'complex' | 'simple'> = {
+  CHAT: 'simple',
+  SEARCH: 'complex',
+  REPORT: 'complex',
+  DRUG: 'complex',
 }
 
 export default async function chatRoutes(fastify: FastifyInstance) {
@@ -55,12 +62,12 @@ export default async function chatRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof sendMessageSchema>
-      const { content, conversationId, type = 'CHAT', useRAG = false } = body
+      const { content, conversationId, type = 'CHAT', useRAG = true } = body
       const userId = request.user?.userId
       const isGuest = !userId
 
       let conversation = null
-      let previousMessages: any[] = []
+      let previousMessages: Array<{ role: string; content: string }> = []
 
       if (!isGuest && conversationId) {
         conversation = await fastify.prisma.conversation.findFirst({
@@ -79,11 +86,16 @@ export default async function chatRoutes(fastify: FastifyInstance) {
       }
 
       if (!isGuest && conversation) {
-        previousMessages = await fastify.prisma.message.findMany({
+        const messages = await fastify.prisma.message.findMany({
           where: { conversationId: conversation.id },
           orderBy: { createdAt: 'asc' },
           take: 10,
         })
+
+        previousMessages = messages.map(m => ({
+          role: m.role.toLowerCase() as 'user' | 'assistant',
+          content: m.content,
+        }))
 
         await fastify.prisma.message.create({
           data: {
@@ -97,6 +109,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
       reply.raw.setHeader('Content-Type', 'text/event-stream')
       reply.raw.setHeader('Cache-Control', 'no-cache')
       reply.raw.setHeader('Connection', 'keep-alive')
+      reply.raw.setHeader('X-Accel-Buffering', 'no')
 
       const messages = [
         ...previousMessages.map(m => ({
@@ -114,6 +127,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
           messages,
           useRAG,
           ragCategory: RagCategories[type],
+          modelType: ModelTypes[type],
           temperature: 0.7,
         })
 
@@ -134,6 +148,11 @@ export default async function chatRoutes(fastify: FastifyInstance) {
               content: fullResponse,
               sources: sources.length > 0 ? JSON.stringify(sources) : undefined,
             },
+          })
+          
+          await fastify.prisma.conversation.update({
+            where: { id: conversation.id },
+            data: { updatedAt: new Date() },
           })
         }
 
@@ -161,22 +180,46 @@ export default async function chatRoutes(fastify: FastifyInstance) {
       schema: {
         body: z.object({
           content: z.string().min(1).max(4000),
+          type: z.enum(['CHAT', 'SEARCH', 'REPORT', 'DRUG']).optional(),
+          useRAG: z.boolean().optional(),
         }),
         tags: ['chat'],
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const body = request.body as { content: string }
-      const { content } = body
+      const body = request.body as { content: string; type?: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'; useRAG?: boolean }
+      const { content, type = 'CHAT', useRAG = true } = body
 
       const response = await llmService.chat({
         messages: [{ role: 'user', content }],
-        useRAG: false,
+        useRAG,
+        ragCategory: RagCategories[type],
+        modelType: ModelTypes[type],
       })
 
       return reply.send({
         success: true,
         data: { content: response },
+      })
+    }
+  )
+  
+  fastify.get(
+    '/models',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['chat'],
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const models = await llmService.listModels()
+      return reply.send({
+        success: true,
+        data: {
+          provider: llmService.getProvider(),
+          models,
+        },
       })
     }
   )

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { setAccessToken, getAccessToken } from '@/services/api'
 
 export interface User {
   id: string
@@ -9,39 +10,37 @@ export interface User {
   email?: string
 }
 
+const USER_STORAGE_KEY = 'user'
+
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null)
-  const token = ref<string>('')
-  const isLoggedIn = computed(() => !!user.value && !!token.value)
+  const isLoggedIn = computed(() => !!user.value && !!getAccessToken())
 
   const login = (userData: User, userToken: string) => {
     user.value = userData
-    token.value = userToken
-    localStorage.setItem('token', userToken)
-    localStorage.setItem('user', JSON.stringify(userData))
+    setAccessToken(userToken)
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData))
   }
 
   const logout = () => {
     user.value = null
-    token.value = ''
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    setAccessToken(null)
+    localStorage.removeItem(USER_STORAGE_KEY)
   }
 
   const updateUser = (userData: Partial<User>) => {
     if (user.value) {
       user.value = { ...user.value, ...userData }
-      localStorage.setItem('user', JSON.stringify(user.value))
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user.value))
     }
   }
 
   const initFromStorage = () => {
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
+    const token = getAccessToken()
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY)
     
-    if (storedToken && storedUser) {
+    if (token && storedUser) {
       try {
-        token.value = storedToken
         user.value = JSON.parse(storedUser)
       } catch {
         logout()
@@ -51,7 +50,6 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     user,
-    token,
     isLoggedIn,
     login,
     logout,
