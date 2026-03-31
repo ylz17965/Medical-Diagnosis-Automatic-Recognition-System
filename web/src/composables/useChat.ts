@@ -14,7 +14,7 @@ export function useChat() {
   const isUploading = ref(false)
   const uploadProgress = ref(0)
   const serverConversationId = ref<string | undefined>(undefined)
-  const uploadedImage = ref<{ url: string; file: File } | null = null)
+  const uploadedImage = ref<{ url: string; file: File } | null>(null)
 
   const hasMessages = computed(() => 
     conversationStore.activeConversation && 
