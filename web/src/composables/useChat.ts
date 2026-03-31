@@ -83,6 +83,7 @@ export function useChat() {
 
     let fullContent = ''
     let sources: Array<{ source: string; content: string }> = []
+    let hasReceivedContent = false
 
     try {
       await chatApi.stream(
@@ -90,6 +91,7 @@ export function useChat() {
         (chunk) => {
           if (chunk.content) {
             fullContent += chunk.content
+            hasReceivedContent = true
             if (loadingMessage) {
               conversationStore.updateMessage(conversationStore.activeId, loadingMessage.id, {
                 content: fullContent,

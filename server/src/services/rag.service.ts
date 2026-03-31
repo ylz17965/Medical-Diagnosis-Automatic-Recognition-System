@@ -25,6 +25,9 @@ export class RAGService {
   private topK: number
   private rerankTopK: number
   private similarityThreshold: number
+  private hasKnowledgeBase: boolean | null = null
+  private lastStatsCheck: number = 0
+  private statsCacheDuration = 60000
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma
@@ -35,6 +38,18 @@ export class RAGService {
     this.topK = config.rag.topK
     this.rerankTopK = config.rag.rerankTopK
     this.similarityThreshold = config.rag.similarityThreshold
+  }
+
+  private async checkKnowledgeBaseExists(): Promise<boolean> {
+    const now = Date.now()
+    if (this.hasKnowledgeBase !== null && (now - this.lastStatsCheck) < this.statsCacheDuration) {
+      return this.hasKnowledgeBase
+    }
+
+    const chunkCount = await this.prisma.documentChunk.count()
+    this.hasKnowledgeBase = chunkCount > 0
+    this.lastStatsCheck = now
+    return this.hasKnowledgeBase
   }
 
   chunkText(text: string): ChunkResult[] {
@@ -128,6 +143,9 @@ export class RAGService {
       `
     }
 
+    this.hasKnowledgeBase = true
+    this.lastStatsCheck = Date.now()
+
     return documentId
   }
 
@@ -137,6 +155,11 @@ export class RAGService {
     healthRecordId?: string
     topK?: number
   }): Promise<RAGContext[]> {
+    const hasKB = await this.checkKnowledgeBaseExists()
+    if (!hasKB) {
+      return []
+    }
+
     const queryEmbedding = await this.embeddingService.generateEmbedding(params.query)
     const topK = params.topK || this.rerankTopK
     const dimension = config.rag.embeddingDimension
@@ -190,6 +213,11 @@ export class RAGService {
     healthRecordId?: string
     topK?: number
   }): Promise<RAGContext[]> {
+    const hasKB = await this.checkKnowledgeBaseExists()
+    if (!hasKB) {
+      return []
+    }
+
     const initialResults = await this.searchSimilar({
       ...params,
       topK: this.rerankTopK,
@@ -253,6 +281,9 @@ export class RAGService {
     await this.prisma.knowledgeDocument.delete({
       where: { id: documentId },
     })
+
+    this.hasKnowledgeBase = null
+    this.lastStatsCheck = 0
   }
 
   async getDocumentStats(): Promise<{
@@ -268,6 +299,9 @@ export class RAGService {
         distinct: ['category'],
       }),
     ])
+
+    this.hasKnowledgeBase = chunkCount > 0
+    this.lastStatsCheck = Date.now()
 
     return {
       totalDocuments: docCount,
