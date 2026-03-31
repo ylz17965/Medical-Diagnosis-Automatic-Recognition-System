@@ -89,7 +89,7 @@ const copyContent = async () => {
           <span class="typing-dot"></span>
           <span class="typing-dot"></span>
           <span class="typing-dot"></span>
-          <span class="loading-text">正在分析...</span>
+          <span class="loading-text">正在思考...</span>
         </div>
         <div v-else class="message-text" v-html="renderedContent"></div>
         

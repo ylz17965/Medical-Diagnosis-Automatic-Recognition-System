@@ -110,6 +110,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
       reply.raw.setHeader('Cache-Control', 'no-cache')
       reply.raw.setHeader('Connection', 'keep-alive')
       reply.raw.setHeader('X-Accel-Buffering', 'no')
+      reply.raw.flushHeaders()
 
       const messages = [
         ...previousMessages.map(m => ({
