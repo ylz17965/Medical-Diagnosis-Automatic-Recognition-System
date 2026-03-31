@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import type { FeatureType } from '@/components/business'
 import { useConversationStore, useUserStore } from '@/stores'
 import { chatApi, imageApi, getAccessToken } from '@/services/api'
@@ -14,7 +14,7 @@ export function useChat() {
   const isUploading = ref(false)
   const uploadProgress = ref(0)
   const serverConversationId = ref<string | undefined>(undefined)
-  const uploadedImage = ref<{ url: string; file: File } | null>(null)
+  const uploadedImage = ref<{ url: string; file: File } | null = null)
 
   const hasMessages = computed(() => 
     conversationStore.activeConversation && 
@@ -83,21 +83,27 @@ export function useChat() {
 
     let fullContent = ''
     let sources: Array<{ source: string; content: string }> = []
-    let hasReceivedContent = false
+    let messageEl = loadingMessage
+
+    const updateContent = async (newContent: string) => {
+      fullContent = newContent
+      if (messageEl) {
+        conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
+          content: fullContent,
+          loading: false
+        })
+        await nextTick()
+        await new Promise(resolve => setTimeout(resolve, 15))
+      }
+    }
 
     try {
       await chatApi.stream(
         userMessage,
-        (chunk) => {
+        async (chunk) => {
           if (chunk.content) {
             fullContent += chunk.content
-            hasReceivedContent = true
-            if (loadingMessage) {
-              conversationStore.updateMessage(conversationStore.activeId, loadingMessage.id, {
-                content: fullContent,
-                loading: false
-              })
-            }
+            await updateContent(fullContent)
           }
           if (chunk.conversationId) {
             serverConversationId.value = chunk.conversationId
@@ -106,8 +112,8 @@ export function useChat() {
             sources = chunk.sources
           }
           if (chunk.done) {
-            if (loadingMessage) {
-              conversationStore.updateMessage(conversationStore.activeId, loadingMessage.id, {
+            if (messageEl) {
+              conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
                 content: fullContent,
                 loading: false,
                 sources: sources.length > 0 ? sources : undefined
@@ -120,8 +126,8 @@ export function useChat() {
       )
     } catch (error) {
       console.error('Chat error:', error)
-      if (loadingMessage) {
-        conversationStore.updateMessage(conversationStore.activeId, loadingMessage.id, {
+      if (messageEl) {
+        conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
           content: '抱歉，生成回复时出现错误，请稍后重试。',
           loading: false
         })
