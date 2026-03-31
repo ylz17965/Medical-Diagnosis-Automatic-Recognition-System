@@ -1,0 +1,163 @@
+{
+  "nodes": {
+    "Disease": {
+      "description": "疾病节点",
+      "properties": {
+        "name": { "type": "string", "required": true, "description": "疾病名称" },
+        "aliases": { "type": "array", "items": "string", "description": "疾病别名" },
+        "symptoms": { "type": "array", "items": "string", "description": "主要症状列表" },
+        "departments": { "type": "array", "items": "string", "description": "所属科室" },
+        "description": { "type": "string", "description": "疾病描述" },
+        "causes": { "type": "array", "items": "string", "description": "病因" },
+        "prevention": { "type": "array", "items": "string", "description": "预防措施" },
+        "complications": { "type": "array", "items": "string", "description": "并发症" },
+        "prevalence": { "type": "string", "description": "患病率" },
+        "severity": { "type": "string", "enum": ["轻度", "中度", "重度"], "description": "严重程度" }
+      }
+    },
+    "Symptom": {
+      "description": "症状节点",
+      "properties": {
+        "name": { "type": "string", "required": true, "description": "症状名称" },
+        "aliases": { "type": "array", "items": "string", "description": "症状别名" },
+        "relatedBodyParts": { "type": "array", "items": "string", "description": "相关身体部位" },
+        "severityLevel": { "type": "string", "enum": ["轻微", "中等", "严重"], "description": "严重程度等级" },
+        "description": { "type": "string", "description": "症状描述" },
+        "commonDiseases": { "type": "array", "items": "string", "description": "常见相关疾病" }
+      }
+    },
+    "Drug": {
+      "description": "药品节点",
+      "properties": {
+        "name": { "type": "string", "required": true, "description": "药品名称" },
+        "genericName": { "type": "string", "description": "通用名" },
+        "category": { "type": "string", "description": "药品分类" },
+        "indications": { "type": "array", "items": "string", "description": "适应症" },
+        "contraindications": { "type": "array", "items": "string", "description": "禁忌症" },
+        "dosage": { "type": "string", "description": "用法用量" },
+        "sideEffects": { "type": "array", "items": "string", "description": "副作用" },
+        "interactions": { "type": "array", "items": "string", "description": "药物相互作用" },
+        "storage": { "type": "string", "description": "储存条件" },
+        "otc": { "type": "boolean", "description": "是否非处方药" }
+      }
+    },
+    "Examination": {
+      "description": "检查项目节点",
+      "properties": {
+        "name": { "type": "string", "required": true, "description": "检查名称" },
+        "category": { "type": "string", "description": "检查分类" },
+        "normalRange": { "type": "string", "description": "正常范围" },
+        "unit": { "type": "string", "description": "单位" },
+        "clinicalSignificance": { "type": "string", "description": "临床意义" },
+        "preparation": { "type": "array", "items": "string", "description": "检查前准备" },
+        "abnormalIndications": { "type": "array", "items": "string", "description": "异常提示疾病" }
+      }
+    },
+    "BodyPart": {
+      "description": "身体部位节点",
+      "properties": {
+        "name": { "type": "string", "required": true, "description": "部位名称" },
+        "system": { "type": "string", "description": "所属系统" },
+        "description": { "type": "string", "description": "描述" }
+      }
+    },
+    "Department": {
+      "description": "科室节点",
+      "properties": {
+        "name": { "type": "string", "required": true, "description": "科室名称" },
+        "description": { "type": "string", "description": "科室描述" },
+        "commonDiseases": { "type": "array", "items": "string", "description": "常见疾病" }
+      }
+    }
+  },
+  "relations": {
+    "HAS_SYMPTOM": {
+      "from": "Disease",
+      "to": "Symptom",
+      "description": "疾病具有症状",
+      "properties": {
+        "frequency": { "type": "string", "enum": ["常见", "偶见", "罕见"], "description": "出现频率" },
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "TREATED_BY": {
+      "from": "Disease",
+      "to": "Drug",
+      "description": "疾病可被药物治疗",
+      "properties": {
+        "efficacy": { "type": "string", "enum": ["首选", "次选", "辅助"], "description": "治疗地位" },
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "NEEDS_EXAMINATION": {
+      "from": "Disease",
+      "to": "Examination",
+      "description": "疾病需要检查",
+      "properties": {
+        "necessity": { "type": "string", "enum": ["必需", "推荐", "可选"], "description": "必要性" },
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "LOCATED_AT": {
+      "from": "Symptom",
+      "to": "BodyPart",
+      "description": "症状位于身体部位",
+      "properties": {
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "HAS_SIDE_EFFECT": {
+      "from": "Drug",
+      "to": "Symptom",
+      "description": "药品有副作用",
+      "properties": {
+        "frequency": { "type": "string", "enum": ["常见", "偶见", "罕见"], "description": "发生频率" },
+        "severity": { "type": "string", "enum": ["轻微", "中等", "严重"], "description": "严重程度" },
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "BELONGS_TO_DEPARTMENT": {
+      "from": "Disease",
+      "to": "Department",
+      "description": "疾病属于科室",
+      "properties": {
+        "isPrimary": { "type": "boolean", "description": "是否主要科室" },
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "RELATED_DISEASE": {
+      "from": "Disease",
+      "to": "Disease",
+      "description": "疾病相关",
+      "properties": {
+        "relationType": { "type": "string", "enum": ["并发症", "鉴别诊断", "病因"], "description": "关系类型" },
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "INDICATES_DISEASE": {
+      "from": "Examination",
+      "to": "Disease",
+      "description": "检查异常提示疾病",
+      "properties": {
+        "condition": { "type": "string", "description": "异常条件" },
+        "weight": { "type": "number", "min": 0, "max": 1, "description": "关系权重" }
+      }
+    },
+    "DRUG_INTERACTION": {
+      "from": "Drug",
+      "to": "Drug",
+      "description": "药物相互作用",
+      "properties": {
+        "interactionType": { "type": "string", "enum": ["禁忌", "慎用", "增效", "减效"], "description": "相互作用类型" },
+        "description": { "type": "string", "description": "相互作用描述" }
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "createdAt": "2026-03-31",
+    "description": "医疗知识图谱Schema定义",
+    "nodeCount": 6,
+    "relationCount": 9
+  }
+}

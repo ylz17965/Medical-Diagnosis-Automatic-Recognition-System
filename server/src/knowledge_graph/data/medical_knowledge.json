@@ -1,0 +1,668 @@
+{
+  "diseases": [
+    {
+      "id": "D001",
+      "name": "感冒",
+      "aliases": ["上呼吸道感染", "伤风", "普通感冒"],
+      "symptoms": ["头痛", "发热", "咳嗽", "流鼻涕", "鼻塞", "咽喉痛", "打喷嚏"],
+      "departments": ["呼吸内科", "全科"],
+      "description": "感冒是一种常见的急性上呼吸道感染性疾病，多由病毒引起，主要通过飞沫传播。",
+      "causes": ["病毒感染", "受凉", "免疫力下降"],
+      "prevention": ["勤洗手", "避免接触患者", "增强免疫力", "保持室内通风"],
+      "complications": ["支气管炎", "肺炎", "中耳炎"],
+      "icdCode": "J00"
+    },
+    {
+      "id": "D002",
+      "name": "高血压",
+      "aliases": ["原发性高血压", "血压高"],
+      "symptoms": ["头痛", "头晕", "心悸", "胸闷", "耳鸣", "失眠"],
+      "departments": ["心血管内科", "全科"],
+      "description": "高血压是以体循环动脉血压持续升高为主要特征的临床综合征，是最常见的慢性病之一。",
+      "causes": ["遗传因素", "高盐饮食", "肥胖", "精神紧张", "缺乏运动"],
+      "prevention": ["低盐饮食", "适量运动", "控制体重", "戒烟限酒", "保持心情舒畅"],
+      "complications": ["冠心病", "脑卒中", "肾功能损害", "眼底病变"],
+      "icdCode": "I10"
+    },
+    {
+      "id": "D003",
+      "name": "糖尿病",
+      "aliases": ["2型糖尿病", "血糖高"],
+      "symptoms": ["多饮", "多尿", "多食", "体重下降", "乏力", "视力模糊"],
+      "departments": ["内分泌科", "全科"],
+      "description": "糖尿病是一组以高血糖为特征的代谢性疾病，由于胰岛素分泌缺陷或其生物作用受损引起。",
+      "causes": ["遗传因素", "肥胖", "不良饮食习惯", "缺乏运动"],
+      "prevention": ["控制饮食", "适量运动", "控制体重", "定期体检"],
+      "complications": ["糖尿病肾病", "糖尿病视网膜病变", "糖尿病足", "心血管疾病"],
+      "icdCode": "E11"
+    },
+    {
+      "id": "D004",
+      "name": "胃炎",
+      "aliases": ["慢性胃炎", "急性胃炎"],
+      "symptoms": ["胃痛", "胃胀", "恶心", "呕吐", "食欲不振", "反酸"],
+      "departments": ["消化内科", "全科"],
+      "description": "胃炎是胃黏膜的炎症性疾病，可分为急性和慢性两种类型。",
+      "causes": ["幽门螺杆菌感染", "饮食不规律", "长期服用非甾体抗炎药", "酗酒"],
+      "prevention": ["规律饮食", "避免刺激性食物", "戒烟限酒", "保持心情舒畅"],
+      "complications": ["胃溃疡", "胃出血", "胃癌"],
+      "icdCode": "K29"
+    },
+    {
+      "id": "D005",
+      "name": "支气管炎",
+      "aliases": ["急性支气管炎", "慢性支气管炎"],
+      "symptoms": ["咳嗽", "咳痰", "胸闷", "气喘", "发热", "胸痛"],
+      "departments": ["呼吸内科", "全科"],
+      "description": "支气管炎是支气管黏膜的炎症，可分为急性和慢性两种类型。",
+      "causes": ["病毒感染", "细菌感染", "吸烟", "空气污染", "过敏"],
+      "prevention": ["戒烟", "避免空气污染", "预防感冒", "增强免疫力"],
+      "complications": ["肺炎", "慢性阻塞性肺疾病", "肺气肿"],
+      "icdCode": "J20"
+    },
+    {
+      "id": "D006",
+      "name": "失眠",
+      "aliases": ["睡眠障碍", "入睡困难"],
+      "symptoms": ["入睡困难", "早醒", "睡眠质量差", "白天困倦", "注意力不集中", "情绪烦躁"],
+      "departments": ["神经内科", "精神科", "全科"],
+      "description": "失眠是指入睡困难、睡眠质量差或早醒等睡眠障碍，影响日常生活和工作。",
+      "causes": ["精神压力", "焦虑", "抑郁", "不良睡眠习惯", "环境因素"],
+      "prevention": ["规律作息", "睡前放松", "避免咖啡因", "创造良好睡眠环境"],
+      "complications": ["焦虑症", "抑郁症", "免疫力下降"],
+      "icdCode": "G47.0"
+    },
+    {
+      "id": "D007",
+      "name": "过敏性鼻炎",
+      "aliases": ["花粉症", "变应性鼻炎"],
+      "symptoms": ["打喷嚏", "流鼻涕", "鼻塞", "鼻痒", "眼痒", "流泪"],
+      "departments": ["耳鼻喉科", "变态反应科", "全科"],
+      "description": "过敏性鼻炎是鼻黏膜对过敏原产生的变态反应性疾病。",
+      "causes": ["花粉过敏", "尘螨过敏", "动物皮屑过敏", "霉菌过敏"],
+      "prevention": ["避免过敏原", "保持室内清洁", "使用空气净化器", "戴口罩"],
+      "complications": ["鼻窦炎", "中耳炎", "哮喘"],
+      "icdCode": "J30"
+    },
+    {
+      "id": "D008",
+      "name": "颈椎病",
+      "aliases": ["颈椎综合征", "颈肩综合征"],
+      "symptoms": ["颈痛", "肩痛", "头痛", "头晕", "上肢麻木", "恶心"],
+      "departments": ["骨科", "康复科", "全科"],
+      "description": "颈椎病是由于颈椎退行性病变引起的临床综合征，多见于长期伏案工作者。",
+      "causes": ["颈椎退行性变", "长期低头", "颈部外伤", "不良姿势"],
+      "prevention": ["正确坐姿", "避免长时间低头", "适当运动", "使用合适枕头"],
+      "complications": ["脊髓压迫", "神经根压迫", "椎动脉压迫"],
+      "icdCode": "M47"
+    },
+    {
+      "id": "D009",
+      "name": "湿疹",
+      "aliases": ["特应性皮炎", "过敏性皮炎"],
+      "symptoms": ["皮肤瘙痒", "红斑", "丘疹", "水疱", "渗出", "皮肤干燥"],
+      "departments": ["皮肤科", "全科"],
+      "description": "湿疹是一种常见的皮肤炎症性疾病，以皮肤瘙痒、红斑、丘疹为主要表现。",
+      "causes": ["过敏", "遗传因素", "环境因素", "免疫功能异常"],
+      "prevention": ["避免过敏原", "保持皮肤清洁", "避免过度清洁", "使用保湿剂"],
+      "complications": ["皮肤感染", "色素沉着", "皮肤增厚"],
+      "icdCode": "L20"
+    },
+    {
+      "id": "D010",
+      "name": "冠心病",
+      "aliases": ["冠状动脉粥样硬化性心脏病", "心绞痛"],
+      "symptoms": ["胸痛", "胸闷", "心悸", "气短", "乏力", "出汗"],
+      "departments": ["心血管内科", "全科"],
+      "description": "冠心病是由于冠状动脉粥样硬化导致心肌缺血缺氧的心脏病。",
+      "causes": ["高血压", "高血脂", "糖尿病", "吸烟", "肥胖", "缺乏运动"],
+      "prevention": ["控制血压", "控制血脂", "戒烟", "健康饮食", "适量运动"],
+      "complications": ["心肌梗死", "心力衰竭", "心律失常"],
+      "icdCode": "I25"
+    },
+    {
+      "id": "D011",
+      "name": "痛风",
+      "aliases": ["高尿酸血症", "痛风性关节炎"],
+      "symptoms": ["关节疼痛", "关节红肿", "关节发热", "活动受限"],
+      "departments": ["风湿免疫科", "全科"],
+      "description": "痛风是由于嘌呤代谢紊乱导致尿酸升高，尿酸盐结晶沉积于关节引起的疾病。",
+      "causes": ["高嘌呤饮食", "饮酒", "肥胖", "遗传因素"],
+      "prevention": ["低嘌呤饮食", "多饮水", "限制饮酒", "控制体重"],
+      "complications": ["痛风石", "肾结石", "肾功能损害"],
+      "icdCode": "M10"
+    },
+    {
+      "id": "D012",
+      "name": "抑郁症",
+      "aliases": ["抑郁障碍", "忧郁症"],
+      "symptoms": ["情绪低落", "兴趣减退", "失眠", "食欲下降", "乏力", "注意力不集中"],
+      "departments": ["精神科", "心理科", "全科"],
+      "description": "抑郁症是一种常见的精神障碍，以持续的情绪低落为主要特征。",
+      "causes": ["遗传因素", "神经递质失衡", "心理因素", "社会因素"],
+      "prevention": ["保持社交活动", "规律作息", "适当运动", "寻求心理支持"],
+      "complications": ["自杀倾向", "焦虑症", "物质滥用"],
+      "icdCode": "F32"
+    },
+    {
+      "id": "D013",
+      "name": "贫血",
+      "aliases": ["缺铁性贫血", "营养不良性贫血"],
+      "symptoms": ["乏力", "头晕", "面色苍白", "心悸", "气短", "食欲不振"],
+      "departments": ["血液科", "全科"],
+      "description": "贫血是指血液中红细胞数量或血红蛋白含量低于正常值的疾病。",
+      "causes": ["铁摄入不足", "慢性失血", "营养不良", "骨髓疾病"],
+      "prevention": ["均衡饮食", "补充铁剂", "治疗原发病", "定期体检"],
+      "complications": ["心脏扩大", "心力衰竭", "免疫力下降"],
+      "icdCode": "D50"
+    },
+    {
+      "id": "D014",
+      "name": "尿路感染",
+      "aliases": ["泌尿系感染", "膀胱炎"],
+      "symptoms": ["尿频", "尿急", "尿痛", "腰痛", "发热", "血尿"],
+      "departments": ["泌尿外科", "肾内科", "全科"],
+      "description": "尿路感染是细菌侵入泌尿系统引起的感染性疾病。",
+      "causes": ["细菌感染", "尿路梗阻", "免疫力下降", "不良卫生习惯"],
+      "prevention": ["多饮水", "注意个人卫生", "避免憋尿", "增强免疫力"],
+      "complications": ["肾盂肾炎", "败血症", "肾功能损害"],
+      "icdCode": "N39.0"
+    },
+    {
+      "id": "D015",
+      "name": "脂肪肝",
+      "aliases": ["非酒精性脂肪肝", "肝脂肪变性"],
+      "symptoms": ["乏力", "右上腹不适", "食欲不振", "恶心", "肝区疼痛"],
+      "departments": ["消化内科", "肝病科", "全科"],
+      "description": "脂肪肝是肝脏内脂肪堆积过多的疾病，与肥胖、糖尿病等密切相关。",
+      "causes": ["肥胖", "糖尿病", "高脂血症", "饮酒", "营养不良"],
+      "prevention": ["控制体重", "健康饮食", "适量运动", "限制饮酒"],
+      "complications": ["肝硬化", "肝癌", "心血管疾病"],
+      "icdCode": "K76.0"
+    }
+  ],
+  "symptoms": [
+    {
+      "id": "S001",
+      "name": "头痛",
+      "aliases": ["头疼", "头昏脑涨"],
+      "relatedBodyParts": ["头部", "大脑"],
+      "severityLevel": "moderate",
+      "description": "头部疼痛不适的感觉，可由多种原因引起。",
+      "possibleDiseases": ["感冒", "高血压", "颈椎病", "失眠", "贫血"]
+    },
+    {
+      "id": "S002",
+      "name": "发热",
+      "aliases": ["发烧", "体温升高"],
+      "relatedBodyParts": ["全身"],
+      "severityLevel": "moderate",
+      "description": "体温超过正常范围（37.3°C以上），是机体对疾病的防御反应。",
+      "possibleDiseases": ["感冒", "支气管炎", "尿路感染", "肺炎"]
+    },
+    {
+      "id": "S003",
+      "name": "咳嗽",
+      "aliases": ["咳痰", "干咳"],
+      "relatedBodyParts": ["呼吸道", "肺部"],
+      "severityLevel": "mild",
+      "description": "呼吸道受到刺激时产生的保护性反射动作。",
+      "possibleDiseases": ["感冒", "支气管炎", "肺炎", "过敏性鼻炎"]
+    },
+    {
+      "id": "S004",
+      "name": "头晕",
+      "aliases": ["眩晕", "头昏"],
+      "relatedBodyParts": ["头部", "内耳"],
+      "severityLevel": "moderate",
+      "description": "头部昏沉、站立不稳的感觉。",
+      "possibleDiseases": ["高血压", "贫血", "颈椎病", "失眠"]
+    },
+    {
+      "id": "S005",
+      "name": "乏力",
+      "aliases": ["疲劳", "无力"],
+      "relatedBodyParts": ["全身"],
+      "severityLevel": "mild",
+      "description": "身体疲乏无力，精神不振。",
+      "possibleDiseases": ["糖尿病", "贫血", "抑郁症", "失眠"]
+    },
+    {
+      "id": "S006",
+      "name": "恶心",
+      "aliases": ["想吐", "反胃"],
+      "relatedBodyParts": ["胃部", "消化道"],
+      "severityLevel": "mild",
+      "description": "胃部不适，有呕吐的感觉。",
+      "possibleDiseases": ["胃炎", "尿路感染", "颈椎病", "脂肪肝"]
+    },
+    {
+      "id": "S007",
+      "name": "失眠",
+      "aliases": ["入睡困难", "睡眠障碍"],
+      "relatedBodyParts": ["大脑", "神经系统"],
+      "severityLevel": "moderate",
+      "description": "难以入睡或睡眠质量差。",
+      "possibleDiseases": ["失眠症", "抑郁症", "高血压", "焦虑症"]
+    },
+    {
+      "id": "S008",
+      "name": "胸痛",
+      "aliases": ["胸闷", "胸部不适"],
+      "relatedBodyParts": ["胸部", "心脏"],
+      "severityLevel": "severe",
+      "description": "胸部疼痛或不适感，可能是心脏疾病的信号。",
+      "possibleDiseases": ["冠心病", "支气管炎", "心肌梗死"]
+    },
+    {
+      "id": "S009",
+      "name": "关节疼痛",
+      "aliases": ["关节痛", "关节肿痛"],
+      "relatedBodyParts": ["关节"],
+      "severityLevel": "moderate",
+      "description": "关节部位的疼痛或肿胀。",
+      "possibleDiseases": ["痛风", "关节炎", "风湿病"]
+    },
+    {
+      "id": "S010",
+      "name": "皮肤瘙痒",
+      "aliases": ["皮肤痒", "瘙痒"],
+      "relatedBodyParts": ["皮肤"],
+      "severityLevel": "mild",
+      "description": "皮肤产生瘙痒感，想抓挠。",
+      "possibleDiseases": ["湿疹", "过敏性皮炎", "皮肤干燥"]
+    }
+  ],
+  "drugs": [
+    {
+      "id": "DR001",
+      "name": "对乙酰氨基酚",
+      "genericName": "Paracetamol",
+      "aliases": ["扑热息痛", "泰诺", "必理通"],
+      "category": "antipyretic_analgesic",
+      "indications": ["感冒", "发热", "头痛", "牙痛", "肌肉痛"],
+      "contraindications": ["严重肝肾功能不全", "对药物过敏者"],
+      "dosage": {
+        "adult": "每次300-600mg",
+        "children": "按体重10-15mg/kg",
+        "frequency": "每4-6小时一次",
+        "maxDose": "每日不超过2000mg"
+      },
+      "sideEffects": ["恶心", "呕吐", "腹痛", "肝损伤（过量）"],
+      "interactions": ["酒精", "华法林", "其他含对乙酰氨基酚药物"],
+      "storage": "避光、密封、阴凉处保存",
+      "otc": true,
+      "approvalNumber": "国药准字H44020370"
+    },
+    {
+      "id": "DR002",
+      "name": "布洛芬",
+      "genericName": "Ibuprofen",
+      "aliases": ["芬必得", "美林", "布洛芬缓释胶囊"],
+      "category": "antipyretic_analgesic",
+      "indications": ["发热", "头痛", "牙痛", "关节痛", "肌肉痛", "痛经"],
+      "contraindications": ["消化性溃疡", "严重肝肾功能不全", "哮喘", "孕妇"],
+      "dosage": {
+        "adult": "每次200-400mg",
+        "children": "按体重5-10mg/kg",
+        "frequency": "每6-8小时一次",
+        "maxDose": "每日不超过1200mg"
+      },
+      "sideEffects": ["胃部不适", "恶心", "呕吐", "头痛", "眩晕"],
+      "interactions": ["阿司匹林", "抗凝药物", "利尿剂"],
+      "storage": "避光、密封、阴凉处保存",
+      "otc": true,
+      "approvalNumber": "国药准字H10900089"
+    },
+    {
+      "id": "DR003",
+      "name": "氨氯地平",
+      "genericName": "Amlodipine",
+      "aliases": ["络活喜", "苯磺酸氨氯地平"],
+      "category": "cardiovascular",
+      "indications": ["高血压", "冠心病", "心绞痛"],
+      "contraindications": ["对药物过敏者", "严重低血压", "休克"],
+      "dosage": {
+        "adult": "每次5-10mg",
+        "frequency": "每日一次",
+        "maxDose": "每日不超过10mg"
+      },
+      "sideEffects": ["头痛", "水肿", "面部潮红", "心悸", "恶心"],
+      "interactions": ["西柚汁", "其他降压药", "辛伐他汀"],
+      "storage": "避光、密封、30°C以下保存",
+      "otc": false,
+      "approvalNumber": "国药准字H20030317"
+    },
+    {
+      "id": "DR004",
+      "name": "二甲双胍",
+      "genericName": "Metformin",
+      "aliases": ["格华止", "盐酸二甲双胍"],
+      "category": "other",
+      "indications": ["2型糖尿病", "糖尿病前期"],
+      "contraindications": ["肾功能不全", "肝功能不全", "心力衰竭", "酮症酸中毒"],
+      "dosage": {
+        "adult": "起始每次250mg",
+        "frequency": "每日2-3次",
+        "maxDose": "每日不超过2000mg"
+      },
+      "sideEffects": ["恶心", "腹泻", "腹痛", "食欲下降", "乳酸酸中毒（罕见）"],
+      "interactions": ["酒精", "碘造影剂", "西咪替丁"],
+      "storage": "避光、密封、干燥处保存",
+      "otc": false,
+      "approvalNumber": "国药准字H20023370"
+    },
+    {
+      "id": "DR005",
+      "name": "奥美拉唑",
+      "genericName": "Omeprazole",
+      "aliases": ["洛赛克", "奥克"],
+      "category": "digestive",
+      "indications": ["胃溃疡", "十二指肠溃疡", "胃炎", "反流性食管炎"],
+      "contraindications": ["对药物过敏者", "严重肝功能不全"],
+      "dosage": {
+        "adult": "每次20mg",
+        "frequency": "每日一次",
+        "maxDose": "每日不超过40mg"
+      },
+      "sideEffects": ["头痛", "腹泻", "恶心", "腹痛", "便秘"],
+      "interactions": ["氯吡格雷", "酮康唑", "铁剂"],
+      "storage": "避光、密封、30°C以下保存",
+      "otc": true,
+      "approvalNumber": "国药准字H20033557"
+    },
+    {
+      "id": "DR006",
+      "name": "氯雷他定",
+      "genericName": "Loratadine",
+      "aliases": ["开瑞坦", "氯雷他定片"],
+      "category": "other",
+      "indications": ["过敏性鼻炎", "荨麻疹", "过敏性皮肤病"],
+      "contraindications": ["对药物过敏者", "严重肝功能不全"],
+      "dosage": {
+        "adult": "每次10mg",
+        "children": "体重>30kg: 10mg; 体重≤30kg: 5mg",
+        "frequency": "每日一次"
+      },
+      "sideEffects": ["嗜睡", "口干", "头痛", "乏力"],
+      "interactions": ["酮康唑", "红霉素", "西咪替丁"],
+      "storage": "避光、密封、干燥处保存",
+      "otc": true,
+      "approvalNumber": "国药准字H20070030"
+    },
+    {
+      "id": "DR007",
+      "name": "阿莫西林",
+      "genericName": "Amoxicillin",
+      "aliases": ["阿莫西林胶囊", "青霉素类抗生素"],
+      "category": "antibiotic",
+      "indications": ["呼吸道感染", "尿路感染", "皮肤软组织感染", "中耳炎"],
+      "contraindications": ["青霉素过敏者", "传染性单核细胞增多症"],
+      "dosage": {
+        "adult": "每次250-500mg",
+        "children": "按体重20-40mg/kg/日",
+        "frequency": "每8小时一次",
+        "maxDose": "每日不超过3000mg"
+      },
+      "sideEffects": ["恶心", "呕吐", "腹泻", "皮疹", "过敏反应"],
+      "interactions": ["丙磺舒", "口服避孕药", "华法林"],
+      "storage": "避光、密封、阴凉处保存",
+      "otc": false,
+      "approvalNumber": "国药准字H23021603"
+    },
+    {
+      "id": "DR008",
+      "name": "阿司匹林",
+      "genericName": "Aspirin",
+      "aliases": ["乙酰水杨酸", "拜阿司匹灵"],
+      "category": "antipyretic_analgesic",
+      "indications": ["发热", "头痛", "肌肉痛", "心血管疾病预防"],
+      "contraindications": ["消化性溃疡", "出血倾向", "哮喘", "孕妇", "儿童水痘"],
+      "dosage": {
+        "adult": "解热镇痛: 300-600mg; 心血管预防: 75-100mg",
+        "frequency": "解热镇痛: 每4-6小时; 心血管预防: 每日一次"
+      },
+      "sideEffects": ["胃部不适", "出血", "耳鸣", "过敏反应"],
+      "interactions": ["华法林", "布洛芬", "酒精", "糖皮质激素"],
+      "storage": "避光、密封、干燥处保存",
+      "otc": true,
+      "approvalNumber": "国药准字H44021139"
+    }
+  ],
+  "examinations": [
+    {
+      "id": "E001",
+      "name": "血常规",
+      "aliases": ["血细胞分析", "CBC"],
+      "category": "blood",
+      "normalRange": [
+        {"description": "白细胞计数", "min": 4, "max": 10, "unit": "×10⁹/L"},
+        {"description": "红细胞计数", "min": 4.0, "max": 5.5, "unit": "×10¹²/L"},
+        {"description": "血红蛋白", "min": 120, "max": 160, "unit": "g/L"},
+        {"description": "血小板计数", "min": 100, "max": 300, "unit": "×10⁹/L"}
+      ],
+      "clinicalSignificance": "评估血液系统状况，筛查感染、贫血、血液病等。",
+      "preparationRequired": ["无需空腹"],
+      "relatedDiseases": ["贫血", "感染", "白血病", "血小板减少症"]
+    },
+    {
+      "id": "E002",
+      "name": "空腹血糖",
+      "aliases": ["FPG", "空腹血糖测定"],
+      "category": "blood",
+      "normalRange": [
+        {"description": "空腹血糖", "min": 3.9, "max": 6.1, "unit": "mmol/L"}
+      ],
+      "clinicalSignificance": "评估血糖水平，筛查和诊断糖尿病。",
+      "preparationRequired": ["空腹8-12小时", "禁食禁水"],
+      "relatedDiseases": ["糖尿病", "低血糖", "代谢综合征"]
+    },
+    {
+      "id": "E003",
+      "name": "血压测量",
+      "aliases": ["血压检测", "BP"],
+      "category": "cardiac",
+      "normalRange": [
+        {"description": "收缩压", "min": 90, "max": 140, "unit": "mmHg"},
+        {"description": "舒张压", "min": 60, "max": 90, "unit": "mmHg"}
+      ],
+      "clinicalSignificance": "评估血压水平，筛查和监测高血压。",
+      "preparationRequired": ["休息5-10分钟", "避免剧烈运动", "避免咖啡因"],
+      "relatedDiseases": ["高血压", "低血压", "心血管疾病"]
+    },
+    {
+      "id": "E004",
+      "name": "心电图",
+      "aliases": ["ECG", "EKG"],
+      "category": "cardiac",
+      "normalRange": [
+        {"description": "心率", "min": 60, "max": 100, "unit": "次/分"},
+        {"description": "心律", "description": "窦性心律"}
+      ],
+      "clinicalSignificance": "评估心脏电活动，诊断心律失常、心肌缺血等。",
+      "preparationRequired": ["放松心情", "避免剧烈运动"],
+      "relatedDiseases": ["冠心病", "心律失常", "心肌梗死", "心肌炎"]
+    },
+    {
+      "id": "E005",
+      "name": "肝功能检查",
+      "aliases": ["肝功能", "肝功"],
+      "category": "liver",
+      "normalRange": [
+        {"description": "谷丙转氨酶(ALT)", "min": 0, "max": 40, "unit": "U/L"},
+        {"description": "谷草转氨酶(AST)", "min": 0, "max": 40, "unit": "U/L"},
+        {"description": "总胆红素", "min": 3.4, "max": 17.1, "unit": "μmol/L"}
+      ],
+      "clinicalSignificance": "评估肝脏功能，筛查肝脏疾病。",
+      "preparationRequired": ["空腹8-12小时", "避免饮酒"],
+      "relatedDiseases": ["肝炎", "肝硬化", "脂肪肝", "肝癌"]
+    },
+    {
+      "id": "E006",
+      "name": "肾功能检查",
+      "aliases": ["肾功能", "肾功"],
+      "category": "kidney",
+      "normalRange": [
+        {"description": "血肌酐", "min": 44, "max": 133, "unit": "μmol/L"},
+        {"description": "血尿素氮", "min": 2.9, "max": 8.2, "unit": "mmol/L"},
+        {"description": "尿酸", "min": 150, "max": 420, "unit": "μmol/L"}
+      ],
+      "clinicalSignificance": "评估肾脏功能，筛查肾脏疾病。",
+      "preparationRequired": ["空腹8-12小时"],
+      "relatedDiseases": ["肾功能不全", "痛风", "尿毒症", "肾病综合征"]
+    },
+    {
+      "id": "E007",
+      "name": "血脂检查",
+      "aliases": ["血脂四项", "血脂分析"],
+      "category": "blood",
+      "normalRange": [
+        {"description": "总胆固醇", "min": 0, "max": 5.18, "unit": "mmol/L"},
+        {"description": "甘油三酯", "min": 0, "max": 1.70, "unit": "mmol/L"},
+        {"description": "低密度脂蛋白", "min": 0, "max": 3.37, "unit": "mmol/L"},
+        {"description": "高密度脂蛋白", "min": 1.04, "max": 999, "unit": "mmol/L"}
+      ],
+      "clinicalSignificance": "评估血脂水平，筛查高脂血症和心血管疾病风险。",
+      "preparationRequired": ["空腹12小时", "低脂饮食3天"],
+      "relatedDiseases": ["高脂血症", "冠心病", "动脉粥样硬化", "脂肪肝"]
+    },
+    {
+      "id": "E008",
+      "name": "尿常规",
+      "aliases": ["尿液分析", "尿检"],
+      "category": "urine",
+      "normalRange": [
+        {"description": "尿蛋白", "description": "阴性"},
+        {"description": "尿糖", "description": "阴性"},
+        {"description": "尿白细胞", "min": 0, "max": 5, "unit": "/HP"}
+      ],
+      "clinicalSignificance": "评估泌尿系统状况，筛查尿路感染、肾脏疾病等。",
+      "preparationRequired": ["清洁中段尿", "女性避开月经期"],
+      "relatedDiseases": ["尿路感染", "肾炎", "糖尿病", "肾病综合征"]
+    }
+  ],
+  "departments": [
+    {
+      "id": "DP001",
+      "name": "呼吸内科",
+      "aliases": ["肺科", "呼吸科"],
+      "commonDiseases": ["感冒", "支气管炎", "肺炎", "哮喘", "慢性阻塞性肺疾病"],
+      "description": "诊治呼吸系统疾病的专科，包括气管、支气管、肺等器官的疾病。"
+    },
+    {
+      "id": "DP002",
+      "name": "心血管内科",
+      "aliases": ["心内科", "心脏科"],
+      "commonDiseases": ["高血压", "冠心病", "心力衰竭", "心律失常", "心肌病"],
+      "description": "诊治心脏和血管系统疾病的专科。"
+    },
+    {
+      "id": "DP003",
+      "name": "消化内科",
+      "aliases": ["胃肠科", "消化科"],
+      "commonDiseases": ["胃炎", "胃溃疡", "肝炎", "脂肪肝", "胰腺炎"],
+      "description": "诊治消化系统疾病的专科，包括食管、胃、肠、肝、胆、胰等器官的疾病。"
+    },
+    {
+      "id": "DP004",
+      "name": "内分泌科",
+      "aliases": ["内分泌代谢科"],
+      "commonDiseases": ["糖尿病", "甲状腺疾病", "痛风", "肥胖症", "骨质疏松症"],
+      "description": "诊治内分泌系统疾病的专科，包括各种激素分泌异常引起的疾病。"
+    },
+    {
+      "id": "DP005",
+      "name": "神经内科",
+      "aliases": ["神经科", "脑病科"],
+      "commonDiseases": ["头痛", "头晕", "失眠", "脑卒中", "帕金森病"],
+      "description": "诊治神经系统疾病的专科，包括大脑、脊髓、周围神经等疾病。"
+    },
+    {
+      "id": "DP006",
+      "name": "皮肤科",
+      "aliases": ["皮肤性病科"],
+      "commonDiseases": ["湿疹", "荨麻疹", "痤疮", "银屑病", "皮肤感染"],
+      "description": "诊治皮肤疾病的专科。"
+    },
+    {
+      "id": "DP007",
+      "name": "骨科",
+      "aliases": ["骨伤科", "运动医学科"],
+      "commonDiseases": ["骨折", "颈椎病", "腰椎间盘突出", "关节炎", "骨质疏松"],
+      "description": "诊治骨骼、关节、肌肉系统疾病的专科。"
+    },
+    {
+      "id": "DP008",
+      "name": "全科",
+      "aliases": ["全科医学科", "家庭医学科"],
+      "commonDiseases": ["感冒", "高血压", "糖尿病", "胃炎", "头痛"],
+      "description": "综合性科室，处理常见病、多发病及慢性病管理。"
+    }
+  ],
+  "bodyParts": [
+    {"id": "BP001", "name": "头部", "system": "nervous", "relatedSymptoms": ["头痛", "头晕"]},
+    {"id": "BP002", "name": "胸部", "system": "cardiovascular", "relatedSymptoms": ["胸痛", "胸闷"]},
+    {"id": "BP003", "name": "腹部", "system": "digestive", "relatedSymptoms": ["腹痛", "恶心"]},
+    {"id": "BP004", "name": "呼吸道", "system": "respiratory", "relatedSymptoms": ["咳嗽", "气喘"]},
+    {"id": "BP005", "name": "关节", "system": "musculoskeletal", "relatedSymptoms": ["关节疼痛", "肿胀"]},
+    {"id": "BP006", "name": "皮肤", "system": "integumentary", "relatedSymptoms": ["皮肤瘙痒", "皮疹"]}
+  ],
+  "relations": [
+    {"id": "R001", "type": "HAS_SYMPTOM", "sourceId": "D001", "sourceType": "Disease", "targetId": "S001", "targetType": "Symptom", "weight": 0.9},
+    {"id": "R002", "type": "HAS_SYMPTOM", "sourceId": "D001", "sourceType": "Disease", "targetId": "S002", "targetType": "Symptom", "weight": 0.8},
+    {"id": "R003", "type": "HAS_SYMPTOM", "sourceId": "D001", "sourceType": "Disease", "targetId": "S003", "targetType": "Symptom", "weight": 0.85},
+    {"id": "R004", "type": "TREATED_BY", "sourceId": "D001", "sourceType": "Disease", "targetId": "DR001", "targetType": "Drug", "weight": 0.9},
+    {"id": "R005", "type": "TREATED_BY", "sourceId": "D001", "sourceType": "Disease", "targetId": "DR002", "targetType": "Drug", "weight": 0.85},
+    {"id": "R006", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D001", "sourceType": "Disease", "targetId": "DP001", "targetType": "Department", "weight": 1.0},
+    {"id": "R007", "type": "NEEDS_EXAMINATION", "sourceId": "D001", "sourceType": "Disease", "targetId": "E001", "targetType": "Examination", "weight": 0.7},
+    {"id": "R008", "type": "HAS_SYMPTOM", "sourceId": "D002", "sourceType": "Disease", "targetId": "S001", "targetType": "Symptom", "weight": 0.8},
+    {"id": "R009", "type": "HAS_SYMPTOM", "sourceId": "D002", "sourceType": "Disease", "targetId": "S004", "targetType": "Symptom", "weight": 0.85},
+    {"id": "R010", "type": "TREATED_BY", "sourceId": "D002", "sourceType": "Disease", "targetId": "DR003", "targetType": "Drug", "weight": 0.95},
+    {"id": "R011", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D002", "sourceType": "Disease", "targetId": "DP002", "targetType": "Department", "weight": 1.0},
+    {"id": "R012", "type": "NEEDS_EXAMINATION", "sourceId": "D002", "sourceType": "Disease", "targetId": "E003", "targetType": "Examination", "weight": 1.0},
+    {"id": "R013", "type": "HAS_SYMPTOM", "sourceId": "D003", "sourceType": "Disease", "targetId": "S005", "targetType": "Symptom", "weight": 0.85},
+    {"id": "R014", "type": "TREATED_BY", "sourceId": "D003", "sourceType": "Disease", "targetId": "DR004", "targetType": "Drug", "weight": 0.95},
+    {"id": "R015", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D003", "sourceType": "Disease", "targetId": "DP004", "targetType": "Department", "weight": 1.0},
+    {"id": "R016", "type": "NEEDS_EXAMINATION", "sourceId": "D003", "sourceType": "Disease", "targetId": "E002", "targetType": "Examination", "weight": 1.0},
+    {"id": "R017", "type": "HAS_SYMPTOM", "sourceId": "D004", "sourceType": "Disease", "targetId": "S006", "targetType": "Symptom", "weight": 0.9},
+    {"id": "R018", "type": "TREATED_BY", "sourceId": "D004", "sourceType": "Disease", "targetId": "DR005", "targetType": "Drug", "weight": 0.95},
+    {"id": "R019", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D004", "sourceType": "Disease", "targetId": "DP003", "targetType": "Department", "weight": 1.0},
+    {"id": "R020", "type": "HAS_SIDE_EFFECT", "sourceId": "DR001", "sourceType": "Drug", "targetId": "S006", "targetType": "Symptom", "weight": 0.3},
+    {"id": "R021", "type": "LOCATED_AT", "sourceId": "S001", "sourceType": "Symptom", "targetId": "BP001", "targetType": "BodyPart", "weight": 1.0},
+    {"id": "R022", "type": "LOCATED_AT", "sourceId": "S003", "sourceType": "Symptom", "targetId": "BP004", "targetType": "BodyPart", "weight": 1.0},
+    {"id": "R023", "type": "LOCATED_AT", "sourceId": "S009", "sourceType": "Symptom", "targetId": "BP005", "targetType": "BodyPart", "weight": 1.0},
+    {"id": "R024", "type": "LOCATED_AT", "sourceId": "S010", "sourceType": "Symptom", "targetId": "BP006", "targetType": "BodyPart", "weight": 1.0},
+    {"id": "R025", "type": "HAS_SYMPTOM", "sourceId": "D005", "sourceType": "Disease", "targetId": "S003", "targetType": "Symptom", "weight": 0.95},
+    {"id": "R026", "type": "HAS_SYMPTOM", "sourceId": "D005", "sourceType": "Disease", "targetId": "S002", "targetType": "Symptom", "weight": 0.7},
+    {"id": "R027", "type": "TREATED_BY", "sourceId": "D005", "sourceType": "Disease", "targetId": "DR007", "targetType": "Drug", "weight": 0.8},
+    {"id": "R028", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D005", "sourceType": "Disease", "targetId": "DP001", "targetType": "Department", "weight": 1.0},
+    {"id": "R029", "type": "HAS_SYMPTOM", "sourceId": "D006", "sourceType": "Disease", "targetId": "S007", "targetType": "Symptom", "weight": 1.0},
+    {"id": "R030", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D006", "sourceType": "Disease", "targetId": "DP005", "targetType": "Department", "weight": 1.0},
+    {"id": "R031", "type": "HAS_SYMPTOM", "sourceId": "D007", "sourceType": "Disease", "targetId": "S003", "targetType": "Symptom", "weight": 0.6},
+    {"id": "R032", "type": "TREATED_BY", "sourceId": "D007", "sourceType": "Disease", "targetId": "DR006", "targetType": "Drug", "weight": 0.95},
+    {"id": "R033", "type": "HAS_SYMPTOM", "sourceId": "D008", "sourceType": "Disease", "targetId": "S001", "targetType": "Symptom", "weight": 0.85},
+    {"id": "R034", "type": "HAS_SYMPTOM", "sourceId": "D008", "sourceType": "Disease", "targetId": "S004", "targetType": "Symptom", "weight": 0.8},
+    {"id": "R035", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D008", "sourceType": "Disease", "targetId": "DP007", "targetType": "Department", "weight": 1.0},
+    {"id": "R036", "type": "HAS_SYMPTOM", "sourceId": "D009", "sourceType": "Disease", "targetId": "S010", "targetType": "Symptom", "weight": 0.95},
+    {"id": "R037", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D009", "sourceType": "Disease", "targetId": "DP006", "targetType": "Department", "weight": 1.0},
+    {"id": "R038", "type": "HAS_SYMPTOM", "sourceId": "D010", "sourceType": "Disease", "targetId": "S008", "targetType": "Symptom", "weight": 0.95},
+    {"id": "R039", "type": "TREATED_BY", "sourceId": "D010", "sourceType": "Disease", "targetId": "DR003", "targetType": "Drug", "weight": 0.8},
+    {"id": "R040", "type": "TREATED_BY", "sourceId": "D010", "sourceType": "Disease", "targetId": "DR008", "targetType": "Drug", "weight": 0.85},
+    {"id": "R041", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D010", "sourceType": "Disease", "targetId": "DP002", "targetType": "Department", "weight": 1.0},
+    {"id": "R042", "type": "NEEDS_EXAMINATION", "sourceId": "D010", "sourceType": "Disease", "targetId": "E004", "targetType": "Examination", "weight": 0.95},
+    {"id": "R043", "type": "HAS_SYMPTOM", "sourceId": "D011", "sourceType": "Disease", "targetId": "S009", "targetType": "Symptom", "weight": 0.95},
+    {"id": "R044", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D011", "sourceType": "Disease", "targetId": "DP004", "targetType": "Department", "weight": 1.0},
+    {"id": "R045", "type": "NEEDS_EXAMINATION", "sourceId": "D011", "sourceType": "Disease", "targetId": "E006", "targetType": "Examination", "weight": 0.9},
+    {"id": "R046", "type": "HAS_SYMPTOM", "sourceId": "D012", "sourceType": "Disease", "targetId": "S007", "targetType": "Symptom", "weight": 0.9},
+    {"id": "R047", "type": "HAS_SYMPTOM", "sourceId": "D012", "sourceType": "Disease", "targetId": "S005", "targetType": "Symptom", "weight": 0.85},
+    {"id": "R048", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D012", "sourceType": "Disease", "targetId": "DP005", "targetType": "Department", "weight": 1.0},
+    {"id": "R049", "type": "HAS_SYMPTOM", "sourceId": "D013", "sourceType": "Disease", "targetId": "S005", "targetType": "Symptom", "weight": 0.9},
+    {"id": "R050", "type": "HAS_SYMPTOM", "sourceId": "D013", "sourceType": "Disease", "targetId": "S004", "targetType": "Symptom", "weight": 0.85},
+    {"id": "R051", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D013", "sourceType": "Disease", "targetId": "DP008", "targetType": "Department", "weight": 1.0},
+    {"id": "R052", "type": "NEEDS_EXAMINATION", "sourceId": "D013", "sourceType": "Disease", "targetId": "E001", "targetType": "Examination", "weight": 1.0},
+    {"id": "R053", "type": "NEEDS_EXAMINATION", "sourceId": "D014", "sourceType": "Disease", "targetId": "E008", "targetType": "Examination", "weight": 0.95},
+    {"id": "R054", "type": "TREATED_BY", "sourceId": "D014", "sourceType": "Disease", "targetId": "DR007", "targetType": "Drug", "weight": 0.9},
+    {"id": "R055", "type": "NEEDS_EXAMINATION", "sourceId": "D015", "sourceType": "Disease", "targetId": "E005", "targetType": "Examination", "weight": 0.9},
+    {"id": "R056", "type": "BELONGS_TO_DEPARTMENT", "sourceId": "D015", "sourceType": "Disease", "targetId": "DP003", "targetType": "Department", "weight": 1.0}
+  ]
+}

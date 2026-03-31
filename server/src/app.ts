@@ -20,6 +20,10 @@ import chatRoutes from './routes/chat.routes.js'
 import uploadRoutes from './routes/upload.routes.js'
 import knowledgeRoutes from './routes/knowledge.routes.js'
 import imageRoutes from './routes/image.routes.js'
+import knowledgeGraphRoutes from './knowledge_graph/routes.js'
+import hybridSearchRoutes from './routes/hybrid-search.routes.js'
+import explainableRAGRoutes from './routes/explainable-rag.routes.js'
+import dialogRoutes from './routes/dialog.routes.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -128,6 +132,10 @@ fastify.register(chatRoutes, { prefix: '/api/v1/chat' })
 fastify.register(uploadRoutes, { prefix: '/api/v1/upload' })
 fastify.register(knowledgeRoutes, { prefix: '/api/v1/knowledge' })
 fastify.register(imageRoutes, { prefix: '/api/v1/image' })
+fastify.register(knowledgeGraphRoutes, { prefix: '/api/v1/kg' })
+fastify.register(hybridSearchRoutes, { prefix: '/api/v1/hybrid' })
+fastify.register(explainableRAGRoutes, { prefix: '/api/v1/explain' })
+fastify.register(dialogRoutes, { prefix: '/api/v1/dialog' })
 
 fastify.get('/health', async () => ({
   status: 'ok',
