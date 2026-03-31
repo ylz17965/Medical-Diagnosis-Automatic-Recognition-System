@@ -236,7 +236,7 @@ export const authApi = {
 export const chatApi = {
   stream: async (
     content: string,
-    onChunk: (chunk: { content?: string; done?: boolean; conversationId?: string; sources?: Array<{ source: string; content: string }> }) => void,
+    onChunk: (chunk: { content?: string; done?: boolean; conversationId?: string; sources?: Array<{ source: string; content: string }> }) => Promise<void> | void,
     conversationId?: string,
     type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' = 'CHAT',
   ): Promise<void> => {
@@ -292,7 +292,7 @@ export const chatApi = {
             const data = line.slice(6)
             try {
               const parsed = JSON.parse(data)
-              onChunk(parsed)
+              await onChunk(parsed)
             } catch {
               // Ignore parse errors
             }

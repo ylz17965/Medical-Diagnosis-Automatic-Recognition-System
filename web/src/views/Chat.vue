@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, watch } from 'vue'
+import { ref, nextTick, onMounted, watch, onUnmounted, computed } from 'vue'
 import { MainLayout } from '@/layouts'
-import { MessageBubble, FeatureEntry } from '@/components/business'
+import { MessageBubble, FeatureEntry, AnchorSidebar } from '@/components/business'
 import type { FeatureType } from '@/components/business'
 import IconSend from '@/components/icons/IconSend.vue'
 import IconUpload from '@/components/icons/IconUpload.vue'
@@ -9,12 +9,14 @@ import IconCamera from '@/components/icons/IconCamera.vue'
 import IconMic from '@/components/icons/IconMic.vue'
 import { useChat, useToast } from '@/composables'
 import { useSpeechRecognition } from '@/composables/useSpeechRecognition'
+import type { ConversationTurn } from '@/composables/useConversationTurns'
 
 const {
   inputMessage,
   currentMode,
   isLoading,
   isUploading,
+  isStreaming,
   uploadProgress,
   hasMessages,
   isEmpty,
@@ -26,8 +28,10 @@ const {
   sendMessage,
   simulateResponse,
   handleFileUpload,
+  setScrollCallback,
   userStore,
-  conversationStore
+  conversationStore,
+  conversationTurns
 } = useChat()
 
 const toast = useToast()
@@ -44,6 +48,17 @@ const messagesContainer = ref<HTMLDivElement>()
 const fileInput = ref<HTMLInputElement>()
 const textareaRef = ref<HTMLTextAreaElement>()
 const isDragging = ref(false)
+
+const autoScrollEnabled = ref(true)
+const isUserScrollingUp = ref(false)
+const highlightedMessageId = ref<string | null>(null)
+const scrollDebounceTimer = ref<number | null>(null)
+const lastScrollTop = ref(0)
+
+const SCROLL_THRESHOLD = 50
+const HIGHLIGHT_DURATION = 3000
+
+const showAnchorSidebar = computed(() => conversationTurns.turnCount.value > 0)
 
 const handleFeatureClick = (type: FeatureType) => {
   setMode(type)
@@ -66,19 +81,80 @@ const handleSend = async () => {
   
   resetTextareaHeight()
   await nextTick()
+  autoScrollEnabled.value = true
   scrollToBottom()
   
   await simulateResponse(result.message, result.mode)
   nextTick(() => scrollToBottom())
 }
 
-const scrollToBottom = () => {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTo({
-      top: messagesContainer.value.scrollHeight,
-      behavior: 'smooth'
-    })
+const scrollToBottom = (smooth = true) => {
+  if (!messagesContainer.value) return
+  messagesContainer.value.scrollTo({
+    top: messagesContainer.value.scrollHeight,
+    behavior: smooth ? 'smooth' : 'auto'
+  })
+}
+
+const scrollToMessage = (messageId: string) => {
+  const element = document.getElementById(`message-${messageId}`)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
+}
+
+const highlightMessage = (messageId: string) => {
+  highlightedMessageId.value = messageId
+  setTimeout(() => {
+    highlightedMessageId.value = null
+  }, HIGHLIGHT_DURATION)
+}
+
+const handleAnchorClick = (turn: ConversationTurn, isLatest: boolean) => {
+  autoScrollEnabled.value = false
+  
+  if (isLatest) {
+    autoScrollEnabled.value = true
+    scrollToBottom()
+  } else {
+    scrollToMessage(turn.userMessageId)
+    highlightMessage(turn.userMessageId)
+  }
+}
+
+const handleScroll = () => {
+  if (!messagesContainer.value) return
+  
+  const { scrollTop, scrollHeight, clientHeight } = messagesContainer.value
+  const isAtBottom = scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD
+  const isScrollingUp = scrollTop < lastScrollTop.value
+  lastScrollTop.value = scrollTop
+  
+  if (isStreaming.value) {
+    if (isScrollingUp && !isAtBottom) {
+      isUserScrollingUp.value = true
+      autoScrollEnabled.value = false
+    }
+    
+    if (isAtBottom) {
+      isUserScrollingUp.value = false
+      autoScrollEnabled.value = true
+    }
+  } else {
+    if (isAtBottom) {
+      autoScrollEnabled.value = true
+    }
+  }
+  
+  if (scrollDebounceTimer.value) {
+    clearTimeout(scrollDebounceTimer.value)
+  }
+  
+  scrollDebounceTimer.value = window.setTimeout(() => {
+    if (isAtBottom && !isStreaming.value) {
+      autoScrollEnabled.value = true
+    }
+  }, 150)
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
@@ -143,6 +219,10 @@ const handleDrop = async (event: DragEvent) => {
   }
 }
 
+const isMessageHighlighted = (messageId: string) => {
+  return highlightedMessageId.value === messageId
+}
+
 watch(inputMessage, () => {
   nextTick(autoResize)
 })
@@ -162,6 +242,19 @@ watch(speechError, (newError) => {
 onMounted(() => {
   conversationStore.loadFromStorage()
   userStore.initFromStorage()
+  
+  setScrollCallback(() => {
+    if (autoScrollEnabled.value) {
+      scrollToBottom(false)
+    }
+  })
+})
+
+onUnmounted(() => {
+  setScrollCallback(() => {})
+  if (scrollDebounceTimer.value) {
+    clearTimeout(scrollDebounceTimer.value)
+  }
 })
 </script>
 
@@ -199,21 +292,28 @@ onMounted(() => {
         </div>
         
         <div v-else key="chat" class="chat-section">
-          <div ref="messagesContainer" class="messages-container">
-            <TransitionGroup name="message-list">
+          <div ref="messagesContainer" class="messages-container" @scroll="handleScroll">
+            <template v-for="message in conversationStore.activeConversation?.messages" :key="message.id">
               <MessageBubble
-                v-for="message in conversationStore.activeConversation?.messages"
-                :key="message.id"
+                :id="`message-${message.id}`"
                 :type="message.role === 'user' ? 'user' : 'ai'"
                 :content="message.content"
                 :loading="message.loading"
+                :streaming="message.streaming"
                 :timestamp="message.timestamp"
                 :avatar="userStore.user?.avatar"
                 :sources="message.sources"
                 :image-url="message.imageUrl"
+                :class="{ 'highlight-flash': isMessageHighlighted(message.id) }"
               />
-            </TransitionGroup>
+            </template>
           </div>
+          
+          <AnchorSidebar
+            v-if="showAnchorSidebar"
+            :turns="conversationTurns.recentTurns.value"
+            @anchor-click="handleAnchorClick"
+          />
           
           <div v-if="currentMode === 'report' || currentMode === 'drug'" class="upload-area">
             <input
@@ -363,30 +463,6 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-.message-list-enter-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.message-list-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: absolute;
-  width: 100%;
-}
-
-.message-list-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.message-list-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-.message-list-move {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .btn-icon-enter-active,
 .btn-icon-leave-active {
   transition: all 0.2s ease;
@@ -420,16 +496,21 @@ onMounted(() => {
 }
 
 .welcome-title {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  margin: 0 0 var(--spacing-2) 0;
+  margin: 0 0 var(--spacing-3) 0;
+  letter-spacing: var(--letter-spacing-title1);
+  line-height: var(--line-height-title1);
 }
 
 .welcome-subtitle {
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
   margin: 0;
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: var(--line-height-headline);
 }
 
 .feature-grid {
@@ -448,8 +529,10 @@ onMounted(() => {
 
 .quick-title {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-tertiary);
   margin: 0 0 var(--spacing-3) 0;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .question-list {
@@ -465,14 +548,16 @@ onMounted(() => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
   transition: all var(--transition-fast);
 }
 
 .question-item:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background-color: var(--color-primary-bg);
+  background-color: var(--color-fill-primary);
 }
 
 .question-item:focus-visible {
@@ -485,16 +570,33 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  position: relative;
 }
 
 .messages-container {
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-4);
+  padding-right: 60px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
   position: relative;
+}
+
+.highlight-flash {
+  animation: highlight-pulse 3s ease-out;
+}
+
+@keyframes highlight-pulse {
+  0% {
+    background-color: var(--color-primary-bg);
+    box-shadow: 0 0 0 4px var(--color-primary-light);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
 }
 
 .upload-area {
@@ -576,31 +678,38 @@ onMounted(() => {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .upload-status {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
   margin: 0;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .upload-icon {
   width: 48px;
   height: 48px;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-quaternary);
   margin-bottom: var(--spacing-3);
 }
 
 .upload-text {
   font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   margin: 0 0 var(--spacing-1) 0;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .upload-hint {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-tertiary);
   margin: 0;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .input-section {
@@ -644,7 +753,9 @@ onMounted(() => {
   border: none;
   outline: none;
   font-size: var(--font-size-base);
-  line-height: 1.5;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
   color: var(--color-text-primary);
   resize: none;
 }
@@ -697,21 +808,21 @@ onMounted(() => {
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: var(--color-text-inverse);
+  background: var(--color-primary-gradient);
+  color: var(--color-primary-text);
   border-radius: var(--radius-full);
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.25);
   transition: all var(--transition-fast);
 }
 
 .send-btn:hover:not(:disabled) {
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.35);
   transform: scale(1.05);
 }
 
 .send-btn:active:not(:disabled) {
   transform: scale(0.95);
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.25);
 }
 
 .send-btn:disabled {
@@ -746,16 +857,19 @@ onMounted(() => {
 
 .input-hint {
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-tertiary);
   margin: 0;
+  letter-spacing: var(--letter-spacing-caption);
 }
 
 .input-hint kbd {
   display: inline-block;
   padding: 2px 6px;
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   font-family: inherit;
-  background-color: var(--color-bg-tertiary);
+  background-color: var(--color-fill-quaternary);
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
 }
@@ -771,8 +885,10 @@ onMounted(() => {
 
 .disclaimer {
   font-size: var(--font-size-xs);
-  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-quaternary);
   margin: 0;
+  letter-spacing: var(--letter-spacing-caption);
 }
 
 @media (max-width: 767px) {
@@ -820,16 +936,22 @@ onMounted(() => {
     gap: var(--spacing-1);
     align-items: flex-start;
   }
+
+  .messages-container {
+    padding-right: var(--spacing-4);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fade-scale-enter-active,
   .fade-scale-leave-active,
-  .message-list-enter-active,
-  .message-list-leave-active,
   .btn-icon-enter-active,
   .btn-icon-leave-active {
     transition: none;
+  }
+
+  .highlight-flash {
+    animation: none;
   }
 }
 </style>

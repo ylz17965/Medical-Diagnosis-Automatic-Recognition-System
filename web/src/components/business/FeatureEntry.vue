@@ -138,11 +138,14 @@ const entryClasses = computed(() => [
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .feature-desc {
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-caption);
 }
 
 @media (max-width: 767px) {

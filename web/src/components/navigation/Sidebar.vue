@@ -258,6 +258,7 @@ const cancelDelete = () => {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-normal);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -265,7 +266,9 @@ const cancelDelete = () => {
 
 .edit-profile-btn {
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-caption);
   text-align: left;
   padding: 0;
   transition: color var(--transition-fast);
@@ -312,17 +315,20 @@ const cancelDelete = () => {
   gap: var(--spacing-2);
   width: 100%;
   height: var(--button-height);
-  background-color: var(--color-primary);
+  background: var(--color-primary-gradient);
   color: var(--color-text-inverse);
   border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-normal);
   transition: all var(--transition-fast);
   margin-bottom: var(--spacing-3);
+  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.25);
 }
 
 .new-chat-btn:hover {
-  background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .new-chat-btn :deep(svg) {
@@ -369,7 +375,9 @@ const cancelDelete = () => {
 .conv-title {
   flex: 1;
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-normal);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -385,7 +393,9 @@ const cancelDelete = () => {
 
 .conv-date {
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-tertiary);
+  letter-spacing: var(--letter-spacing-caption);
 }
 
 .delete-btn {
@@ -491,14 +501,18 @@ const cancelDelete = () => {
 
 .empty-state p {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
   margin: 0;
 }
 
 .empty-hint {
   margin-top: var(--spacing-2) !important;
   font-size: var(--font-size-xs) !important;
+  font-weight: var(--font-weight-regular) !important;
   color: var(--color-text-tertiary) !important;
+  letter-spacing: var(--letter-spacing-caption) !important;
 }
 
 .sidebar-footer {
@@ -516,7 +530,9 @@ const cancelDelete = () => {
   padding: var(--spacing-3);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
   transition: all var(--transition-fast);
 }
 

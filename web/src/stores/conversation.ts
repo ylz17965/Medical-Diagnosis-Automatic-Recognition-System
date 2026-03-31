@@ -8,6 +8,7 @@ export interface Message {
   timestamp: Date
   sources?: Source[]
   loading?: boolean
+  streaming?: boolean
   imageUrl?: string
 }
 

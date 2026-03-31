@@ -3,18 +3,25 @@ import type { FeatureType } from '@/components/business'
 import { useConversationStore, useUserStore } from '@/stores'
 import { chatApi, imageApi, getAccessToken } from '@/services/api'
 import type { DrugInfo, ReportInfo } from '@/services/api'
+import { useConversationTurns, type ConversationTurn } from './useConversationTurns'
+
+export type ScrollCallback = () => void
 
 export function useChat() {
   const conversationStore = useConversationStore()
   const userStore = useUserStore()
+  const conversationTurns = useConversationTurns()
 
   const inputMessage = ref('')
   const currentMode = ref<FeatureType | 'chat'>('chat')
   const isLoading = ref(false)
   const isUploading = ref(false)
+  const isStreaming = ref(false)
   const uploadProgress = ref(0)
   const serverConversationId = ref<string | undefined>(undefined)
   const uploadedImage = ref<{ url: string; file: File } | null>(null)
+  const onScrollCallback = ref<ScrollCallback | null>(null)
+  const currentTurnId = ref<string | undefined>(undefined)
 
   const hasMessages = computed(() => 
     conversationStore.activeConversation && 
@@ -47,6 +54,7 @@ export function useChat() {
     currentMode.value = type
     serverConversationId.value = undefined
     uploadedImage.value = null
+    conversationTurns.clearTurns()
     conversationStore.createConversation(type)
     conversationStore.addMessage(conversationStore.activeId, {
       role: 'assistant',
@@ -64,16 +72,22 @@ export function useChat() {
       conversationStore.createConversation('chat')
     }
 
-    conversationStore.addMessage(conversationStore.activeId, {
+    const userMsg = conversationStore.addMessage(conversationStore.activeId, {
       role: 'user',
       content: message
     })
+
+    if (userMsg) {
+      const turn = conversationTurns.addTurn(message, userMsg.id)
+      currentTurnId.value = turn.id
+    }
 
     return { message, mode: currentMode.value }
   }
 
   const sendToBackend = async (userMessage: string, mode: FeatureType | 'chat') => {
     isLoading.value = true
+    isStreaming.value = true
 
     const loadingMessage = conversationStore.addMessage(conversationStore.activeId, {
       role: 'assistant',
@@ -81,29 +95,33 @@ export function useChat() {
       loading: true
     })
 
+    if (loadingMessage && currentTurnId.value) {
+      conversationTurns.setAiMessageId(currentTurnId.value, loadingMessage.id)
+    }
+
     let fullContent = ''
     let sources: Array<{ source: string; content: string }> = []
     let messageEl = loadingMessage
-
-    const updateContent = async (newContent: string) => {
-      fullContent = newContent
-      if (messageEl) {
-        conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
-          content: fullContent,
-          loading: false
-        })
-        await nextTick()
-        await new Promise(resolve => setTimeout(resolve, 30))
-      }
-    }
 
     try {
       await chatApi.stream(
         userMessage,
         async (chunk) => {
           if (chunk.content) {
-            fullContent += chunk.content
-            await updateContent(fullContent)
+            const chars = chunk.content.split('')
+            for (const char of chars) {
+              fullContent += char
+              if (messageEl) {
+                conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
+                  content: fullContent,
+                  loading: false,
+                  streaming: true
+                })
+                await nextTick()
+                onScrollCallback.value?.()
+                await new Promise(resolve => setTimeout(resolve, 30))
+              }
+            }
           }
           if (chunk.conversationId) {
             serverConversationId.value = chunk.conversationId
@@ -116,6 +134,7 @@ export function useChat() {
               conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
                 content: fullContent,
                 loading: false,
+                streaming: false,
                 sources: sources.length > 0 ? sources : undefined
               })
             }
@@ -129,12 +148,14 @@ export function useChat() {
       if (messageEl) {
         conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
           content: '抱歉，生成回复时出现错误，请稍后重试。',
-          loading: false
+          loading: false,
+          streaming: false
         })
       }
     }
 
     isLoading.value = false
+    isStreaming.value = false
   }
 
   const simulateResponse = async (userMessage: string, mode: FeatureType | 'chat') => {
@@ -237,6 +258,10 @@ export function useChat() {
     }
   }
 
+  const setScrollCallback = (callback: ScrollCallback) => {
+    onScrollCallback.value = callback
+  }
+
   const initAuth = () => {
     const token = getAccessToken()
     if (token) {
@@ -249,6 +274,7 @@ export function useChat() {
     currentMode,
     isLoading,
     isUploading,
+    isStreaming,
     uploadProgress,
     uploadedImage,
     hasMessages,
@@ -262,8 +288,12 @@ export function useChat() {
     simulateResponse,
     handleFileUpload,
     clearUploadedImage,
+    setScrollCallback,
     userStore,
     conversationStore,
+    conversationTurns,
     initAuth
   }
 }
+
+export type { ConversationTurn }

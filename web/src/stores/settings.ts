@@ -12,7 +12,7 @@ export interface Settings {
 }
 
 const defaultSettings: Settings = {
-  theme: 'dark',
+  theme: 'light',
   notifications: true,
   soundEnabled: true,
   fontSize: 'medium',

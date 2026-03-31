@@ -173,6 +173,7 @@ const close = () => {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
@@ -244,14 +245,17 @@ const close = () => {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-normal);
   margin: 0 0 var(--spacing-1) 0;
 }
 
 .guide-text p {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
   margin: 0;
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
 }
 
 .faq-section {
@@ -270,14 +274,17 @@ const close = () => {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-normal);
   margin: 0 0 var(--spacing-2) 0;
 }
 
 .faq-answer {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
   margin: 0;
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
 }
 
 .shortcuts-section {
@@ -303,8 +310,9 @@ const close = () => {
   min-width: 100px;
   padding: var(--spacing-2) var(--spacing-3);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   font-family: var(--font-family-mono);
-  background-color: var(--color-bg-tertiary);
+  background-color: var(--color-fill-quaternary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   text-align: center;
@@ -312,12 +320,14 @@ const close = () => {
 
 .shortcut-desc {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .tips {
   padding: var(--spacing-4);
-  background-color: var(--color-primary-bg);
+  background-color: var(--color-fill-primary);
   border-radius: var(--radius-lg);
 }
 
@@ -325,6 +335,7 @@ const close = () => {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
+  letter-spacing: var(--letter-spacing-normal);
   margin: 0 0 var(--spacing-2) 0;
 }
 
@@ -335,21 +346,27 @@ const close = () => {
 
 .tips li {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-normal);
   margin-bottom: var(--spacing-1);
 }
 
 .close-btn {
   width: 100%;
   padding: var(--spacing-3) var(--spacing-4);
-  background-color: var(--color-primary);
+  background: var(--color-primary-gradient);
   color: var(--color-text-inverse);
   border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-normal);
+  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.25);
   transition: all var(--transition-fast);
 }
 
 .close-btn:hover {
-  background-color: var(--color-primary-dark);
+  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.35);
+  transform: translateY(-1px);
 }
 </style>

@@ -17,6 +17,7 @@ interface Props {
   avatar?: string
   sources?: Source[]
   loading?: boolean
+  streaming?: boolean
   timestamp?: Date
   messageId?: string
   imageUrl?: string
@@ -28,6 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
   avatar: '',
   sources: () => [],
   loading: false,
+  streaming: false,
   messageId: '',
   imageUrl: ''
 })
@@ -45,7 +47,7 @@ const bubbleClasses = computed(() => [
 ])
 
 const renderedContent = computed(() => {
-  if (props.loading) return ''
+  if (props.loading || props.streaming) return props.content
   const rawHtml = marked.parse(props.content, { breaks: true }) as string
   return DOMPurify.sanitize(rawHtml, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'code', 'pre', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
@@ -91,7 +93,10 @@ const copyContent = async () => {
           <span class="typing-dot"></span>
           <span class="loading-text">正在思考...</span>
         </div>
-        <div v-else class="message-text" v-html="renderedContent"></div>
+        <div v-else class="message-text-wrapper">
+          <div v-if="streaming" class="message-text streaming-text">{{ content }}<span class="streaming-cursor"></span></div>
+          <div v-else class="message-text" v-html="renderedContent"></div>
+        </div>
         
         <div v-if="sources.length > 0 && !loading" class="message-sources">
           <span class="sources-label">引用来源：</span>
@@ -180,7 +185,7 @@ const copyContent = async () => {
 .user-avatar {
   width: 36px;
   height: 36px;
-  background-color: var(--color-primary-bg);
+  background: linear-gradient(135deg, var(--color-fill-primary), var(--color-fill-secondary));
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
@@ -189,6 +194,7 @@ const copyContent = async () => {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-primary);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .user-avatar img {
@@ -222,11 +228,12 @@ const copyContent = async () => {
   padding: var(--spacing-3) var(--spacing-4);
   border-radius: var(--radius-xl);
   font-size: var(--font-size-base);
-  line-height: var(--line-height-relaxed);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
 }
 
 .message-user .message-content {
-  background-color: var(--color-primary);
+  background: var(--color-primary-gradient);
   color: var(--color-text-inverse);
   border-bottom-right-radius: var(--radius-sm);
 }
@@ -242,6 +249,45 @@ const copyContent = async () => {
   word-break: break-word;
 }
 
+.streaming-text {
+  white-space: pre-wrap;
+}
+
+.message-text :deep(p) {
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.message-text :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.message-text-wrapper {
+  display: inline;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+.message-user .streaming-cursor {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 .message-text :deep(h1),
 .message-text :deep(h2),
 .message-text :deep(h3),
@@ -251,19 +297,12 @@ const copyContent = async () => {
   margin-top: var(--spacing-3);
   margin-bottom: var(--spacing-2);
   font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-headline);
 }
 
 .message-text :deep(h1) { font-size: var(--font-size-xl); }
 .message-text :deep(h2) { font-size: var(--font-size-lg); }
 .message-text :deep(h3) { font-size: var(--font-size-base); }
-
-.message-text :deep(p) {
-  margin: 0 0 var(--spacing-2) 0;
-}
-
-.message-text :deep(p:last-child) {
-  margin-bottom: 0;
-}
 
 .message-text :deep(ul),
 .message-text :deep(ol) {
@@ -280,12 +319,13 @@ const copyContent = async () => {
 }
 
 .message-text :deep(a) {
-  color: var(--color-primary);
+  color: var(--color-text-link);
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .message-user .message-text :deep(a) {
-  color: var(--color-text-inverse);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
 }
 
@@ -298,7 +338,7 @@ const copyContent = async () => {
 .typing-dot {
   width: 8px;
   height: 8px;
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   border-radius: var(--radius-full);
   animation: typing 1.4s ease-in-out infinite;
 }
@@ -323,6 +363,8 @@ const copyContent = async () => {
 .loading-text {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .message-sources {
@@ -332,25 +374,29 @@ const copyContent = async () => {
   gap: var(--spacing-2);
   margin-top: var(--spacing-3);
   padding-top: var(--spacing-3);
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--color-separator);
 }
 
 .sources-label {
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-tertiary);
+  letter-spacing: var(--letter-spacing-caption);
 }
 
 .source-item {
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   color: var(--color-primary);
   padding: var(--spacing-1) var(--spacing-2);
-  background-color: var(--color-primary-bg);
+  background-color: var(--color-fill-primary);
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
+  letter-spacing: var(--letter-spacing-caption);
 }
 
 .source-item:hover {
-  background-color: var(--color-primary);
+  background: var(--color-primary-gradient);
   color: var(--color-text-inverse);
 }
 
@@ -363,15 +409,15 @@ const copyContent = async () => {
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-quaternary);
   border-radius: var(--radius-md);
   opacity: 0;
   transition: all var(--transition-fast);
 }
 
 .copy-btn:hover {
-  background-color: var(--color-surface-hover);
-  color: var(--color-text-primary);
+  background-color: var(--color-fill-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .copy-btn.is-copied {
@@ -389,7 +435,9 @@ const copyContent = async () => {
 
 .message-time {
   font-size: var(--font-size-xs);
-  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-quaternary);
+  letter-spacing: var(--letter-spacing-caption);
 }
 
 .message-user .message-time {
@@ -413,6 +461,11 @@ const copyContent = async () => {
   
   .typing-dot {
     animation: none;
+  }
+  
+  .streaming-cursor {
+    animation: none;
+    opacity: 1;
   }
 }
 </style>

@@ -150,6 +150,7 @@ watch(() => props.modelValue, (value) => {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-headline);
   margin: 0;
 }
 

@@ -88,7 +88,9 @@ const close = () => {
 .toast-message {
   flex: 1;
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .toast-close {
