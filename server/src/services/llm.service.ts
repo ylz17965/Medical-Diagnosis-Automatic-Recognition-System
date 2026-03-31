@@ -123,7 +123,7 @@ export class LLMService {
       return this.getDemoResponse()
     }
 
-    const messages = await this.buildMessages(options)
+    const { messages } = await this.buildMessagesWithRAG(options)
     const lastUserMessage = options.messages.filter(m => m.role === 'user').pop()
     const model = this.selectModel(lastUserMessage?.content || '', options.modelType)
 
@@ -162,7 +162,7 @@ export class LLMService {
       return
     }
 
-    const messages = await this.buildMessages(options)
+    const { messages, sources } = await this.buildMessagesWithRAG(options)
     const lastUserMessage = options.messages.filter(m => m.role === 'user').pop()
     const model = this.selectModel(lastUserMessage?.content || '', options.modelType)
 
@@ -193,18 +193,6 @@ export class LLMService {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
-    let sources: Array<{ source: string; content: string }> = []
-
-    if (options.useRAG && this.ragService) {
-      if (lastUserMessage) {
-        const ragResults = await this.ragService.searchWithRerank({
-          query: lastUserMessage.content,
-          category: options.ragCategory,
-          healthRecordId: options.healthRecordId,
-        })
-        sources = ragResults.map(r => ({ source: r.source, content: r.content }))
-      }
-    }
 
     try {
       while (true) {
@@ -241,35 +229,45 @@ export class LLMService {
     }
   }
 
-  private async buildMessages(options: ChatCompletionOptions): Promise<ChatMessage[]> {
+  private async buildMessagesWithRAG(options: ChatCompletionOptions): Promise<{
+    messages: ChatMessage[]
+    sources: Array<{ source: string; content: string }>
+  }> {
     const conversationType = options.ragCategory === 'medical_report' ? 'REPORT' :
                             options.ragCategory === 'drug_info' ? 'DRUG' : 'CHAT'
     
-    let messages: ChatMessage[] = [{ 
+    const messages: ChatMessage[] = [{ 
       role: 'system', 
       content: this.getSystemPrompt(conversationType) 
     }]
 
-    if (options.useRAG && this.ragService) {
-      const lastUserMessage = options.messages.filter(m => m.role === 'user').pop()
-      if (lastUserMessage) {
-        const context = await this.ragService.buildContextForQuery({
+    const sources: Array<{ source: string; content: string }> = []
+    const lastUserMessage = options.messages.filter(m => m.role === 'user').pop()
+
+    if (options.useRAG && this.ragService && lastUserMessage) {
+      try {
+        const ragResults = await this.ragService.searchWithRerank({
           query: lastUserMessage.content,
           category: options.ragCategory,
           healthRecordId: options.healthRecordId,
         })
-
+        
+        const context = ragResults.map(r => r.content).join('\n\n---\n\n')
+        sources.push(...ragResults.map(r => ({ source: r.source, content: r.content })))
+        
         if (context) {
           messages.push({
             role: 'system',
             content: `以下是与用户问题相关的参考资料：\n\n${context}`,
           })
         }
+      } catch (error) {
+        console.error('RAG search error:', error)
       }
     }
 
     messages.push(...options.messages)
-    return messages
+    return { messages, sources }
   }
 
   async checkHealth(): Promise<boolean> {
