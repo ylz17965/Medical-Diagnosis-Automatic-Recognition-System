@@ -93,7 +93,7 @@ export function useChat() {
           loading: false
         })
         await nextTick()
-        await new Promise(resolve => setTimeout(resolve, 15))
+        await new Promise(resolve => setTimeout(resolve, 30))
       }
     }
 
