@@ -1,0 +1,920 @@
+{
+  "metadata": {
+    "name": "医学考试题测试集",
+    "version": "1.0.0",
+    "description": "基于执业医师考试真题的医学知识测试集",
+    "total_questions": 50,
+    "categories": ["内科", "外科", "妇产科", "儿科", "药理学", "诊断学"],
+    "difficulty_levels": {
+      "1": "基础",
+      "2": "中等",
+      "3": "困难"
+    },
+    "expected_retrieval_methods": {
+      "vector": "向量检索优先",
+      "graph": "图谱检索优先",
+      "both": "混合检索"
+    }
+  },
+  "questions": [
+    {
+      "id": "ME001",
+      "category": "药理学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "可引起首关消除的主要给药途径是",
+      "options": {
+        "A": "吸入给药",
+        "B": "舌下给药",
+        "C": "口服给药",
+        "D": "直肠给药",
+        "E": "皮下注射"
+      },
+      "correct_answer": "C",
+      "explanation": "首关消除是指药物在通过肠黏膜和肝脏时，被代谢灭活的现象。口服给药后，药物经肠道吸收进入门静脉，再经肝脏进入体循环，因此口服给药最易发生首关消除。",
+      "expected_retrieval": "vector",
+      "key_entities": ["首关消除", "给药途径", "口服给药"]
+    },
+    {
+      "id": "ME002",
+      "category": "药理学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "药物的副反应是",
+      "options": {
+        "A": "难以避免的",
+        "B": "较严重的",
+        "C": "与治疗目的有关的",
+        "D": "剂量过大引起的",
+        "E": "可以避免的"
+      },
+      "correct_answer": "A",
+      "explanation": "副反应是药物在治疗剂量下出现的与治疗目的无关的作用，是药物固有的作用，难以避免，但一般较轻微。",
+      "expected_retrieval": "vector",
+      "key_entities": ["副反应", "药物作用"]
+    },
+    {
+      "id": "ME003",
+      "category": "药理学",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "治疗军团菌病的首选药物是",
+      "options": {
+        "A": "青霉素",
+        "B": "红霉素",
+        "C": "头孢菌素",
+        "D": "庆大霉素",
+        "E": "链霉素"
+      },
+      "correct_answer": "B",
+      "explanation": "红霉素是大环内酯类抗生素，对军团菌有较强的抗菌活性，是治疗军团菌病的首选药物。",
+      "expected_retrieval": "graph",
+      "key_entities": ["军团菌病", "红霉素", "治疗药物"]
+    },
+    {
+      "id": "ME004",
+      "category": "内科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "慢性阻塞性肺疾病最主要的病因是",
+      "options": {
+        "A": "吸烟",
+        "B": "职业粉尘",
+        "C": "空气污染",
+        "D": "感染因素",
+        "E": "氧化应激"
+      },
+      "correct_answer": "A",
+      "explanation": "吸烟是慢性阻塞性肺疾病最主要的病因，香烟中的有害物质可损伤气道上皮细胞，导致气道慢性炎症和气流受限。",
+      "expected_retrieval": "graph",
+      "key_entities": ["慢性阻塞性肺疾病", "病因", "吸烟"]
+    },
+    {
+      "id": "ME005",
+      "category": "诊断学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "下列哪项不属于现病史的内容",
+      "options": {
+        "A": "病情的发生情况",
+        "B": "主要症状的特点",
+        "C": "家族成员的健康状况",
+        "D": "病情的发展与演变"
+      },
+      "correct_answer": "C",
+      "explanation": "现病史是记述患者疾病的发生、发展、演变、诊治经过和目前状况。家族成员的健康状况属于既往史中的家族史内容。",
+      "expected_retrieval": "vector",
+      "key_entities": ["现病史", "病史采集", "家族史"]
+    },
+    {
+      "id": "ME006",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "肺部叩诊呈过清音常见于",
+      "options": {
+        "A": "肺气肿",
+        "B": "肺实变",
+        "C": "胸腔积液",
+        "D": "气胸",
+        "E": "肺结核"
+      },
+      "correct_answer": "A",
+      "explanation": "肺气肿时肺泡过度充气，肺含气量增加，叩诊呈过清音。肺实变叩诊呈浊音，胸腔积液叩诊呈实音，气胸叩诊呈鼓音。",
+      "expected_retrieval": "both",
+      "key_entities": ["肺气肿", "肺部叩诊", "过清音"]
+    },
+    {
+      "id": "ME007",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "高血压患者出现头痛、呕吐、意识障碍，最可能的诊断是",
+      "options": {
+        "A": "高血压脑病",
+        "B": "脑出血",
+        "C": "脑血栓形成",
+        "D": "蛛网膜下腔出血",
+        "E": "短暂性脑缺血发作"
+      },
+      "correct_answer": "B",
+      "explanation": "高血压患者出现头痛、呕吐、意识障碍三主征，提示颅内压增高，结合高血压病史，最可能为脑出血。",
+      "expected_retrieval": "graph",
+      "key_entities": ["高血压", "脑出血", "头痛", "呕吐", "意识障碍"]
+    },
+    {
+      "id": "ME008",
+      "category": "内科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "糖尿病的典型症状是",
+      "options": {
+        "A": "多饮、多食、多尿、体重减轻",
+        "B": "多饮、多食、多尿、体重增加",
+        "C": "少饮、多食、多尿、体重减轻",
+        "D": "多饮、少食、多尿、体重减轻",
+        "E": "多饮、多食、少尿、体重减轻"
+      },
+      "correct_answer": "A",
+      "explanation": "糖尿病的典型症状是'三多一少'：多饮、多食、多尿、体重减轻。由于胰岛素分泌不足或作用缺陷，导致血糖升高，出现渗透性利尿和多尿。",
+      "expected_retrieval": "graph",
+      "key_entities": ["糖尿病", "症状", "三多一少"]
+    },
+    {
+      "id": "ME009",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "急性心肌梗死最早出现的心电图改变是",
+      "options": {
+        "A": "病理性Q波",
+        "B": "ST段抬高",
+        "C": "T波倒置",
+        "D": "ST段压低",
+        "E": "高大T波"
+      },
+      "correct_answer": "E",
+      "explanation": "急性心肌梗死最早出现的心电图改变是高大T波（超急性期），随后出现ST段抬高、病理性Q波和T波倒置。",
+      "expected_retrieval": "vector",
+      "key_entities": ["心肌梗死", "心电图", "高大T波"]
+    },
+    {
+      "id": "ME010",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "胃溃疡最常见的并发症是",
+      "options": {
+        "A": "出血",
+        "B": "穿孔",
+        "C": "幽门梗阻",
+        "D": "癌变",
+        "E": "感染"
+      },
+      "correct_answer": "A",
+      "explanation": "胃溃疡最常见的并发症是出血，约占患者的20%-30%。表现为呕血、黑便或大便潜血阳性。",
+      "expected_retrieval": "graph",
+      "key_entities": ["胃溃疡", "并发症", "出血"]
+    },
+    {
+      "id": "ME011",
+      "category": "内科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "感冒最常见的病因是",
+      "options": {
+        "A": "细菌感染",
+        "B": "病毒感染",
+        "C": "支原体感染",
+        "D": "衣原体感染",
+        "E": "真菌感染"
+      },
+      "correct_answer": "B",
+      "explanation": "感冒（上呼吸道感染）最常见的病因是病毒感染，约占70%-80%，常见病毒包括鼻病毒、冠状病毒、流感病毒等。",
+      "expected_retrieval": "graph",
+      "key_entities": ["感冒", "病因", "病毒感染"]
+    },
+    {
+      "id": "ME012",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "支气管哮喘的主要病理生理改变是",
+      "options": {
+        "A": "气道炎症和气道高反应性",
+        "B": "气道阻塞和肺气肿",
+        "C": "肺动脉高压和右心衰竭",
+        "D": "肺纤维化和限制性通气障碍",
+        "E": "胸膜肥厚和胸腔积液"
+      },
+      "correct_answer": "A",
+      "explanation": "支气管哮喘是一种慢性气道炎症性疾病，主要特征是气道炎症和气道高反应性，导致可逆性气流受限。",
+      "expected_retrieval": "vector",
+      "key_entities": ["支气管哮喘", "病理生理", "气道炎症"]
+    },
+    {
+      "id": "ME013",
+      "category": "外科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "急性阑尾炎最重要的体征是",
+      "options": {
+        "A": "右下腹压痛",
+        "B": "反跳痛",
+        "C": "腹肌紧张",
+        "D": "结肠充气试验阳性",
+        "E": "腰大肌试验阳性"
+      },
+      "correct_answer": "A",
+      "explanation": "急性阑尾炎最重要的体征是右下腹压痛（麦氏点压痛），这是诊断急性阑尾炎最可靠的体征。",
+      "expected_retrieval": "both",
+      "key_entities": ["急性阑尾炎", "体征", "右下腹压痛"]
+    },
+    {
+      "id": "ME014",
+      "category": "外科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "骨折的专有体征不包括",
+      "options": {
+        "A": "畸形",
+        "B": "异常活动",
+        "C": "骨擦音",
+        "D": "局部肿胀",
+        "E": "以上都是专有体征"
+      },
+      "correct_answer": "D",
+      "explanation": "骨折的三大专有体征是：畸形、异常活动、骨擦音或骨擦感。局部肿胀是一般体征，不是骨折专有体征。",
+      "expected_retrieval": "vector",
+      "key_entities": ["骨折", "体征", "畸形"]
+    },
+    {
+      "id": "ME015",
+      "category": "妇产科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "妊娠期高血压疾病的基本病理生理变化是",
+      "options": {
+        "A": "全身小动脉痉挛",
+        "B": "水钠潴留",
+        "C": "血液浓缩",
+        "D": "凝血功能障碍",
+        "E": "胎盘功能减退"
+      },
+      "correct_answer": "A",
+      "explanation": "妊娠期高血压疾病的基本病理生理变化是全身小动脉痉挛，导致各器官供血不足，出现高血压、蛋白尿、水肿等临床表现。",
+      "expected_retrieval": "vector",
+      "key_entities": ["妊娠期高血压", "病理生理", "小动脉痉挛"]
+    },
+    {
+      "id": "ME016",
+      "category": "儿科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "小儿肺炎最常见的病原体是",
+      "options": {
+        "A": "细菌",
+        "B": "病毒",
+        "C": "支原体",
+        "D": "衣原体",
+        "E": "真菌"
+      },
+      "correct_answer": "B",
+      "explanation": "小儿肺炎最常见的病原体是病毒，约占50%以上，常见病毒有呼吸道合胞病毒、腺病毒、流感病毒等。",
+      "expected_retrieval": "graph",
+      "key_entities": ["小儿肺炎", "病原体", "病毒"]
+    },
+    {
+      "id": "ME017",
+      "category": "儿科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "新生儿生理性黄疸的特点是",
+      "options": {
+        "A": "生后24小时内出现",
+        "B": "血清胆红素>221μmol/L",
+        "C": "黄疸持续时间>2周",
+        "D": "一般情况良好",
+        "E": "伴有贫血"
+      },
+      "correct_answer": "D",
+      "explanation": "新生儿生理性黄疸的特点是：生后2-3天出现，4-5天达高峰，足月儿2周内消退，早产儿可延至3-4周，一般情况良好，血清胆红素不超过221μmol/L。",
+      "expected_retrieval": "vector",
+      "key_entities": ["新生儿黄疸", "生理性", "特点"]
+    },
+    {
+      "id": "ME018",
+      "category": "药理学",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "对乙酰氨基酚的主要不良反应是",
+      "options": {
+        "A": "胃肠道反应",
+        "B": "肝损伤",
+        "C": "肾损伤",
+        "D": "过敏反应",
+        "E": "血液系统损害"
+      },
+      "correct_answer": "B",
+      "explanation": "对乙酰氨基酚过量可导致肝损伤，严重者可致肝坏死。这是其最严重的不良反应，应避免超量服用。",
+      "expected_retrieval": "graph",
+      "key_entities": ["对乙酰氨基酚", "不良反应", "肝损伤"]
+    },
+    {
+      "id": "ME019",
+      "category": "药理学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "阿司匹林的禁忌症不包括",
+      "options": {
+        "A": "消化性溃疡",
+        "B": "血友病",
+        "C": "哮喘",
+        "D": "高血压",
+        "E": "孕妇"
+      },
+      "correct_answer": "D",
+      "explanation": "阿司匹林的禁忌症包括：消化性溃疡、出血性疾病（如血友病）、哮喘、孕妇等。高血压不是阿司匹林的禁忌症，反而小剂量阿司匹林可用于心血管疾病预防。",
+      "expected_retrieval": "graph",
+      "key_entities": ["阿司匹林", "禁忌症", "消化性溃疡"]
+    },
+    {
+      "id": "ME020",
+      "category": "内科",
+      "difficulty": 3,
+      "type": "single_choice",
+      "question": "患者，男，65岁，高血压病史20年，突发剧烈头痛、呕吐、意识障碍。查体：血压210/120mmHg，昏迷，右侧瞳孔散大，左侧肢体偏瘫。最可能的诊断是",
+      "options": {
+        "A": "高血压脑病",
+        "B": "脑出血",
+        "C": "脑血栓形成",
+        "D": "蛛网膜下腔出血",
+        "E": "脑栓塞"
+      },
+      "correct_answer": "B",
+      "explanation": "老年高血压患者，突发剧烈头痛、呕吐、意识障碍，伴瞳孔不等大和偏瘫，提示脑出血（右侧基底节区出血破入脑室，压迫动眼神经致右侧瞳孔散大）。",
+      "expected_retrieval": "graph",
+      "key_entities": ["高血压", "脑出血", "头痛", "呕吐", "意识障碍", "偏瘫"]
+    },
+    {
+      "id": "ME021",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "冠心病心绞痛的典型部位是",
+      "options": {
+        "A": "心前区",
+        "B": "胸骨后",
+        "C": "左肩背部",
+        "D": "剑突下",
+        "E": "右胸"
+      },
+      "correct_answer": "B",
+      "explanation": "冠心病心绞痛的典型部位是胸骨后，可向左肩、左臂内侧放射。心前区、剑突下也可出现，但不是最典型部位。",
+      "expected_retrieval": "graph",
+      "key_entities": ["冠心病", "心绞痛", "胸骨后"]
+    },
+    {
+      "id": "ME022",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "痛风患者应避免食用的食物是",
+      "options": {
+        "A": "蔬菜",
+        "B": "水果",
+        "C": "海鲜",
+        "D": "牛奶",
+        "E": "鸡蛋"
+      },
+      "correct_answer": "C",
+      "explanation": "痛风患者应避免高嘌呤食物，海鲜（尤其是贝类、沙丁鱼等）嘌呤含量高，可诱发痛风发作。蔬菜、水果、牛奶、鸡蛋属于低嘌呤食物。",
+      "expected_retrieval": "graph",
+      "key_entities": ["痛风", "饮食", "海鲜", "嘌呤"]
+    },
+    {
+      "id": "ME023",
+      "category": "内科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "贫血的诊断标准是成年男性血红蛋白低于",
+      "options": {
+        "A": "90g/L",
+        "B": "100g/L",
+        "C": "110g/L",
+        "D": "120g/L",
+        "E": "130g/L"
+      },
+      "correct_answer": "D",
+      "explanation": "贫血的诊断标准：成年男性血红蛋白<120g/L，成年女性（非妊娠）<110g/L，孕妇<100g/L。",
+      "expected_retrieval": "vector",
+      "key_entities": ["贫血", "诊断标准", "血红蛋白"]
+    },
+    {
+      "id": "ME024",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "肝硬化最常见的并发症是",
+      "options": {
+        "A": "上消化道出血",
+        "B": "肝性脑病",
+        "C": "感染",
+        "D": "肝肾综合征",
+        "E": "原发性肝癌"
+      },
+      "correct_answer": "A",
+      "explanation": "肝硬化最常见的并发症是上消化道出血，主要原因是食管胃底静脉曲张破裂出血，是肝硬化患者的主要死亡原因之一。",
+      "expected_retrieval": "graph",
+      "key_entities": ["肝硬化", "并发症", "上消化道出血"]
+    },
+    {
+      "id": "ME025",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "慢性肾衰竭最常见的病因是",
+      "options": {
+        "A": "慢性肾小球肾炎",
+        "B": "糖尿病肾病",
+        "C": "高血压肾病",
+        "D": "多囊肾",
+        "E": "梗阻性肾病"
+      },
+      "correct_answer": "B",
+      "explanation": "慢性肾衰竭最常见的病因是糖尿病肾病，其次是高血压肾病和慢性肾小球肾炎。随着糖尿病发病率上升，糖尿病肾病已成为终末期肾病的首位病因。",
+      "expected_retrieval": "graph",
+      "key_entities": ["慢性肾衰竭", "病因", "糖尿病肾病"]
+    },
+    {
+      "id": "ME026",
+      "category": "外科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "急性胆囊炎的典型体征是",
+      "options": {
+        "A": "右上腹压痛",
+        "B": "Murphy征阳性",
+        "C": "反跳痛",
+        "D": "腹肌紧张",
+        "E": "发热"
+      },
+      "correct_answer": "B",
+      "explanation": "急性胆囊炎的典型体征是Murphy征阳性：检查者将拇指置于右肋下胆囊点，嘱患者深吸气，患者因疼痛而突然屏气。这是急性胆囊炎的特征性体征。",
+      "expected_retrieval": "both",
+      "key_entities": ["急性胆囊炎", "体征", "Murphy征"]
+    },
+    {
+      "id": "ME027",
+      "category": "外科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "腹股沟斜疝与直疝的主要鉴别点是",
+      "options": {
+        "A": "发病年龄",
+        "B": "疝块外形",
+        "C": "回纳后压住内环是否再突出",
+        "D": "嵌顿机会",
+        "E": "疝内容物"
+      },
+      "correct_answer": "C",
+      "explanation": "腹股沟斜疝与直疝的主要鉴别点是回纳后压住内环，斜疝不再突出，直疝仍可突出。斜疝从内环突出，直疝从直疝三角突出。",
+      "expected_retrieval": "vector",
+      "key_entities": ["腹股沟疝", "斜疝", "直疝", "鉴别诊断"]
+    },
+    {
+      "id": "ME028",
+      "category": "妇产科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "正常足月妊娠的胎位是",
+      "options": {
+        "A": "枕左前",
+        "B": "枕右前",
+        "C": "枕左后",
+        "D": "枕右后",
+        "E": "以上均可"
+      },
+      "correct_answer": "A",
+      "explanation": "正常足月妊娠最常见的胎位是枕左前位（LOA），约占60%左右。这是最有利于分娩的胎位。",
+      "expected_retrieval": "vector",
+      "key_entities": ["胎位", "枕左前", "妊娠"]
+    },
+    {
+      "id": "ME029",
+      "category": "妇产科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "异位妊娠最常见的部位是",
+      "options": {
+        "A": "卵巢",
+        "B": "输卵管",
+        "C": "腹腔",
+        "D": "宫颈",
+        "E": "子宫角"
+      },
+      "correct_answer": "B",
+      "explanation": "异位妊娠最常见的部位是输卵管，约占95%，其中以输卵管壶腹部最常见，约占78%。",
+      "expected_retrieval": "graph",
+      "key_entities": ["异位妊娠", "输卵管妊娠", "部位"]
+    },
+    {
+      "id": "ME030",
+      "category": "儿科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "小儿营养不良最早出现的症状是",
+      "options": {
+        "A": "体重不增",
+        "B": "体重下降",
+        "C": "皮下脂肪减少",
+        "D": "皮肤干燥",
+        "E": "精神萎靡"
+      },
+      "correct_answer": "A",
+      "explanation": "小儿营养不良最早出现的症状是体重不增，随后出现体重下降、皮下脂肪减少、皮肤干燥、精神萎靡等症状。",
+      "expected_retrieval": "vector",
+      "key_entities": ["小儿营养不良", "症状", "体重不增"]
+    },
+    {
+      "id": "ME031",
+      "category": "药理学",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "布洛芬的主要不良反应是",
+      "options": {
+        "A": "肝损伤",
+        "B": "肾损伤",
+        "C": "胃肠道反应",
+        "D": "过敏反应",
+        "E": "血液系统损害"
+      },
+      "correct_answer": "C",
+      "explanation": "布洛芬是非甾体抗炎药，主要不良反应是胃肠道反应，如胃部不适、恶心、呕吐、消化性溃疡等。长期大剂量使用也可导致肾损伤。",
+      "expected_retrieval": "graph",
+      "key_entities": ["布洛芬", "不良反应", "胃肠道反应"]
+    },
+    {
+      "id": "ME032",
+      "category": "药理学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "青霉素过敏最严重的不良反应是",
+      "options": {
+        "A": "皮疹",
+        "B": "药物热",
+        "C": "过敏性休克",
+        "D": "血清病样反应",
+        "E": "溶血性贫血"
+      },
+      "correct_answer": "C",
+      "explanation": "青霉素过敏最严重的不良反应是过敏性休克，可在用药后数秒至数分钟内发生，表现为呼吸困难、血压下降、意识丧失，可危及生命。",
+      "expected_retrieval": "graph",
+      "key_entities": ["青霉素", "过敏", "过敏性休克"]
+    },
+    {
+      "id": "ME033",
+      "category": "诊断学",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "血常规检查中，白细胞计数正常范围是",
+      "options": {
+        "A": "(3-8)×10⁹/L",
+        "B": "(4-10)×10⁹/L",
+        "C": "(5-12)×10⁹/L",
+        "D": "(6-15)×10⁹/L",
+        "E": "(8-20)×10⁹/L"
+      },
+      "correct_answer": "B",
+      "explanation": "成人白细胞计数正常范围是(4-10)×10⁹/L。新生儿和婴幼儿白细胞计数较高，可达(15-20)×10⁹/L。",
+      "expected_retrieval": "graph",
+      "key_entities": ["血常规", "白细胞", "正常范围"]
+    },
+    {
+      "id": "ME034",
+      "category": "诊断学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "空腹血糖正常范围是",
+      "options": {
+        "A": "2.8-5.6 mmol/L",
+        "B": "3.9-6.1 mmol/L",
+        "C": "4.4-7.0 mmol/L",
+        "D": "5.0-7.8 mmol/L",
+        "E": "6.1-11.1 mmol/L"
+      },
+      "correct_answer": "B",
+      "explanation": "空腹血糖正常范围是3.9-6.1 mmol/L。空腹血糖≥7.0 mmol/L或随机血糖≥11.1 mmol/L可诊断为糖尿病。",
+      "expected_retrieval": "graph",
+      "key_entities": ["空腹血糖", "正常范围", "糖尿病"]
+    },
+    {
+      "id": "ME035",
+      "category": "诊断学",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "心电图ST段抬高最常见于",
+      "options": {
+        "A": "心肌缺血",
+        "B": "急性心肌梗死",
+        "C": "心包炎",
+        "D": "室壁瘤",
+        "E": "早期复极综合征"
+      },
+      "correct_answer": "B",
+      "explanation": "心电图ST段抬高最常见于急性心肌梗死（ST段抬高型心肌梗死），是急性心肌梗死的重要诊断依据之一。",
+      "expected_retrieval": "both",
+      "key_entities": ["心电图", "ST段抬高", "心肌梗死"]
+    },
+    {
+      "id": "ME036",
+      "category": "内科",
+      "difficulty": 3,
+      "type": "single_choice",
+      "question": "患者，女，30岁，多饮、多尿、多食、体重下降3个月，空腹血糖12.5mmol/L，尿糖+++，尿酮体阴性。最可能的诊断是",
+      "options": {
+        "A": "1型糖尿病",
+        "B": "2型糖尿病",
+        "C": "糖尿病酮症酸中毒",
+        "D": "高渗性高血糖状态",
+        "E": "继发性糖尿病"
+      },
+      "correct_answer": "B",
+      "explanation": "青年女性，典型糖尿病症状，空腹血糖>7.0mmol/L，尿酮体阴性，排除酮症酸中毒。虽然年龄较轻，但尿酮体阴性更支持2型糖尿病诊断。",
+      "expected_retrieval": "graph",
+      "key_entities": ["糖尿病", "诊断", "空腹血糖", "多饮多尿"]
+    },
+    {
+      "id": "ME037",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "过敏性鼻炎的典型症状不包括",
+      "options": {
+        "A": "鼻痒",
+        "B": "打喷嚏",
+        "C": "流清涕",
+        "D": "鼻塞",
+        "E": "发热"
+      },
+      "correct_answer": "E",
+      "explanation": "过敏性鼻炎的典型症状是鼻痒、打喷嚏、流清涕、鼻塞，一般不伴有发热。发热提示可能存在感染。",
+      "expected_retrieval": "graph",
+      "key_entities": ["过敏性鼻炎", "症状", "鼻痒", "打喷嚏"]
+    },
+    {
+      "id": "ME038",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "颈椎病的常见症状不包括",
+      "options": {
+        "A": "颈痛",
+        "B": "头痛",
+        "C": "上肢麻木",
+        "D": "下肢无力",
+        "E": "发热"
+      },
+      "correct_answer": "E",
+      "explanation": "颈椎病的常见症状包括颈痛、头痛、上肢麻木、下肢无力（脊髓型）等，一般不伴有发热。发热提示可能存在感染或其他疾病。",
+      "expected_retrieval": "graph",
+      "key_entities": ["颈椎病", "症状", "颈痛", "上肢麻木"]
+    },
+    {
+      "id": "ME039",
+      "category": "皮肤科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "湿疹的典型表现是",
+      "options": {
+        "A": "皮肤干燥",
+        "B": "皮肤瘙痒",
+        "C": "红斑、丘疹、水疱",
+        "D": "以上都是",
+        "E": "以上都不是"
+      },
+      "correct_answer": "D",
+      "explanation": "湿疹的典型表现包括皮肤瘙痒、红斑、丘疹、水疱、渗出、皮肤干燥等。急性期以红斑、丘疹、水疱为主，慢性期以皮肤干燥、肥厚为主。",
+      "expected_retrieval": "graph",
+      "key_entities": ["湿疹", "症状", "瘙痒", "红斑"]
+    },
+    {
+      "id": "ME040",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "尿路感染最常见的致病菌是",
+      "options": {
+        "A": "葡萄球菌",
+        "B": "大肠杆菌",
+        "C": "链球菌",
+        "D": "变形杆菌",
+        "E": "铜绿假单胞菌"
+      },
+      "correct_answer": "B",
+      "explanation": "尿路感染最常见的致病菌是大肠杆菌，约占80%-90%。大肠杆菌是肠道正常菌群，可通过上行感染引起尿路感染。",
+      "expected_retrieval": "graph",
+      "key_entities": ["尿路感染", "致病菌", "大肠杆菌"]
+    },
+    {
+      "id": "ME041",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "脂肪肝的常见病因不包括",
+      "options": {
+        "A": "肥胖",
+        "B": "糖尿病",
+        "C": "饮酒",
+        "D": "病毒性肝炎",
+        "E": "高脂血症"
+      },
+      "correct_answer": "D",
+      "explanation": "脂肪肝的常见病因包括肥胖、糖尿病、高脂血症、饮酒等。病毒性肝炎是独立的肝脏疾病，不是脂肪肝的病因，但可合并脂肪肝。",
+      "expected_retrieval": "graph",
+      "key_entities": ["脂肪肝", "病因", "肥胖", "糖尿病"]
+    },
+    {
+      "id": "ME042",
+      "category": "精神科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "抑郁症的核心症状是",
+      "options": {
+        "A": "情绪低落、兴趣减退、快感缺失",
+        "B": "失眠、食欲下降、体重减轻",
+        "C": "焦虑、紧张、坐立不安",
+        "D": "幻觉、妄想、思维紊乱",
+        "E": "记忆力下降、注意力不集中"
+      },
+      "correct_answer": "A",
+      "explanation": "抑郁症的核心症状是情绪低落、兴趣减退、快感缺失，称为抑郁症的'三主征'。其他症状如失眠、食欲下降等是伴随症状。",
+      "expected_retrieval": "graph",
+      "key_entities": ["抑郁症", "核心症状", "情绪低落"]
+    },
+    {
+      "id": "ME043",
+      "category": "药理学",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "奥美拉唑的主要作用机制是",
+      "options": {
+        "A": "中和胃酸",
+        "B": "保护胃黏膜",
+        "C": "抑制胃酸分泌",
+        "D": "促进胃动力",
+        "E": "杀灭幽门螺杆菌"
+      },
+      "correct_answer": "C",
+      "explanation": "奥美拉唑是质子泵抑制剂，通过抑制胃壁细胞H+-K+-ATP酶，减少胃酸分泌，是治疗消化性溃疡、反流性食管炎的常用药物。",
+      "expected_retrieval": "graph",
+      "key_entities": ["奥美拉唑", "作用机制", "抑制胃酸"]
+    },
+    {
+      "id": "ME044",
+      "category": "药理学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "氯雷他定主要用于治疗",
+      "options": {
+        "A": "高血压",
+        "B": "糖尿病",
+        "C": "过敏性疾病",
+        "D": "感染",
+        "E": "疼痛"
+      },
+      "correct_answer": "C",
+      "explanation": "氯雷他定是抗组胺药，主要用于治疗过敏性疾病，如过敏性鼻炎、荨麻疹等。可缓解鼻痒、打喷嚏、皮肤瘙痒等症状。",
+      "expected_retrieval": "graph",
+      "key_entities": ["氯雷他定", "适应症", "过敏"]
+    },
+    {
+      "id": "ME045",
+      "category": "诊断学",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "肝功能检查中，反映肝细胞损伤最敏感的指标是",
+      "options": {
+        "A": "总胆红素",
+        "B": "白蛋白",
+        "C": "谷丙转氨酶(ALT)",
+        "D": "谷草转氨酶(AST)",
+        "E": "碱性磷酸酶(ALP)"
+      },
+      "correct_answer": "C",
+      "explanation": "谷丙转氨酶(ALT)主要存在于肝细胞胞质中，肝细胞损伤时释放入血，是反映肝细胞损伤最敏感的指标。",
+      "expected_retrieval": "graph",
+      "key_entities": ["肝功能", "ALT", "肝细胞损伤"]
+    },
+    {
+      "id": "ME046",
+      "category": "诊断学",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "血压的正常范围是",
+      "options": {
+        "A": "收缩压<120mmHg，舒张压<80mmHg",
+        "B": "收缩压<130mmHg，舒张压<85mmHg",
+        "C": "收缩压<140mmHg，舒张压<90mmHg",
+        "D": "收缩压<150mmHg，舒张压<95mmHg",
+        "E": "收缩压<160mmHg，舒张压<100mmHg"
+      },
+      "correct_answer": "C",
+      "explanation": "成人血压正常范围是收缩压<140mmHg且舒张压<90mmHg。理想血压是收缩压<120mmHg且舒张压<80mmHg。",
+      "expected_retrieval": "graph",
+      "key_entities": ["血压", "正常范围", "高血压"]
+    },
+    {
+      "id": "ME047",
+      "category": "内科",
+      "difficulty": 3,
+      "type": "single_choice",
+      "question": "患者，男，45岁，突发剧烈胸痛2小时，向左肩背部放射，伴大汗、恶心。心电图示V1-V4导联ST段抬高。最可能的诊断是",
+      "options": {
+        "A": "稳定型心绞痛",
+        "B": "不稳定型心绞痛",
+        "C": "急性前壁心肌梗死",
+        "D": "急性下壁心肌梗死",
+        "E": "主动脉夹层"
+      },
+      "correct_answer": "C",
+      "explanation": "中年男性，突发剧烈胸痛，向左肩背部放射，伴大汗、恶心，心电图V1-V4导联ST段抬高，提示急性前壁心肌梗死。V1-V4对应前壁，是前降支供血区域。",
+      "expected_retrieval": "graph",
+      "key_entities": ["心肌梗死", "胸痛", "ST段抬高", "前壁"]
+    },
+    {
+      "id": "ME048",
+      "category": "内科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "失眠患者应避免",
+      "options": {
+        "A": "规律作息",
+        "B": "睡前放松",
+        "C": "睡前饮用咖啡",
+        "D": "创造良好睡眠环境",
+        "E": "适当运动"
+      },
+      "correct_answer": "C",
+      "explanation": "失眠患者应避免睡前饮用咖啡、茶等含咖啡因的饮料，因为咖啡因有兴奋作用，可加重失眠。其他选项都是改善睡眠的正确做法。",
+      "expected_retrieval": "graph",
+      "key_entities": ["失眠", "咖啡因", "睡眠卫生"]
+    },
+    {
+      "id": "ME049",
+      "category": "外科",
+      "difficulty": 2,
+      "type": "single_choice",
+      "question": "腰椎间盘突出症的典型症状是",
+      "options": {
+        "A": "腰痛",
+        "B": "下肢放射痛",
+        "C": "下肢麻木",
+        "D": "以上都是",
+        "E": "以上都不是"
+      },
+      "correct_answer": "D",
+      "explanation": "腰椎间盘突出症的典型症状包括腰痛、下肢放射痛（坐骨神经痛）、下肢麻木、肌力下降等。腰痛是最常见症状，下肢放射痛是最典型症状。",
+      "expected_retrieval": "graph",
+      "key_entities": ["腰椎间盘突出", "腰痛", "下肢放射痛"]
+    },
+    {
+      "id": "ME050",
+      "category": "内科",
+      "difficulty": 1,
+      "type": "single_choice",
+      "question": "预防感冒的有效措施不包括",
+      "options": {
+        "A": "勤洗手",
+        "B": "避免接触患者",
+        "C": "增强免疫力",
+        "D": "长期使用抗生素",
+        "E": "保持室内通风"
+      },
+      "correct_answer": "D",
+      "explanation": "感冒主要由病毒引起，抗生素对病毒无效，长期使用抗生素不仅不能预防感冒，还可能导致耐药和菌群失调。",
+      "expected_retrieval": "graph",
+      "key_entities": ["感冒", "预防", "抗生素"]
+    }
+  ]
+}

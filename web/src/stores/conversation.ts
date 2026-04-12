@@ -1,20 +1,45 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+export interface Source {
+  source: string
+  content: string
+}
+
+export interface Citation {
+  id: string
+  type: string
+  typeLabel: string
+  title: string
+  authors: string
+  journal: string
+  year: number
+  volume?: string
+  issue?: string
+  impactFactor: number | null
+  citationContent: string
+  citationContext: string
+  relevanceScore: number
+}
+
+export interface DeepSearchResult {
+  totalSearched: number
+  totalCited: number
+  citations: Citation[]
+  searchSummary: string
+}
+
 export interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
   sources?: Source[]
+  citations?: Citation[]
+  deepSearchResult?: DeepSearchResult
   loading?: boolean
   streaming?: boolean
   imageUrl?: string
-}
-
-export interface Source {
-  source: string
-  content: string
 }
 
 export interface Conversation {
@@ -23,7 +48,7 @@ export interface Conversation {
   messages: Message[]
   createdAt: Date
   updatedAt: Date
-  mode?: 'chat' | 'search' | 'qa' | 'report' | 'drug'
+  mode?: 'chat' | 'search' | 'qa' | 'report' | 'drug' | 'lung' | 'heart' | 'lung-ct'
 }
 
 export const useConversationStore = defineStore('conversation', () => {
@@ -33,7 +58,7 @@ export const useConversationStore = defineStore('conversation', () => {
     conversations.value.find(c => c.id === activeId.value)
   )
 
-  const createConversation = (mode: 'chat' | 'search' | 'qa' | 'report' | 'drug' = 'chat') => {
+  const createConversation = (mode: 'chat' | 'search' | 'qa' | 'report' | 'drug' | 'lung' | 'heart' | 'lung-ct' = 'chat') => {
     const newConversation: Conversation = {
       id: generateId(),
       title: '新对话',

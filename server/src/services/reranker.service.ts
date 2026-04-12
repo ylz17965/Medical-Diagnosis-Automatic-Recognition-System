@@ -18,13 +18,13 @@ export class RerankerService {
 
   constructor() {
     this.apiKey = config.qwen.apiKey
-    this.baseUrl = 'https://dashscope.aliyuncs.com/api/v1/services/rerank'
+    this.baseUrl = 'https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank'
     this.model = config.qwen.models.rerank
   }
 
   async rerank(query: string, documents: RerankDocument[], topN?: number): Promise<RerankResult[]> {
     if (!this.apiKey) {
-      console.warn('QWEN_API_KEY not configured, skipping rerank')
+      console.warn('[Reranker] QWEN_API_KEY not configured, using fallback ranking')
       return documents.map((_, index) => ({ index, relevanceScore: 1 - index * 0.1 }))
     }
 
@@ -54,13 +54,14 @@ export class RerankerService {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Rerank API failed:', response.status, errorText)
+        console.error('[Reranker] API failed:', response.status, errorText)
         return documents.map((_, index) => ({ index, relevanceScore: 1 - index * 0.1 }))
       }
 
       const data = await response.json()
       
       if (data.output?.results) {
+        console.log('[Reranker] Rerank success, results:', data.output.results.length)
         return data.output.results.map((r: { index: number; relevance_score: number }) => ({
           index: r.index,
           relevanceScore: r.relevance_score,
@@ -69,7 +70,7 @@ export class RerankerService {
 
       return documents.map((_, index) => ({ index, relevanceScore: 1 - index * 0.1 }))
     } catch (error) {
-      console.error('Rerank error:', error)
+      console.error('[Reranker] Error:', error)
       return documents.map((_, index) => ({ index, relevanceScore: 1 - index * 0.1 }))
     }
   }

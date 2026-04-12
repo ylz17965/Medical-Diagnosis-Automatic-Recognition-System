@@ -1,6 +1,33 @@
 import { FastifyInstance } from 'fastify'
-import { HybridSearchService } from '../services/hybrid-search.service.js'
+import { z } from 'zod'
+import { HybridSearchService, type HybridSearchResult } from '../services/hybrid-search.service.js'
 import { ExplainableRAGService } from '../services/explainable-rag.service.js'
+
+interface SourceReference {
+  type: 'vector' | 'knowledge_graph'
+  source: string
+  content: string
+  score: number
+}
+
+const explainQuerySchema = z.object({
+  query: z.string().min(1, '查询内容不能为空').max(2000),
+  symptoms: z.array(z.string()).optional(),
+  response: z.string().optional(),
+})
+
+const confidenceSchema = z.object({
+  sources: z.array(z.object({
+    type: z.enum(['vector', 'knowledge_graph']),
+    source: z.string(),
+    content: z.string(),
+    score: z.number().min(0).max(1),
+  })).min(1, '至少需要一个来源'),
+})
+
+const reasoningChainSchema = z.object({
+  query: z.string().min(1, '查询内容不能为空').max(2000),
+})
 
 export default async function explainableRAGRoutes(fastify: FastifyInstance) {
   const hybridSearch = new HybridSearchService(fastify.prisma)
@@ -12,15 +39,11 @@ export default async function explainableRAGRoutes(fastify: FastifyInstance) {
 
   fastify.post('/explain', async (request, reply) => {
     try {
-      const { query, symptoms, response } = request.body as {
-        query?: string
-        symptoms?: string[]
-        response?: string
+      const parseResult = explainQuerySchema.safeParse(request.body)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
       }
-
-      if (!query) {
-        return reply.status(400).send({ error: '请提供查询内容' })
-      }
+      const { query, symptoms, response } = parseResult.data
 
       const searchResults = await hybridSearch.search({
         query,
@@ -45,14 +68,11 @@ export default async function explainableRAGRoutes(fastify: FastifyInstance) {
 
   fastify.post('/explain/formatted', async (request, reply) => {
     try {
-      const { query, response } = request.body as {
-        query?: string
-        response?: string
+      const parseResult = explainQuerySchema.omit({ symptoms: true }).safeParse(request.body)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
       }
-
-      if (!query) {
-        return reply.status(400).send({ error: '请提供查询内容' })
-      }
+      const { query, response } = parseResult.data
 
       const searchResults = await hybridSearch.search({
         query,
@@ -82,20 +102,13 @@ export default async function explainableRAGRoutes(fastify: FastifyInstance) {
 
   fastify.post('/confidence', async (request, reply) => {
     try {
-      const { sources } = request.body as {
-        sources?: Array<{
-          type: 'vector' | 'knowledge_graph'
-          source: string
-          content: string
-          score: number
-        }>
+      const parseResult = confidenceSchema.safeParse(request.body)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
       }
+      const { sources } = parseResult.data
 
-      if (!sources || !Array.isArray(sources)) {
-        return reply.status(400).send({ error: '请提供来源列表' })
-      }
-
-      const hybridResults = sources.map(s => ({
+      const hybridResults: SourceReference[] = sources.map(s => ({
         type: s.type,
         content: s.content,
         source: s.source,
@@ -104,7 +117,7 @@ export default async function explainableRAGRoutes(fastify: FastifyInstance) {
 
       const explanation = explainableRAG.generateExplanation(
         'confidence_check',
-        hybridResults as any
+        hybridResults as unknown as HybridSearchResult[]
       )
 
       return {
@@ -125,11 +138,11 @@ export default async function explainableRAGRoutes(fastify: FastifyInstance) {
 
   fastify.post('/reasoning-chain', async (request, reply) => {
     try {
-      const { query } = request.body as { query?: string }
-
-      if (!query) {
-        return reply.status(400).send({ error: '请提供查询内容' })
+      const parseResult = reasoningChainSchema.safeParse(request.body)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
       }
+      const { query } = parseResult.data
 
       const searchResults = await hybridSearch.search({
         query,

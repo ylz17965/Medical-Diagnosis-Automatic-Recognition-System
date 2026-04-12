@@ -1,0 +1,146 @@
+{
+  "metadata": {
+    "name": "追问机制规则配置",
+    "version": "1.0.0",
+    "description": "定义AI在信息不足时的追问触发规则和话术"
+  },
+  "followUpRules": [
+    {
+      "id": "fever_detail",
+      "name": "发热细节追问",
+      "triggers": {
+        "keywords": ["发热", "发烧", "体温高", "低烧", "高烧"],
+        "missingInfo": ["持续时间", "体温数值", "伴随症状"]
+      },
+      "condition": "用户提及发热但未说明持续时间和体温",
+      "questions": [
+        "请问发热多少度了？持续几天了？",
+        "除了发热，还有其他症状吗？比如咳嗽、头痛、肌肉酸痛？"
+      ],
+      "purpose": "判断发热严重程度和可能原因",
+      "priority": "high"
+    },
+    {
+      "id": "chronic_disease_symptom",
+      "name": "慢性病+症状追问",
+      "triggers": {
+        "keywords": ["糖尿病", "高血压", "心脏病", "肾病", "肝病", "哮喘"],
+        "symptomKeywords": ["感冒", "发烧", "咳嗽", "头痛", "胃不舒服"]
+      },
+      "condition": "用户提及慢性病史同时描述新发症状",
+      "questions": [
+        "请问您的{慢性病}目前控制得怎么样？最近有没有复查？",
+        "正在服用什么药物吗？是否已咨询过您的主治医生？"
+      ],
+      "purpose": "评估慢性病稳定性及是否需要调整治疗",
+      "priority": "high"
+    },
+    {
+      "id": "medication_inquiry",
+      "name": "用药咨询追问",
+      "triggers": {
+        "keywords": ["吃什么药", "用什么药", "药", "可以吃", "能吃吗"],
+        "missingInfo": ["具体症状", "持续时间", "过敏史", "正在使用的药物"]
+      },
+      "condition": "用户询问用药建议但未提供症状细节",
+      "questions": [
+        "请问具体有哪些症状？出现多久了？",
+        "以前有药物过敏史吗？目前正在服用其他药物吗？"
+      ],
+      "purpose": "确保用药安全，避免药物相互作用",
+      "priority": "high"
+    },
+    {
+      "id": "symptom_duration",
+      "name": "症状持续时间追问",
+      "triggers": {
+        "keywords": ["头痛", "胃痛", "肚子疼", "胸闷", "心慌", "乏力"],
+        "missingInfo": ["持续时间", "严重程度", "诱因"]
+      },
+      "condition": "用户描述症状但未说明持续时间",
+      "questions": [
+        "请问这个症状持续多久了？是持续性的还是间歇性的？",
+        "疼痛程度如何？有没有什么情况会加重或缓解？"
+      ],
+      "purpose": "判断症状急慢性及严重程度",
+      "priority": "medium"
+    },
+    {
+      "id": "pregnancy_related",
+      "name": "孕期相关追问",
+      "triggers": {
+        "keywords": ["怀孕", "孕妇", "孕期", "妊娠"]
+      },
+      "condition": "用户提及怀孕相关情况",
+      "questions": [
+        "请问现在怀孕多少周了？这是第几胎？",
+        "目前产检情况如何？有没有妊娠期糖尿病或高血压等并发症？"
+      ],
+      "purpose": "孕期用药和健康建议需特别谨慎",
+      "priority": "high"
+    },
+    {
+      "id": "child_symptom",
+      "name": "儿童症状追问",
+      "triggers": {
+        "keywords": ["孩子", "宝宝", "小孩", "儿童", "婴儿", "幼儿"]
+      },
+      "condition": "用户咨询儿童健康问题",
+      "questions": [
+        "请问孩子多大了？体重多少？",
+        "症状出现多久了？精神状态和食欲怎么样？"
+      ],
+      "purpose": "儿童用药和健康建议需考虑年龄体重",
+      "priority": "high"
+    },
+    {
+      "id": "elderly_symptom",
+      "name": "老年人症状追问",
+      "triggers": {
+        "keywords": ["老人", "老年人", "老人家", "父亲", "母亲", "爷爷", "奶奶"]
+      },
+      "condition": "用户咨询老年人健康问题",
+      "questions": [
+        "请问老人今年多大年纪了？",
+        "有没有高血压、糖尿病、心脏病等基础疾病？目前服用什么药物？"
+      ],
+      "purpose": "老年人健康建议需考虑基础疾病和用药",
+      "priority": "medium"
+    },
+    {
+      "id": "vague_complaint",
+      "name": "模糊主诉追问",
+      "triggers": {
+        "keywords": ["不舒服", "难受", "不对劲", "有问题"],
+        "missingInfo": ["具体症状", "部位", "持续时间"]
+      },
+      "condition": "用户描述模糊，无法判断具体情况",
+      "questions": [
+        "请问具体是哪里不舒服？能详细描述一下吗？",
+        "这种感觉持续多久了？有没有加重或缓解的情况？"
+      ],
+      "purpose": "获取足够信息以提供有价值的建议",
+      "priority": "medium"
+    }
+  ],
+  "followUpTemplates": {
+    "opening": "为了给您更准确的建议，我需要了解一些情况：",
+    "singleQuestion": "请问{question}",
+    "multipleQuestions": "为了更好地帮助您，请告诉我：\n1. {question1}\n2. {question2}",
+    "explanation": "了解这些信息可以帮助我更好地判断您的情况。"
+  },
+  "sessionStateTracking": {
+    "enabled": true,
+    "trackedFields": [
+      "hasChronicDisease",
+      "chronicDiseaseType",
+      "hasAllergy",
+      "allergyDetails",
+      "currentMedications",
+      "ageGroup",
+      "pregnancyStatus",
+      "symptomDetails"
+    ],
+    "avoidRepeatAsking": true
+  }
+}

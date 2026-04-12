@@ -4,8 +4,10 @@ import IconSearch from '@/components/icons/IconSearch.vue'
 import IconMessage from '@/components/icons/IconMessage.vue'
 import IconFile from '@/components/icons/IconFile.vue'
 import IconBox from '@/components/icons/IconBox.vue'
+import IconLung from '@/components/icons/IconLung.vue'
+import IconHeart from '@/components/icons/IconHeart.vue'
 
-export type FeatureType = 'search' | 'qa' | 'report' | 'drug'
+export type FeatureType = 'search' | 'qa' | 'report' | 'drug' | 'lung' | 'heart' | 'lung-ct'
 
 interface Props {
   type: FeatureType
@@ -46,6 +48,24 @@ const featureConfig = {
     title: '药盒识别',
     description: '识别药品信息',
     color: '#F59E0B'
+  },
+  lung: {
+    icon: IconLung,
+    title: '肺癌早筛',
+    description: '肺结节风险评估',
+    color: '#10B981'
+  },
+  heart: {
+    icon: IconHeart,
+    title: '高血压管理',
+    description: '血压分析与用药',
+    color: '#EF4444'
+  },
+  'lung-ct': {
+    icon: IconLung,
+    title: '肺部CT',
+    description: 'CT影像可视化',
+    color: '#8B5CF6'
   }
 }
 
@@ -61,6 +81,7 @@ const entryClasses = computed(() => [
   <button
     :class="entryClasses"
     :style="{ '--feature-color': config.color }"
+    :aria-label="`${title || config.title}：${description || config.description}`"
     @click="$emit('click')"
   >
     <div class="feature-icon">

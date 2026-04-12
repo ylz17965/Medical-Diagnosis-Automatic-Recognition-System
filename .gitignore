@@ -107,6 +107,9 @@ venv/
 ENV/
 env/
 .venv/
+*.pyc
+.pytest_cache/
+.mypy_cache/
 
 # Medical Imaging Data
 *.dcm
@@ -125,3 +128,29 @@ jsjsj_exercise_2_data/
 
 # VTK.js cache
 .vtk-cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temp files
+*.tmp
+*.temp
+.cache/

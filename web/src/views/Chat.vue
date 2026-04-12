@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, onUnmounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { MainLayout } from '@/layouts'
 import { MessageBubble, FeatureEntry, AnchorSidebar } from '@/components/business'
 import type { FeatureType } from '@/components/business'
+import { LungVolume3D } from '@/components/business/LungViewer'
 import IconSend from '@/components/icons/IconSend.vue'
 import IconUpload from '@/components/icons/IconUpload.vue'
 import IconCamera from '@/components/icons/IconCamera.vue'
@@ -10,6 +12,8 @@ import IconMic from '@/components/icons/IconMic.vue'
 import { useChat, useToast } from '@/composables'
 import { useSpeechRecognition } from '@/composables/useSpeechRecognition'
 import type { ConversationTurn } from '@/composables/useConversationTurns'
+
+const router = useRouter()
 
 const {
   inputMessage,
@@ -61,6 +65,14 @@ const HIGHLIGHT_DURATION = 3000
 const showAnchorSidebar = computed(() => conversationTurns.turnCount.value > 0)
 
 const handleFeatureClick = (type: FeatureType) => {
+  if (type === 'lung') {
+    router.push('/lung-cancer')
+    return
+  }
+  if (type === 'heart') {
+    router.push('/hypertension')
+    return
+  }
   setMode(type)
   nextTick(() => scrollToBottom())
 }
@@ -273,6 +285,9 @@ onUnmounted(() => {
             <FeatureEntry type="qa" @click="handleFeatureClick('qa')" />
             <FeatureEntry type="report" @click="handleFeatureClick('report')" />
             <FeatureEntry type="drug" @click="handleFeatureClick('drug')" />
+            <FeatureEntry type="lung" @click="handleFeatureClick('lung')" />
+            <FeatureEntry type="heart" @click="handleFeatureClick('heart')" />
+            <FeatureEntry type="lung-ct" @click="handleFeatureClick('lung-ct')" />
           </div>
           
           <div class="quick-questions">
@@ -303,6 +318,8 @@ onUnmounted(() => {
                 :timestamp="message.timestamp"
                 :avatar="userStore.user?.avatar"
                 :sources="message.sources"
+                :citations="message.citations"
+                :deep-search-result="message.deepSearchResult"
                 :image-url="message.imageUrl"
                 :class="{ 'highlight-flash': isMessageHighlighted(message.id) }"
               />
@@ -315,15 +332,19 @@ onUnmounted(() => {
             @anchor-click="handleAnchorClick"
           />
           
-          <div v-if="currentMode === 'report' || currentMode === 'drug'" class="upload-area">
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/*,.pdf"
-              hidden
-              @change="handleFileChange"
-            />
-            <div
+          <div v-if="currentMode === 'report' || currentMode === 'drug' || currentMode === 'lung-ct'" class="upload-area">
+            <div v-if="currentMode === 'lung-ct'">
+              <LungVolume3D :width="500" :height="400"></LungVolume3D>
+            </div>
+            <div v-if="currentMode !== 'lung-ct'">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*,.pdf"
+                hidden
+                @change="handleFileChange"
+              />
+              <div
               :class="['upload-box', { 'is-dragging': isDragging, 'is-uploading': isUploading }]"
               role="button"
               :tabindex="isUploading ? -1 : 0"
@@ -364,6 +385,7 @@ onUnmounted(() => {
                 </p>
                 <p class="upload-hint">支持 PDF、JPG、PNG 格式</p>
               </template>
+            </div>
             </div>
           </div>
         </div>
@@ -515,7 +537,7 @@ onUnmounted(() => {
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-4);
   margin-bottom: var(--spacing-8);
   width: 100%;

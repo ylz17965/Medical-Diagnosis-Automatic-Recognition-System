@@ -1,0 +1,209 @@
+{
+  "diseases": [
+    {
+      "id": "essential_hypertension",
+      "name": "原发性高血压",
+      "icd10": "I10",
+      "description": "原因不明的高血压，占高血压患者的95%",
+      "riskFactors": ["遗传因素", "高钠饮食", "肥胖", "缺乏运动", "精神压力", "年龄增长"],
+      "complications": ["冠心病", "脑卒中", "心力衰竭", "慢性肾脏病", "视网膜病变"]
+    },
+    {
+      "id": "secondary_hypertension",
+      "name": "继发性高血压",
+      "icd10": "I15",
+      "description": "由特定疾病引起的高血压，约占5%",
+      "causes": ["肾实质性高血压", "肾血管性高血压", "原发性醛固酮增多症", "嗜铬细胞瘤", "库欣综合征", "主动脉缩窄"],
+      "treatment": "治疗原发病为主"
+    },
+    {
+      "id": "hypertensive_emergency",
+      "name": "高血压急症",
+      "icd10": "I16.1",
+      "description": "血压急剧升高伴靶器官损害",
+      "criteria": "SBP≥180mmHg和/或DBP≥120mmHg伴靶器官损害",
+      "organDamage": ["高血压脑病", "急性左心衰", "急性冠脉综合征", "主动脉夹层", "急性肾损伤", "子痫/子痫前期"],
+      "treatment": "静脉降压药，1小时内降压25%，随后2-6小时降至160/100mmHg"
+    }
+  ],
+  "classification": {
+    "standard": [
+      {"category": "正常血压", "systolic": [0, 119], "diastolic": [0, 79], "description": "血压正常"},
+      {"category": "正常高值", "systolic": [120, 139], "diastolic": [80, 89], "description": "血压偏高，需生活方式干预"},
+      {"category": "高血压1级(轻度)", "systolic": [140, 159], "diastolic": [90, 99], "description": "轻度高血压"},
+      {"category": "高血压2级(中度)", "systolic": [160, 179], "diastolic": [100, 109], "description": "中度高血压"},
+      {"category": "高血压3级(重度)", "systolic": [180, 300], "diastolic": [110, 200], "description": "重度高血压，需紧急处理"}
+    ],
+    "home": [
+      {"category": "正常", "systolic": [0, 134], "diastolic": [0, 84], "description": "家庭血压正常"},
+      {"category": "高血压", "systolic": [135, 300], "diastolic": [85, 200], "description": "家庭血压升高"}
+    ],
+    "abpm": {
+      "daytime": {"normal": "<135/85mmHg", "hypertension": "≥135/85mmHg"},
+      "nighttime": {"normal": "<120/70mmHg", "hypertension": "≥120/70mmHg"},
+      "24h": {"normal": "<130/80mmHg", "hypertension": "≥130/80mmHg"}
+    }
+  },
+  "dipperPatterns": [
+    {"pattern": "杓型", "dip": "10-20%", "description": "正常夜间血压下降", "risk": "正常"},
+    {"pattern": "非杓型", "dip": "<10%", "description": "夜间血压下降不足", "risk": "心血管风险增加"},
+    {"pattern": "超杓型", "dip": ">20%", "description": "夜间血压过度下降", "risk": "脑卒中风险增加"},
+    {"pattern": "反杓型", "dip": "<0%", "description": "夜间血压反升", "risk": "心血管风险显著增加"}
+  ],
+  "riskStratification": {
+    "factors": {
+      "clinical": [
+        {"factor": "年龄", "criteria": "男性≥55岁，女性≥65岁", "weight": 2},
+        {"factor": "吸烟", "criteria": "当前吸烟", "weight": 2},
+        {"factor": "糖尿病", "criteria": "已确诊糖尿病", "weight": 3},
+        {"factor": "血脂异常", "criteria": "TC≥5.7mmol/L或LDL-C≥3.4mmol/L", "weight": 2},
+        {"factor": "早发心血管病家族史", "criteria": "一级亲属发病年龄<50岁", "weight": 1},
+        {"factor": "肥胖", "criteria": "BMI≥28或腹型肥胖", "weight": 2},
+        {"factor": "慢性肾脏病", "criteria": "eGFR<60ml/min", "weight": 4},
+        {"factor": "已确诊心血管疾病", "criteria": "冠心病、脑卒中、外周动脉疾病", "weight": 5}
+      ]
+    },
+    "levels": [
+      {"level": "低危", "tenYearRisk": "<5%", "description": "无危险因素，血压1级"},
+      {"level": "中危", "tenYearRisk": "5-9%", "description": "1-2个危险因素，血压1-2级"},
+      {"level": "高危", "tenYearRisk": "10-19%", "description": "≥3个危险因素或靶器官损害"},
+      {"level": "很高危", "tenYearRisk": "≥20%", "description": "已确诊CVD、CKD或糖尿病伴靶器官损害"}
+    ]
+  },
+  "medications": {
+    "classes": [
+      {
+        "class": "CCB",
+        "name": "钙通道阻滞剂",
+        "examples": [
+          {"name": "氨氯地平", "dosage": "5-10mg qd", "halfLife": "30-50h", "characteristics": "长效、平稳"},
+          {"name": "硝苯地平控释片", "dosage": "30-60mg qd", "halfLife": "长效", "characteristics": "起效快"},
+          {"name": "非洛地平", "dosage": "5-10mg qd", "halfLife": "11-16h", "characteristics": "心脏选择性"}
+        ],
+        "indications": ["老年高血压", "单纯收缩期高血压", "心绞痛", "颈动脉粥样硬化"],
+        "contraindications": ["严重心力衰竭(非二氢吡啶类)"],
+        "sideEffects": ["踝部水肿", "面部潮红", "头痛", "牙龈增生"]
+      },
+      {
+        "class": "ARB",
+        "name": "血管紧张素受体拮抗剂",
+        "examples": [
+          {"name": "缬沙坦", "dosage": "80-160mg qd", "halfLife": "6-9h", "characteristics": "常用"},
+          {"name": "厄贝沙坦", "dosage": "150-300mg qd", "halfLife": "11-15h", "characteristics": "肾脏保护"},
+          {"name": "氯沙坦", "dosage": "50-100mg qd", "halfLife": "2h(活性代谢物6-9h)", "characteristics": "降尿酸"},
+          {"name": "替米沙坦", "dosage": "40-80mg qd", "halfLife": "24h", "characteristics": "超长效"}
+        ],
+        "indications": ["糖尿病肾病", "蛋白尿", "心力衰竭", "房颤预防"],
+        "contraindications": ["妊娠", "高钾血症", "双侧肾动脉狭窄"],
+        "sideEffects": ["高钾血症", "肾功能影响"]
+      },
+      {
+        "class": "ACEI",
+        "name": "血管紧张素转换酶抑制剂",
+        "examples": [
+          {"name": "培哚普利", "dosage": "4-8mg qd", "halfLife": "长效", "characteristics": "心脏保护"},
+          {"name": "依那普利", "dosage": "5-20mg qd/bid", "halfLife": "11h", "characteristics": "经典"},
+          {"name": "贝那普利", "dosage": "10-20mg qd", "halfLife": "长效", "characteristics": "肾脏保护"}
+        ],
+        "indications": ["心力衰竭", "心肌梗死后", "糖尿病肾病", "蛋白尿"],
+        "contraindications": ["妊娠", "高钾血症", "双侧肾动脉狭窄", "血管神经性水肿史"],
+        "sideEffects": ["干咳", "高钾血症", "血管神经性水肿"]
+      },
+      {
+        "class": "Diuretic",
+        "name": "利尿剂",
+        "examples": [
+          {"name": "氢氯噻嗪", "dosage": "12.5-25mg qd", "halfLife": "6-15h", "characteristics": "经典"},
+          {"name": "吲达帕胺", "dosage": "1.5-2.5mg qd", "halfLife": "14-18h", "characteristics": "长效"},
+          {"name": "螺内酯", "dosage": "20-40mg qd", "halfLife": "13-24h", "characteristics": "保钾利尿"}
+        ],
+        "indications": ["心力衰竭", "老年高血压", "单纯收缩期高血压"],
+        "contraindications": ["痛风(噻嗪类)", "严重肾功能不全"],
+        "sideEffects": ["低钾血症", "高尿酸血症", "血糖血脂影响"]
+      },
+      {
+        "class": "BetaBlocker",
+        "name": "β受体阻滞剂",
+        "examples": [
+          {"name": "美托洛尔缓释片", "dosage": "47.5-95mg qd", "halfLife": "3-7h", "characteristics": "心脏选择性"},
+          {"name": "比索洛尔", "dosage": "2.5-10mg qd", "halfLife": "10-12h", "characteristics": "高选择性"},
+          {"name": "卡维地洛", "dosage": "12.5-25mg bid", "halfLife": "7-10h", "characteristics": "α+β阻滞"}
+        ],
+        "indications": ["冠心病", "心力衰竭", "心率快", "交感神经活性增高"],
+        "contraindications": ["哮喘", "二度以上房室传导阻滞", "严重心动过缓"],
+        "sideEffects": ["心动过缓", "乏力", "性功能障碍"]
+      },
+      {
+        "class": "AlphaBlocker",
+        "name": "α受体阻滞剂",
+        "examples": [
+          {"name": "特拉唑嗪", "dosage": "1-10mg qn", "halfLife": "12h", "characteristics": "睡前服用"},
+          {"name": "多沙唑嗪", "dosage": "1-8mg qd", "halfLife": "22h", "characteristics": "长效"}
+        ],
+        "indications": ["前列腺增生", "难治性高血压"],
+        "contraindications": ["体位性低血压"],
+        "sideEffects": ["体位性低血压", "头晕", "乏力"]
+      }
+    ],
+    "combinationTherapy": [
+      {"combination": "ARB/ACEI + CCB", "advantage": "协同降压，减少水肿", "recommended": true},
+      {"combination": "ARB/ACEI + 利尿剂", "advantage": "协同降压，减少低钾", "recommended": true},
+      {"combination": "CCB + 利尿剂", "advantage": "适合老年收缩期高血压", "recommended": true},
+      {"combination": "ARB/ACEI + CCB + 利尿剂", "advantage": "三联强效降压", "recommended": true},
+      {"combination": "ACEI + ARB", "advantage": "不推荐", "recommended": false, "reason": "增加不良反应风险"}
+    ]
+  },
+  "targetBP": [
+    {"population": "一般高血压患者", "target": "<140/90mmHg", "optionalTarget": "<130/80mmHg(如耐受)"},
+    {"population": "老年高血压(≥65岁)", "target": "<150/90mmHg", "optionalTarget": "<140/90mmHg(如耐受)"},
+    {"population": "糖尿病", "target": "<130/80mmHg", "optionalTarget": "-"},
+    {"population": "慢性肾脏病", "target": "<130/80mmHg", "optionalTarget": "-"},
+    {"population": "冠心病", "target": "<130/80mmHg", "optionalTarget": "-"},
+    {"population": "心力衰竭", "target": "<130/80mmHg", "optionalTarget": "<120/80mmHg"}
+  ],
+  "lifestyle": {
+    "diet": [
+      {"recommendation": "限制钠盐", "target": "<5g/天", "effect": "SBP下降4-5mmHg"},
+      {"recommendation": "增加钾摄入", "target": "多吃蔬菜水果", "effect": "SBP下降2-3mmHg"},
+      {"recommendation": "DASH饮食", "target": "多蔬菜水果、全谷物、低脂乳制品", "effect": "SBP下降8-14mmHg"},
+      {"recommendation": "限制饮酒", "target": "男性<25g/天，女性<15g/天", "effect": "SBP下降2-4mmHg"}
+    ],
+    "exercise": [
+      {"type": "有氧运动", "target": "每周≥150分钟中等强度", "effect": "SBP下降5-8mmHg"},
+      {"type": "抗阻运动", "target": "每周2-3次", "effect": "SBP下降2-3mmHg"}
+    ],
+    "weight": [
+      {"recommendation": "减重", "target": "BMI<24，腰围男<90cm女<85cm", "effect": "每减10kg SBP下降5-20mmHg"}
+    ],
+    "other": [
+      {"recommendation": "戒烟", "effect": "降低心血管风险"},
+      {"recommendation": "心理平衡", "effect": "减少血压波动"}
+    ]
+  },
+  "guidelines": [
+    {
+      "name": "中国高血压防治指南",
+      "version": "2024年修订版",
+      "organization": "中国高血压联盟",
+      "evidence": "A"
+    },
+    {
+      "name": "ISH国际高血压实践指南",
+      "version": "2020",
+      "organization": "ISH",
+      "evidence": "A"
+    },
+    {
+      "name": "ESC/ESH高血压管理指南",
+      "version": "2023",
+      "organization": "ESC",
+      "evidence": "A"
+    },
+    {
+      "name": "ACC/AHA高血压指南",
+      "version": "2017",
+      "organization": "ACC/AHA",
+      "evidence": "A"
+    }
+  ]
+}

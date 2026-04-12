@@ -1,19 +1,30 @@
 import { FastifyInstance } from 'fastify'
+import { z } from 'zod'
 import { DialogStateMachine } from '../services/dialog/index.js'
+
+const messageSchema = z.object({
+  sessionId: z.string().optional(),
+  message: z.string().min(1, '消息内容不能为空').max(2000),
+})
+
+const textSchema = z.object({
+  text: z.string().min(1, '文本内容不能为空').max(5000),
+})
+
+const sessionIdSchema = z.object({
+  sessionId: z.string().uuid('无效的会话ID'),
+})
 
 export default async function dialogRoutes(fastify: FastifyInstance) {
   const dialogMachine = new DialogStateMachine()
 
   fastify.post('/message', async (request, reply) => {
     try {
-      const { sessionId, message } = request.body as {
-        sessionId?: string
-        message?: string
+      const parseResult = messageSchema.safeParse(request.body)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
       }
-
-      if (!message) {
-        return reply.status(400).send({ error: '请输入消息内容' })
-      }
+      const { sessionId, message } = parseResult.data
 
       const sid = sessionId || crypto.randomUUID()
 
@@ -41,7 +52,11 @@ export default async function dialogRoutes(fastify: FastifyInstance) {
 
   fastify.get('/context/:sessionId', async (request, reply) => {
     try {
-      const { sessionId } = request.params as { sessionId: string }
+      const parseResult = sessionIdSchema.safeParse(request.params)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
+      }
+      const { sessionId } = parseResult.data
       const context = dialogMachine.getContext(sessionId)
 
       if (!context) {
@@ -70,7 +85,11 @@ export default async function dialogRoutes(fastify: FastifyInstance) {
 
   fastify.delete('/session/:sessionId', async (request, reply) => {
     try {
-      const { sessionId } = request.params as { sessionId: string }
+      const parseResult = sessionIdSchema.safeParse(request.params)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
+      }
+      const { sessionId } = parseResult.data
       dialogMachine.resetSession(sessionId)
 
       return {
@@ -93,11 +112,11 @@ export default async function dialogRoutes(fastify: FastifyInstance) {
 
   fastify.post('/intent/recognize', async (request, reply) => {
     try {
-      const { text } = request.body as { text?: string }
-
-      if (!text) {
-        return reply.status(400).send({ error: '请提供文本内容' })
+      const parseResult = textSchema.safeParse(request.body)
+      if (!parseResult.success) {
+        return reply.status(400).send({ error: parseResult.error.errors[0].message })
       }
+      const { text } = parseResult.data
 
       const { IntentRecognizer } = await import('../services/dialog/intent-recognizer.js')
       const recognizer = new IntentRecognizer()

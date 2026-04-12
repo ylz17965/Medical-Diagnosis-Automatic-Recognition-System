@@ -21,17 +21,49 @@ interface LoginResponse {
   accessToken: string
 }
 
+interface Source {
+  source: string
+  content: string
+}
+
+interface Citation {
+  id: string
+  type: string
+  typeLabel: string
+  title: string
+  authors: string
+  journal: string
+  year: number
+  volume?: string
+  issue?: string
+  impactFactor: number | null
+  doi?: string
+  link?: string
+  citationContent: string
+  citationContext: string
+  relevanceScore: number
+}
+
+interface DeepSearchResult {
+  totalSearched: number
+  totalCited: number
+  citations: Citation[]
+  searchSummary: string
+}
+
 interface Message {
   id: string
   role: 'USER' | 'ASSISTANT'
   content: string
-  sources?: Array<{ source: string; content: string }>
+  sources?: Source[]
+  citations?: Citation[]
+  deepSearchResult?: DeepSearchResult
   createdAt: string
 }
 
 interface Conversation {
   id: string
-  type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'
+  type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' | 'LUNG' | 'HEART'
   title: string
   messages: Message[]
   createdAt: string
@@ -91,6 +123,15 @@ const defaultRetryConfig: RetryConfig = {
 }
 
 let accessToken: string | null = localStorage.getItem('accessToken')
+
+function getSessionId(): string {
+  let sessionId = localStorage.getItem('chatSessionId')
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    localStorage.setItem('chatSessionId', sessionId)
+  }
+  return sessionId
+}
 
 export function setAccessToken(token: string | null) {
   accessToken = token
@@ -236,12 +277,21 @@ export const authApi = {
 export const chatApi = {
   stream: async (
     content: string,
-    onChunk: (chunk: { content?: string; done?: boolean; conversationId?: string; sources?: Array<{ source: string; content: string }> }) => Promise<void> | void,
+    onChunk: (chunk: { 
+      content?: string
+      done?: boolean
+      conversationId?: string
+      sessionId?: string
+      sources?: Source[]
+      citations?: Citation[]
+      deepSearchResult?: DeepSearchResult
+    }) => Promise<void> | void,
     conversationId?: string,
-    type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' = 'CHAT',
+    type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' | 'LUNG' | 'HEART' = 'CHAT',
   ): Promise<void> => {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      'x-session-id': getSessionId(),
     }
 
     if (accessToken) {
@@ -476,4 +526,4 @@ export const imageApi = {
   },
 }
 
-export type { User, Message, Conversation, DrugInfo, ReportItem, ReportInfo, ImageAnalyzeResponse }
+export type { User, Message, Conversation, DrugInfo, ReportItem, ReportInfo, ImageAnalyzeResponse, Source, Citation, DeepSearchResult }

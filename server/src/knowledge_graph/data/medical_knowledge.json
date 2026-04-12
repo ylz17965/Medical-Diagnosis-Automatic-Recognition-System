@@ -477,7 +477,7 @@
       "category": "cardiac",
       "normalRange": [
         {"description": "心率", "min": 60, "max": 100, "unit": "次/分"},
-        {"description": "心律", "description": "窦性心律"}
+        {"description": "心律", "value": "窦性心律"}
       ],
       "clinicalSignificance": "评估心脏电活动，诊断心律失常、心肌缺血等。",
       "preparationRequired": ["放松心情", "避免剧烈运动"],
@@ -532,8 +532,8 @@
       "aliases": ["尿液分析", "尿检"],
       "category": "urine",
       "normalRange": [
-        {"description": "尿蛋白", "description": "阴性"},
-        {"description": "尿糖", "description": "阴性"},
+        {"description": "尿蛋白定性", "value": "阴性"},
+        {"description": "尿糖定性", "value": "阴性"},
         {"description": "尿白细胞", "min": 0, "max": 5, "unit": "/HP"}
       ],
       "clinicalSignificance": "评估泌尿系统状况，筛查尿路感染、肾脏疾病等。",

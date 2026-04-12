@@ -3,12 +3,14 @@ import { optionalAuth, authenticate } from '../middleware/auth.middleware.js'
 import { z } from 'zod'
 import { LLMService } from '../services/llm.service.js'
 import { RAGService } from '../services/rag.service.js'
+import { KnowledgeGraphRAGSync } from '../services/kg-rag-sync.service.js'
 
 const sendMessageSchema = z.object({
   conversationId: z.string().uuid().optional(),
   content: z.string().min(1).max(4000),
   type: z.enum(['CHAT', 'SEARCH', 'REPORT', 'DRUG']).optional(),
   useRAG: z.boolean().optional(),
+  useAgent: z.boolean().optional(),
 })
 
 const RagCategories: Record<string, string> = {
@@ -25,9 +27,30 @@ const ModelTypes: Record<string, 'complex' | 'simple'> = {
   DRUG: 'complex',
 }
 
+const MAX_HISTORY_MESSAGES = 20
+
+const guestSessions: Map<string, Array<{ role: string; content: string; timestamp: number }>> = new Map()
+
+const GUEST_SESSION_TIMEOUT = 30 * 60 * 1000
+
+function cleanupGuestSessions() {
+  const now = Date.now()
+  for (const [sessionId, messages] of guestSessions.entries()) {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1]
+      if (now - lastMessage.timestamp > GUEST_SESSION_TIMEOUT) {
+        guestSessions.delete(sessionId)
+      }
+    }
+  }
+}
+
+setInterval(cleanupGuestSessions, 5 * 60 * 1000)
+
 export default async function chatRoutes(fastify: FastifyInstance) {
   const ragService = new RAGService(fastify.prisma)
   const llmService = new LLMService(ragService)
+  const kgRagSync = new KnowledgeGraphRAGSync(fastify.prisma)
 
   fastify.get(
     '/health',
@@ -62,9 +85,12 @@ export default async function chatRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof sendMessageSchema>
-      const { content, conversationId, type = 'CHAT', useRAG = true } = body
+      const { content, conversationId, type = 'CHAT', useRAG = true, useAgent = true } = body
       const userId = request.user?.userId
       const isGuest = !userId
+      
+      const sessionId = request.headers['x-session-id'] as string || 
+                        `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
       let conversation = null
       let previousMessages: Array<{ role: string; content: string }> = []
@@ -89,7 +115,7 @@ export default async function chatRoutes(fastify: FastifyInstance) {
         const messages = await fastify.prisma.message.findMany({
           where: { conversationId: conversation.id },
           orderBy: { createdAt: 'asc' },
-          take: 10,
+          take: MAX_HISTORY_MESSAGES,
         })
 
         previousMessages = messages.map(m => ({
@@ -104,6 +130,14 @@ export default async function chatRoutes(fastify: FastifyInstance) {
             content,
           },
         })
+      }
+
+      if (isGuest) {
+        const sessionMessages = guestSessions.get(sessionId) || []
+        previousMessages = sessionMessages.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }))
       }
 
       reply.raw.setHeader('Content-Type', 'text/event-stream')
@@ -122,11 +156,15 @@ export default async function chatRoutes(fastify: FastifyInstance) {
 
       let fullResponse = ''
       let sources: Array<{ source: string; content: string }> = []
+      let citations: any[] = []
+      let deepSearchResult: any = undefined
+      let agentUsed: { id: string; name: string; emoji: string } | undefined
 
       try {
         const stream = llmService.chatStream({
           messages,
           useRAG,
+          useAgent,
           ragCategory: RagCategories[type],
           modelType: ModelTypes[type],
           temperature: 0.7,
@@ -135,6 +173,9 @@ export default async function chatRoutes(fastify: FastifyInstance) {
         for await (const chunk of stream) {
           if (chunk.done) {
             sources = chunk.sources || []
+            citations = chunk.citations || []
+            deepSearchResult = chunk.deepSearchResult
+            agentUsed = chunk.agentUsed
           } else {
             fullResponse += chunk.content
             reply.raw.write(`data: ${JSON.stringify({ content: chunk.content })}\n\n`)
@@ -157,10 +198,26 @@ export default async function chatRoutes(fastify: FastifyInstance) {
           })
         }
 
+        if (isGuest) {
+          const sessionMessages = guestSessions.get(sessionId) || []
+          sessionMessages.push(
+            { role: 'user', content, timestamp: Date.now() },
+            { role: 'assistant', content: fullResponse, timestamp: Date.now() }
+          )
+          if (sessionMessages.length > MAX_HISTORY_MESSAGES * 2) {
+            sessionMessages.splice(0, sessionMessages.length - MAX_HISTORY_MESSAGES * 2)
+          }
+          guestSessions.set(sessionId, sessionMessages)
+        }
+
         reply.raw.write(`data: ${JSON.stringify({ 
           done: true, 
           conversationId: conversation?.id,
+          sessionId: isGuest ? sessionId : undefined,
           sources: sources.length > 0 ? sources : undefined,
+          citations: citations.length > 0 ? citations : undefined,
+          deepSearchResult: deepSearchResult,
+          agentUsed: agentUsed,
         })}\n\n`)
       } catch (error) {
         console.error('Chat stream error:', error)
@@ -183,17 +240,19 @@ export default async function chatRoutes(fastify: FastifyInstance) {
           content: z.string().min(1).max(4000),
           type: z.enum(['CHAT', 'SEARCH', 'REPORT', 'DRUG']).optional(),
           useRAG: z.boolean().optional(),
+          useAgent: z.boolean().optional(),
         }),
         tags: ['chat'],
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const body = request.body as { content: string; type?: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'; useRAG?: boolean }
-      const { content, type = 'CHAT', useRAG = true } = body
+      const body = request.body as { content: string; type?: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'; useRAG?: boolean; useAgent?: boolean }
+      const { content, type = 'CHAT', useRAG = true, useAgent = true } = body
 
       const response = await llmService.chat({
         messages: [{ role: 'user', content }],
         useRAG,
+        useAgent,
         ragCategory: RagCategories[type],
         modelType: ModelTypes[type],
       })
@@ -222,6 +281,57 @@ export default async function chatRoutes(fastify: FastifyInstance) {
           models,
         },
       })
+    }
+  )
+
+  fastify.post(
+    '/kg-sync',
+    {
+      schema: {
+        tags: ['chat'],
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const result = await kgRagSync.syncToRAG()
+        return reply.send({
+          success: true,
+          data: {
+            message: `成功同步 ${result.synced} 条知识到RAG系统`,
+            ...result,
+          },
+        })
+      } catch (error) {
+        fastify.log.error(error, 'KG sync error')
+        return reply.status(500).send({
+          success: false,
+          error: '知识图谱同步失败',
+        })
+      }
+    }
+  )
+
+  fastify.get(
+    '/kg-status',
+    {
+      schema: {
+        tags: ['chat'],
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const status = await kgRagSync.getSyncStatus()
+        return reply.send({
+          success: true,
+          data: status,
+        })
+      } catch (error) {
+        fastify.log.error(error, 'KG status error')
+        return reply.status(500).send({
+          success: false,
+          error: '获取知识图谱状态失败',
+        })
+      }
     }
   )
 }

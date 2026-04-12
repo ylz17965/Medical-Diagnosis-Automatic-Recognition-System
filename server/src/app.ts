@@ -24,6 +24,14 @@ import knowledgeGraphRoutes from './knowledge_graph/routes.js'
 import hybridSearchRoutes from './routes/hybrid-search.routes.js'
 import explainableRAGRoutes from './routes/explainable-rag.routes.js'
 import dialogRoutes from './routes/dialog.routes.js'
+import testRoutes from './tests/routes.js'
+import userTestRoutes from './tests/user-test-routes.js'
+import { federatedRoutes } from './routes/federated.routes.js'
+import { digitalTwinRoutes } from './routes/digital-twin.routes.js'
+import { blockchainRoutes } from './routes/blockchain.routes.js'
+import { lungCancerRoutes } from './routes/lung-cancer.routes.js'
+import { hypertensionRoutes } from './routes/hypertension.routes.js'
+import agentRoutes from './routes/agent.routes.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -136,6 +144,32 @@ fastify.register(knowledgeGraphRoutes, { prefix: '/api/v1/kg' })
 fastify.register(hybridSearchRoutes, { prefix: '/api/v1/hybrid' })
 fastify.register(explainableRAGRoutes, { prefix: '/api/v1/explain' })
 fastify.register(dialogRoutes, { prefix: '/api/v1/dialog' })
+fastify.register(testRoutes, { prefix: '/api/v1/tests' })
+fastify.register(userTestRoutes, { prefix: '/api/v1/user-test' })
+fastify.register(federatedRoutes, { prefix: '/api/v1/federated' })
+fastify.register(digitalTwinRoutes, { prefix: '/api/v1/digital-twin' })
+fastify.register(blockchainRoutes, { prefix: '/api/v1/blockchain' })
+fastify.register(lungCancerRoutes, { prefix: '/api/v1/lung-cancer' })
+fastify.register(hypertensionRoutes, { prefix: '/api/v1/hypertension' })
+fastify.register(agentRoutes, { prefix: '/api/v1/agents' })
+
+fastify.get('/', async () => ({
+  name: 'AI健康助手 API',
+  version: '1.0.0',
+  description: '基于知识图谱增强的可信医疗RAG系统',
+  endpoints: {
+    health: '/health',
+    docs: '/docs',
+    api: '/api/v1',
+  },
+  links: {
+    chat: '/api/v1/chat',
+    knowledge: '/api/v1/knowledge',
+    knowledgeGraph: '/api/v1/kg',
+    tests: '/api/v1/tests',
+    userTest: '/api/v1/user-test',
+  },
+}))
 
 fastify.get('/health', async () => ({
   status: 'ok',

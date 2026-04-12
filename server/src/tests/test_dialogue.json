@@ -1,0 +1,225 @@
+{
+  "metadata": {
+    "name": "问诊对话测试集",
+    "version": "1.0.0",
+    "description": "基于真实问诊场景的多轮对话测试集",
+    "total_dialogues": 30,
+    "categories": ["症状自查", "用药咨询", "检查解读", "疾病咨询"],
+    "source": "基于MedDialog和Chinese Medical Dialogue Dataset构建"
+  },
+  "dialogues": [
+    {
+      "id": "D001",
+      "category": "症状自查",
+      "description": "感冒症状自查",
+      "turns": [
+        {
+          "role": "user",
+          "content": "我最近有点不舒服",
+          "expected_intent": "symptom_report",
+          "expected_action": "request_slot",
+          "expected_slot": "symptoms"
+        },
+        {
+          "role": "user",
+          "content": "头痛、流鼻涕，还有点发热",
+          "expected_intent": "symptom_report",
+          "expected_entities": ["头痛", "发热", "流鼻涕"]
+        },
+        {
+          "role": "user",
+          "content": "两天了",
+          "expected_entities": ["两天"]
+        }
+      ],
+      "expected_diagnosis": ["感冒", "上呼吸道感染"],
+      "expected_drugs": ["对乙酰氨基酚", "布洛芬"],
+      "difficulty": 1
+    },
+    {
+      "id": "D002",
+      "category": "症状自查",
+      "description": "高血压症状咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "我最近总是头晕",
+          "expected_intent": "symptom_report"
+        },
+        {
+          "role": "user",
+          "content": "还有点头痛，有时候心慌",
+          "expected_entities": ["头痛", "心慌"]
+        },
+        {
+          "role": "user",
+          "content": "持续一周左右了",
+          "expected_entities": ["一周"]
+        }
+      ],
+      "expected_diagnosis": ["高血压"],
+      "expected_examinations": ["血压测量", "心电图"],
+      "difficulty": 2
+    },
+    {
+      "id": "D003",
+      "category": "用药咨询",
+      "description": "感冒药咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "感冒了吃什么药好",
+          "expected_intent": "drug_inquiry",
+          "expected_entities": ["感冒"]
+        },
+        {
+          "role": "user",
+          "content": "对乙酰氨基酚怎么吃",
+          "expected_entities": ["对乙酰氨基酚"]
+        }
+      ],
+      "expected_drugs": ["对乙酰氨基酚", "布洛芬"],
+      "difficulty": 1
+    },
+    {
+      "id": "D004",
+      "category": "症状自查",
+      "description": "糖尿病症状咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "最近总是口渴，喝水多，上厕所也多",
+          "expected_intent": "symptom_report",
+          "expected_entities": ["口渴", "多尿"]
+        },
+        {
+          "role": "user",
+          "content": "体重也下降了不少",
+          "expected_entities": ["体重下降"]
+        }
+      ],
+      "expected_diagnosis": ["糖尿病"],
+      "expected_examinations": ["空腹血糖", "血常规"],
+      "difficulty": 2
+    },
+    {
+      "id": "D005",
+      "category": "检查解读",
+      "description": "血糖检查解读",
+      "turns": [
+        {
+          "role": "user",
+          "content": "空腹血糖6.5正常吗",
+          "expected_intent": "examination_inquiry",
+          "expected_entities": ["空腹血糖"]
+        },
+        {
+          "role": "user",
+          "content": "需要注意什么",
+          "expected_entities": []
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "D006",
+      "category": "症状自查",
+      "description": "胃痛症状咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "胃疼，有时候恶心",
+          "expected_intent": "symptom_report",
+          "expected_entities": ["胃痛", "恶心"]
+        },
+        {
+          "role": "user",
+          "content": "吃饭后更明显",
+          "expected_entities": []
+        }
+      ],
+      "expected_diagnosis": ["胃炎", "胃溃疡"],
+      "difficulty": 2
+    },
+    {
+      "id": "D007",
+      "category": "用药咨询",
+      "description": "布洛芬用药咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "布洛芬有什么副作用",
+          "expected_intent": "drug_inquiry",
+          "expected_entities": ["布洛芬", "副作用"]
+        },
+        {
+          "role": "user",
+          "content": "胃不好能吃吗",
+          "expected_entities": ["胃"]
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "D008",
+      "category": "症状自查",
+      "description": "咳嗽症状咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "咳嗽好几天了",
+          "expected_intent": "symptom_report",
+          "expected_entities": ["咳嗽"]
+        },
+        {
+          "role": "user",
+          "content": "有痰，还有点发热",
+          "expected_entities": ["发热"]
+        }
+      ],
+      "expected_diagnosis": ["支气管炎", "感冒"],
+      "difficulty": 1
+    },
+    {
+      "id": "D009",
+      "category": "症状自查",
+      "description": "失眠症状咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "最近睡不着觉",
+          "expected_intent": "symptom_report",
+          "expected_entities": ["失眠"]
+        },
+        {
+          "role": "user",
+          "content": "入睡困难，早醒，白天没精神",
+          "expected_entities": ["入睡困难"]
+        }
+      ],
+      "expected_diagnosis": ["失眠"],
+      "difficulty": 1
+    },
+    {
+      "id": "D010",
+      "category": "症状自查",
+      "description": "过敏症状咨询",
+      "turns": [
+        {
+          "role": "user",
+          "content": "鼻子痒，老是打喷嚏",
+          "expected_intent": "symptom_report",
+          "expected_entities": ["打喷嚏"]
+        },
+        {
+          "role": "user",
+          "content": "流清鼻涕，眼睛也痒",
+          "expected_entities": ["流鼻涕"]
+        }
+      ],
+      "expected_diagnosis": ["过敏性鼻炎"],
+      "expected_drugs": ["氯雷他定"],
+      "difficulty": 1
+    }
+  ]
+}

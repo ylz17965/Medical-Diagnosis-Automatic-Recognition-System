@@ -2,7 +2,7 @@ import { ref, computed, nextTick } from 'vue'
 import type { FeatureType } from '@/components/business'
 import { useConversationStore, useUserStore } from '@/stores'
 import { chatApi, imageApi, getAccessToken } from '@/services/api'
-import type { DrugInfo, ReportInfo } from '@/services/api'
+import type { DrugInfo, ReportInfo, Citation, DeepSearchResult } from '@/services/api'
 import { useConversationTurns, type ConversationTurn } from './useConversationTurns'
 
 export type ScrollCallback = () => void
@@ -39,14 +39,20 @@ export function useChat() {
     search: '您已进入深度搜索模式，请输入您想要搜索的医学问题，我将为您查找权威资料。',
     qa: '您已进入健康问答模式，请描述您的健康问题，我将为您提供专业建议。',
     report: '请上传您的体检报告，我将为您解读各项指标。',
-    drug: '请上传药盒照片，我将为您识别药品信息。'
+    drug: '请上传药盒照片，我将为您识别药品信息。',
+    lung: '您已进入肺癌早筛模式，请提供肺结节信息（大小、类型、位置），我将为您评估恶性风险并给出管理建议。',
+    heart: '您已进入高血压管理模式，请提供血压数据，我将为您分析血压状况并给出个性化建议。',
+    'lung-ct': '您已进入肺部CT可视化模式，请上传DICOM格式的CT影像文件，我将为您展示可视化结果。'
   }
 
-  const modeToType: Record<FeatureType | 'chat', 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'> = {
+  const modeToType: Record<FeatureType | 'chat', 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' | 'LUNG' | 'HEART'> = {
     search: 'SEARCH',
     qa: 'CHAT',
     report: 'REPORT',
     drug: 'DRUG',
+    lung: 'LUNG',
+    heart: 'HEART',
+    'lung-ct': 'LUNG',
     chat: 'CHAT'
   }
 
@@ -101,6 +107,8 @@ export function useChat() {
 
     let fullContent = ''
     let sources: Array<{ source: string; content: string }> = []
+    let citations: Citation[] = []
+    let deepSearchResult: DeepSearchResult | undefined = undefined
     let messageEl = loadingMessage
 
     try {
@@ -129,13 +137,21 @@ export function useChat() {
           if (chunk.sources) {
             sources = chunk.sources
           }
+          if (chunk.citations) {
+            citations = chunk.citations
+          }
+          if (chunk.deepSearchResult) {
+            deepSearchResult = chunk.deepSearchResult
+          }
           if (chunk.done) {
             if (messageEl) {
               conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
                 content: fullContent,
                 loading: false,
                 streaming: false,
-                sources: sources.length > 0 ? sources : undefined
+                sources: sources.length > 0 ? sources : undefined,
+                citations: citations.length > 0 ? citations : undefined,
+                deepSearchResult: deepSearchResult
               })
             }
           }
