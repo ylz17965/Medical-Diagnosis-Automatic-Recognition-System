@@ -139,10 +139,19 @@ Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "   环境初始化完成!" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host ""
+Write-Host "功能模块:" -ForegroundColor White
+Write-Host "  - 健康问答: AI医疗咨询" -ForegroundColor Gray
+Write-Host "  - 报告解读: 体检报告分析" -ForegroundColor Gray
+Write-Host "  - 肺部CT 3D可视化: DICOM/MHD文件体绘制" -ForegroundColor Gray
+Write-Host ""
 Write-Host "后续步骤:" -ForegroundColor White
 Write-Host "  1. 编辑 server\.env 配置 QWEN_API_KEY" -ForegroundColor Gray
 Write-Host "  2. 运行 npm run dev 启动开发服务器" -ForegroundColor Gray
 Write-Host "  3. 访问 http://localhost:5173" -ForegroundColor Gray
+Write-Host ""
+Write-Host "肺部CT测试数据:" -ForegroundColor White
+Write-Host "  - LUNA16: https://luna16.grand-challenge.org/Data/" -ForegroundColor Gray
+Write-Host "  - LIDC-IDRI: https://www.cancerimagingarchive.net/collection/lidc-idri/" -ForegroundColor Gray
 Write-Host ""
 Write-Host "常用命令:" -ForegroundColor White
 Write-Host "  npm run dev          - 启动开发服务器" -ForegroundColor Gray
