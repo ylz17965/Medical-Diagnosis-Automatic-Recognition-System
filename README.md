@@ -6,10 +6,20 @@
 
 | 功能模块 | 说明 | 图片识别 |
 |---------|------|---------|
-| 深度搜索 | 搜索权威医学资料并整合答案 | 否 |
-| 健康问答 | 回答常见健康问题 | 否 |
+| 深度搜索 | 搜索权威医学资料并整合答案，支持文献引用 | 否 |
+| 健康问答 | 回答常见健康问题，附带权威来源标注 | 否 |
 | 报告解读 | 上传体检报告图片，解析异常指标 | 是 |
 | 药盒识别 | 上传药盒图片，识别药品信息 | 是 |
+| **肺部CT 3D可视化** | 上传DICOM/MHD文件，进行肺部CT体绘制可视化 | 否 |
+
+### 核心亮点
+
+- **知识图谱增强**: 构建医学知识图谱，支持症状-疾病-药品的关联推理
+- **文献引用系统**: 回答附带权威医学文献引用，显示影响因子和引用段落
+- **可解释性**: 每个回答都有来源追溯，提升可信度
+- **追问机制**: 智能追问收集关键信息，提供个性化建议
+- **多轮对话**: 支持上下文记忆的连贯对话体验
+- **肺部CT 3D可视化**: 基于VTK.js的Web端肺部CT体绘制，支持多窗宽窗位预设
 
 ## 技术栈
 
@@ -22,6 +32,8 @@
 | Pinia | 状态管理 |
 | Vue Router | 路由管理 |
 | VueUse | 组合式函数库 |
+| VTK.js | 医学影像3D可视化 |
+| dicom-parser | DICOM文件解析 |
 
 ### 后端
 | 技术 | 说明 |
@@ -232,22 +244,37 @@ git push origin feature/你的功能名称
 ├── web/                    # 前端项目
 │   ├── src/
 │   │   ├── components/     # 组件
+│   │   │   ├── base/       # 基础组件
+│   │   │   ├── business/   # 业务组件
+│   │   │   │   └── LungViewer/ # 肺部CT可视化模块
+│   │   │   ├── icons/      # 图标组件
+│   │   │   └── navigation/ # 导航组件
 │   │   ├── composables/    # 组合式函数
+│   │   │   ├── useVTKVolumeRenderer.ts # VTK体绘制渲染器
+│   │   │   └── useSimulatedCTData.ts   # 模拟CT数据生成
 │   │   ├── layouts/        # 布局组件
 │   │   ├── router/         # 路由配置
 │   │   ├── services/       # API 服务
 │   │   ├── stores/         # Pinia 状态
 │   │   ├── styles/         # 样式文件
+│   │   ├── utils/          # 工具函数
+│   │   │   └── mhdParser.ts # MHD/RAW文件解析器
 │   │   └── views/          # 页面视图
+│   │       └── LungCTView.vue # 肺部CT可视化页面
 │   └── package.json
 │
 ├── server/                 # 后端项目
 │   ├── src/
 │   │   ├── config/         # 配置
+│   │   ├── data/           # 数据文件（文献库、权威来源等）
+│   │   ├── knowledge_graph/ # 知识图谱模块
 │   │   ├── middleware/     # 中间件
 │   │   ├── repositories/   # 数据访问层
 │   │   ├── routes/         # 路由
 │   │   ├── services/       # 业务逻辑
+│   │   │   ├── dialog/     # 对话状态机
+│   │   │   └── ...         # 其他服务
+│   │   ├── tests/          # 测试文件
 │   │   └── app.ts          # 入口文件
 │   ├── prisma/
 │   │   └── schema.prisma   # 数据库模型
@@ -255,6 +282,7 @@ git push origin feature/你的功能名称
 │
 ├── setup.sh                # Linux/Mac 部署脚本
 ├── setup.ps1               # Windows 部署脚本
+├── PROJECT_DESCRIPTION.md  # 项目详细描述文档
 ├── CONTRIBUTING.md         # 团队协作指南
 └── README.md
 ```

@@ -81,5 +81,47 @@ skills-lock.json
 *.md
 !README.md
 !CONTRIBUTING.md
+!PROJECT_DESCRIPTION.md
 !server/README.md
 !web/README.md
+
+# Project specific
+denglu.html
+xiangmu.txt
+
+# Data collection outputs
+data/pubmed/
+data/tcm/
+data/guidelines/
+data/processed/
+data/vectors/
+scripts/data_collection/data/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+
+# Medical Imaging Data
+*.dcm
+*.dicom
+*.mhd
+*.raw
+*.nii
+*.nii.gz
+*.nrrd
+*.vti
+*.vtk
+DICOM_samples/
+LUNA16*/
+LIDC-IDRI/
+jsjsj_exercise_2_data/
+
+# VTK.js cache
+.vtk-cache/

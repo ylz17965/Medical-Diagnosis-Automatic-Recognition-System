@@ -7,6 +7,7 @@ import IconLogout from '@/components/icons/IconLogout.vue'
 import IconSidebar from '@/components/icons/IconSidebar.vue'
 import IconMessage from '@/components/icons/IconMessage.vue'
 import IconClose from '@/components/icons/IconClose.vue'
+import IconLung from '@/components/icons/IconLung.vue'
 
 interface Conversation {
   id: string
@@ -159,6 +160,27 @@ const cancelDelete = () => {
       <div v-if="!collapsed && conversations.length === 0" class="empty-state" role="status">
         <p>暂无对话记录</p>
         <p class="empty-hint">点击上方按钮开始新对话</p>
+      </div>
+
+      <div class="nav-divider" v-if="!collapsed"></div>
+
+      <div class="nav-menu" v-if="!collapsed">
+        <a href="/lung-ct" class="nav-item">
+          <IconLung class="nav-icon" />
+          <span>肺部CT</span>
+        </a>
+        <a href="/lung-cancer" class="nav-item">
+          <IconMessage class="nav-icon" />
+          <span>肺癌早筛</span>
+        </a>
+        <a href="/hypertension" class="nav-item">
+          <IconMessage class="nav-icon" />
+          <span>高血压管理</span>
+        </a>
+        <a href="/dashboard" class="nav-item">
+          <IconMessage class="nav-icon" />
+          <span>健康仪表盘</span>
+        </a>
       </div>
     </div>
 
@@ -421,6 +443,42 @@ const cancelDelete = () => {
   height: 16px;
 }
 
+.nav-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--spacing-2) 0;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-2);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.nav-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 .delete-confirm {
   display: flex;
   align-items: center;
@@ -568,7 +626,9 @@ const cancelDelete = () => {
 }
 
 .sidebar-collapsed .conversations-list,
-.sidebar-collapsed .empty-state {
+.sidebar-collapsed .empty-state,
+.sidebar-collapsed .nav-menu,
+.sidebar-collapsed .nav-divider {
   display: none;
 }
 

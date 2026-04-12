@@ -1,6 +1,19 @@
 {
-  "name": "web",
+  "name": "zhiliao-assistant",
   "version": "1.0.0",
+  "description": "智疗助手 - AI医疗自助服务平台，支持健康咨询、体检报告解读、用药指导、肺部CT 3D可视化",
+  "keywords": [
+    "medical",
+    "healthcare",
+    "ai",
+    "vue3",
+    "vtk.js",
+    "dicom",
+    "lung-ct",
+    "3d-visualization"
+  ],
+  "author": "",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,11 +24,19 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@cornerstonejs/core": "^4.21.0",
+    "@cornerstonejs/dicom-image-loader": "^4.21.0",
+    "@cornerstonejs/tools": "^4.21.0",
+    "@kitware/vtk.js": "^34.15.1",
     "@types/dompurify": "^3.0.5",
+    "@types/three": "^0.183.1",
     "@vueuse/core": "^10.9.0",
+    "cornerstone-tools": "^6.0.10",
+    "dicom-parser": "^1.8.21",
     "dompurify": "^3.3.3",
     "marked": "^12.0.1",
     "pinia": "^2.1.7",
+    "three": "^0.183.2",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
