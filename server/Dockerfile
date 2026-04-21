@@ -8,13 +8,13 @@ RUN npm config set registry https://registry.npmmirror.com
 COPY package*.json ./
 COPY server/package*.json ./server/
 
-RUN npm ci --workspace=server --omit=dev --ignore-scripts
+WORKDIR /app/server
+RUN npm install --omit=dev --ignore-scripts || npm install --omit=dev
 
 COPY server/src server/src
 COPY server/prisma server/prisma
 COPY server/tsconfig.json server/
 
-WORKDIR /app/server
 RUN npx prisma generate
 RUN npm run build
 

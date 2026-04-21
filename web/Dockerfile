@@ -11,7 +11,8 @@ COPY package*.json ./
 COPY web/package*.json ./web/
 COPY server/package*.json ./server/
 
-RUN npm ci --workspace=web --omit=dev --ignore-scripts
+WORKDIR /app/web
+RUN npm install --omit=dev --ignore-scripts || npm install --omit=dev
 
 COPY web/src web/src
 COPY web/public web/public
@@ -19,8 +20,6 @@ COPY web/index.html web/
 COPY web/vite.config.ts web/
 COPY web/tsconfig.json web/
 COPY web/tsconfig.node.json web/
-
-WORKDIR /app/web
 
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
