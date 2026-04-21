@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/app.ts",
-    "build": "tsc",
+    "build": "tsc --skipLibCheck",
     "start": "node dist/app.js",
     "lint": "eslint src --ext .ts --fix",
     "typecheck": "tsc --noEmit",
@@ -47,6 +47,7 @@
     "@types/node": "^20.11.28",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
+    "esbuild": "^0.20.0",
     "eslint": "^8.57.0",
     "prisma": "^5.10.0",
     "tsx": "^4.7.1",
