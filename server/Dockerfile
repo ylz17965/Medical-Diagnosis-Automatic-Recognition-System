@@ -1,21 +1,19 @@
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /app/server
 
 RUN apk add --no-cache openssl
 RUN npm config set registry https://registry.npmmirror.com
 
-COPY package*.json ./
-COPY server/package*.json ./server/
+COPY server/package*.json ./
 
-WORKDIR /app/server
 RUN npm install --ignore-scripts
 
-COPY server/src server/src
-COPY server/prisma server/prisma
-COPY server/tsconfig.json server/
+COPY server/src ./src
+COPY server/prisma ./prisma
+COPY server/tsconfig.json ./
 
-RUN npx prisma generate
+RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build
 RUN npm prune --omit=dev
 
