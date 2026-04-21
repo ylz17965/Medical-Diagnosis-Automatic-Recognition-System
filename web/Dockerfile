@@ -24,7 +24,7 @@ COPY web/tsconfig.node.json web/
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN npm run build
+RUN npm run build -- --mode production || npx vite build
 
 FROM nginx:alpine AS runner
 

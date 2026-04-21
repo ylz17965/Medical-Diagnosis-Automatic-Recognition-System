@@ -1,0 +1,424 @@
+Run docker/build-push-action@v5
+GitHub Actions runtime token ACs
+Docker info
+Proxy configuration
+Buildx version
+Builder info
+/usr/bin/docker buildx build --build-arg VITE_API_URL=http://localhost:3000 --file ./web/Dockerfile --iidfile /home/runner/work/_temp/docker-actions-toolkit-egrRvy/build-iidfile-50bdf5682e.txt --label org.opencontainers.image.created=2026-04-21T10:13:34.498Z --label org.opencontainers.image.description=An AI‑powered system that automatically recognizes diseases from medical images and clinical data, combining deep learning with a scalable microservices backend for fast, interpretable diagnostic support. --label org.opencontainers.image.licenses= --label org.opencontainers.image.revision=a48a087d76fe5425e5e87b2eb87100b5d2c02b1f --label org.opencontainers.image.source=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System --label org.opencontainers.image.title=Medical-Diagnosis-Automatic-Recognition-System --label org.opencontainers.image.url=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System --label org.opencontainers.image.version=main --platform linux/amd64,linux/arm64 --attest type=provenance,mode=max,builder-id=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System/actions/runs/24716795541 --tag ghcr.io/ylz17965/medical-diagnosis-automatic-recognition-system:main --tag ghcr.io/ylz17965/medical-diagnosis-automatic-recognition-system:a48a087-web --metadata-file /home/runner/work/_temp/docker-actions-toolkit-egrRvy/build-metadata-01092c83ab.json --push .
+#0 building with "builder-ca72e991-0452-4c4c-bf6f-886743ca6278" instance using docker-container driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.27kB done
+#1 DONE 0.0s
+
+#2 [linux/arm64 internal] load metadata for docker.io/library/nginx:alpine
+#2 ...
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [auth] library/nginx:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [linux/arm64 internal] load metadata for docker.io/library/node:20-alpine
+#5 ...
+
+#6 [linux/amd64 internal] load metadata for docker.io/library/node:20-alpine
+#6 DONE 0.8s
+
+#5 [linux/arm64 internal] load metadata for docker.io/library/node:20-alpine
+#5 DONE 0.8s
+
+#2 [linux/arm64 internal] load metadata for docker.io/library/nginx:alpine
+#2 DONE 0.9s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 866B done
+#7 DONE 0.0s
+
+#8 [linux/amd64 internal] load metadata for docker.io/library/nginx:alpine
+#8 DONE 0.9s
+
+#9 [linux/amd64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 done
+#9 DONE 0.1s
+
+#10 [linux/arm64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#10 resolve docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de 0.0s done
+#10 sha256:83fbf849ee89c6ab0fe1aadcf6a85dcc275070854ee1ca76ee88eb24d9f524af 1.40kB / 1.40kB 0.1s done
+#10 sha256:634f1d1ce0f777ef20ee9c698a3022175abda8611de03efb010559c7c411f23c 1.21kB / 1.21kB 0.1s done
+#10 sha256:662c8d6f66200adef0cf551c6decc52e200f0a30d11eb042708157398efaeb48 19.72MB / 19.72MB 0.2s done
+#10 sha256:10cbc192f783597fdf87a6e883b139c1b18228e8ee4313665026137d6a31077d 403B / 403B 0.1s done
+#10 sha256:a96b658a00feada62d1fac10d4f49ff5da15023f0e29708ff59127bf7b0e03d2 955B / 955B 0.1s done
+#10 sha256:a89d14ef5abe21dda8850d86d557cfa12c57a34bdcbe1c782fb851ec0c52b750 628B / 628B 0.1s done
+#10 sha256:910c2a6cad6dc66c2058f7ef9d3dbb2dfded05a92d6ba4d7ebfc39fc3f74a1e3 1.89MB / 1.89MB 0.1s done
+#10 extracting sha256:910c2a6cad6dc66c2058f7ef9d3dbb2dfded05a92d6ba4d7ebfc39fc3f74a1e3
+#10 extracting sha256:910c2a6cad6dc66c2058f7ef9d3dbb2dfded05a92d6ba4d7ebfc39fc3f74a1e3 0.3s done
+#10 DONE 1.0s
+
+#11 [linux/amd64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#11 resolve docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de 0.0s done
+#11 sha256:612c0c1df4c55a0bf145f84df03cb28de505e6a52fb8e49c9da7b143fc00ad2d 20.25MB / 20.25MB 0.2s done
+#11 sha256:4a8b0b2a5b1937755263ac7ac4ee26db2906c13a5d70f1fb1875ba8e370cdd8f 1.40kB / 1.40kB 0.1s done
+#11 sha256:453da7dbc73e7338c4e201ec3f3c4a5f7751adbf5a6f127792c1cd001a780721 1.21kB / 1.21kB 0.1s done
+#11 sha256:781ff50d2644f74714c0d5a4ffa3447bbfd4b293cfb1dc6a637722ae24c89241 404B / 404B 0.1s done
+#11 sha256:aee4e54b3865ee4d98545b6b49f9e8ab3b9b6ed114a2eafedc7a22e984ea5a68 956B / 956B 0.1s done
+#11 sha256:583599bb7d382e9e986a9ff65204981307bfa71670a29f4190eedae93c4858be 627B / 627B 0.1s done
+#11 sha256:82736a35d0e7f1309edc13d09115410b81542cf8b91afff80deeace02b6f2f26 1.87MB / 1.87MB 0.1s done
+#11 extracting sha256:82736a35d0e7f1309edc13d09115410b81542cf8b91afff80deeace02b6f2f26
+#11 extracting sha256:82736a35d0e7f1309edc13d09115410b81542cf8b91afff80deeace02b6f2f26 0.3s done
+#11 extracting sha256:583599bb7d382e9e986a9ff65204981307bfa71670a29f4190eedae93c4858be 0.0s done
+#11 extracting sha256:aee4e54b3865ee4d98545b6b49f9e8ab3b9b6ed114a2eafedc7a22e984ea5a68 0.0s done
+#11 extracting sha256:781ff50d2644f74714c0d5a4ffa3447bbfd4b293cfb1dc6a637722ae24c89241 0.0s done
+#11 extracting sha256:453da7dbc73e7338c4e201ec3f3c4a5f7751adbf5a6f127792c1cd001a780721 done
+#11 extracting sha256:4a8b0b2a5b1937755263ac7ac4ee26db2906c13a5d70f1fb1875ba8e370cdd8f done
+#11 extracting sha256:612c0c1df4c55a0bf145f84df03cb28de505e6a52fb8e49c9da7b143fc00ad2d
+#11 ...
+
+#12 [internal] load build context
+#12 transferring context: 130.26MB 1.5s done
+#12 DONE 1.5s
+
+#10 [linux/arm64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#10 extracting sha256:a89d14ef5abe21dda8850d86d557cfa12c57a34bdcbe1c782fb851ec0c52b750 0.0s done
+#10 extracting sha256:a96b658a00feada62d1fac10d4f49ff5da15023f0e29708ff59127bf7b0e03d2 done
+#10 extracting sha256:10cbc192f783597fdf87a6e883b139c1b18228e8ee4313665026137d6a31077d done
+#10 extracting sha256:634f1d1ce0f777ef20ee9c698a3022175abda8611de03efb010559c7c411f23c done
+#10 extracting sha256:83fbf849ee89c6ab0fe1aadcf6a85dcc275070854ee1ca76ee88eb24d9f524af 0.0s done
+#10 extracting sha256:662c8d6f66200adef0cf551c6decc52e200f0a30d11eb042708157398efaeb48
+#10 extracting sha256:662c8d6f66200adef0cf551c6decc52e200f0a30d11eb042708157398efaeb48 0.8s done
+#10 DONE 1.8s
+
+#13 [linux/arm64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#13 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 done
+#13 sha256:cd322d0ddd02673e6c24a2158d1f12f6ec7c6fd9c0dc67123244d0f0eb0f8806 443B / 443B 0.1s done
+#13 sha256:13e45b12880fbbfe3554ecf6b70131ace701d0c2fd3e2fb9abb842ba2494cd40 1.26MB / 1.26MB 0.1s done
+#13 sha256:d17f077ada118cc762df373ff803592abf2dfa3ddafaa7381e364dd27a88fca7 4.20MB / 4.20MB 0.1s done
+#13 extracting sha256:d17f077ada118cc762df373ff803592abf2dfa3ddafaa7381e364dd27a88fca7 0.2s done
+#13 sha256:bda5d7ef971f8ede8ea80002d2ac886ef6807fe32cfe46c38704a7ba0429475d 43.55MB / 43.55MB 0.4s done
+#13 extracting sha256:bda5d7ef971f8ede8ea80002d2ac886ef6807fe32cfe46c38704a7ba0429475d
+#13 ...
+
+#11 [linux/amd64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#11 extracting sha256:612c0c1df4c55a0bf145f84df03cb28de505e6a52fb8e49c9da7b143fc00ad2d 1.3s done
+#11 DONE 2.6s
+
+#14 [linux/amd64 runner 2/5] RUN addgroup -g 101 -S nginx &&     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
+#14 0.079 addgroup: group 'nginx' in use
+#14 ...
+
+#15 [linux/arm64 runner 2/5] RUN addgroup -g 101 -S nginx &&     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
+#15 0.117 addgroup: group 'nginx' in use
+#15 DONE 1.1s
+
+#14 [linux/amd64 runner 2/5] RUN addgroup -g 101 -S nginx &&     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
+#14 DONE 0.3s
+
+#9 [linux/amd64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 445B / 445B 0.1s done
+#9 sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 1.26MB / 1.26MB 0.2s done
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 43.23MB / 43.23MB 0.3s done
+#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 0.2s done
+#9 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 0.2s done
+#9 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287
+#9 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 2.7s done
+#9 DONE 3.2s
+
+#13 [linux/arm64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#13 ...
+
+#9 [linux/amd64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 extracting sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 0.0s done
+#9 extracting sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 done
+#9 DONE 3.2s
+
+#16 [linux/amd64 builder  2/16] WORKDIR /app
+#16 DONE 0.1s
+
+#13 [linux/arm64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#13 extracting sha256:bda5d7ef971f8ede8ea80002d2ac886ef6807fe32cfe46c38704a7ba0429475d 2.6s done
+#13 extracting sha256:13e45b12880fbbfe3554ecf6b70131ace701d0c2fd3e2fb9abb842ba2494cd40 0.0s done
+#13 extracting sha256:cd322d0ddd02673e6c24a2158d1f12f6ec7c6fd9c0dc67123244d0f0eb0f8806
+#13 extracting sha256:cd322d0ddd02673e6c24a2158d1f12f6ec7c6fd9c0dc67123244d0f0eb0f8806 done
+#13 DONE 3.3s
+
+#17 [linux/arm64 builder  2/16] WORKDIR /app
+#17 DONE 0.0s
+
+#18 [linux/arm64 builder  3/16] RUN apk add --no-cache openssl
+#18 ...
+
+#19 [linux/amd64 builder  3/16] RUN apk add --no-cache openssl
+#19 0.544 (1/1) Installing openssl (3.5.6-r0)
+#19 0.561 Executing busybox-1.37.0-r30.trigger
+#19 0.567 OK: 11.7 MiB in 19 packages
+#19 DONE 0.6s
+
+#20 [linux/amd64 builder  4/16] RUN npm config set registry https://registry.npmmirror.com
+#20 DONE 0.7s
+
+#18 [linux/arm64 builder  3/16] RUN apk add --no-cache openssl
+#18 ...
+
+#21 [linux/amd64 builder  5/16] COPY package*.json ./
+#21 DONE 0.0s
+
+#22 [linux/amd64 builder  6/16] COPY web/package*.json ./web/
+#22 DONE 0.0s
+
+#23 [linux/amd64 builder  7/16] COPY server/package*.json ./server/
+#23 DONE 0.0s
+
+#24 [linux/amd64 builder  8/16] WORKDIR /app/web
+#24 DONE 0.0s
+
+#25 [linux/amd64 builder  9/16] RUN npm install --ignore-scripts
+#25 ...
+
+#18 [linux/arm64 builder  3/16] RUN apk add --no-cache openssl
+#18 2.292 (1/1) Installing openssl (3.5.6-r0)
+#18 2.350 Executing busybox-1.37.0-r30.trigger
+#18 2.414 OK: 11.9 MiB in 19 packages
+#18 DONE 2.5s
+
+#26 [linux/arm64 builder  4/16] RUN npm config set registry https://registry.npmmirror.com
+#26 DONE 4.8s
+
+#25 [linux/amd64 builder  9/16] RUN npm install --ignore-scripts
+#25 ...
+
+#27 [linux/arm64 builder  5/16] COPY package*.json ./
+#27 DONE 0.0s
+
+#28 [linux/arm64 builder  6/16] COPY web/package*.json ./web/
+#28 DONE 0.0s
+
+#29 [linux/arm64 builder  7/16] COPY server/package*.json ./server/
+#29 DONE 0.0s
+
+#30 [linux/arm64 builder  8/16] WORKDIR /app/web
+#30 DONE 0.0s
+
+#31 [linux/arm64 builder  9/16] RUN npm install --ignore-scripts
+#31 ...
+
+#25 [linux/amd64 builder  9/16] RUN npm install --ignore-scripts
+#25 269.7 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#25 273.3 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+#25 273.8 npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+#25 274.2 npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+#25 275.9 npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+#25 279.4 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#25 280.0 npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+#25 280.3 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#25 282.3 
+#25 282.3 added 490 packages in 5m
+#25 282.3 
+#25 282.3 79 packages are looking for funding
+#25 282.3   run `npm fund` for details
+#25 DONE 283.9s
+
+#31 [linux/arm64 builder  9/16] RUN npm install --ignore-scripts
+#31 ...
+
+#32 [linux/amd64 builder 10/16] COPY web/src web/src
+#32 DONE 0.3s
+
+#31 [linux/arm64 builder  9/16] RUN npm install --ignore-scripts
+#31 ...
+
+#33 [linux/amd64 builder 11/16] COPY web/public web/public
+#33 DONE 0.1s
+
+#34 [linux/amd64 builder 12/16] COPY web/index.html web/
+#34 DONE 0.0s
+
+#35 [linux/amd64 builder 13/16] COPY web/vite.config.ts web/
+#35 DONE 0.0s
+
+#36 [linux/amd64 builder 14/16] COPY web/tsconfig.json web/
+#36 DONE 0.0s
+
+#37 [linux/amd64 builder 15/16] COPY web/tsconfig.node.json web/
+#37 DONE 0.0s
+
+#38 [linux/amd64 builder 16/16] RUN npm run build
+#38 0.231 
+#38 0.231 > zhiliao-assistant@1.0.0 build
+#38 0.231 > vue-tsc && vite build
+#38 0.231 
+#38 0.510 Version 5.9.3
+#38 0.513 tsc: The TypeScript Compiler - Version 5.9.3
+#38 0.513 
+#38 0.513 COMMON COMMANDS
+#38 0.513 
+#38 0.513   tsc
+#38 0.513   Compiles the current project (tsconfig.json in the working directory.)
+#38 0.513 
+#38 0.513   tsc app.ts util.ts
+#38 0.513   Ignoring tsconfig.json, compiles the specified files with default compiler options.
+#38 0.513 
+#38 0.513   tsc -b
+#38 0.513   Build a composite project in the working directory.
+#38 0.513 
+#38 0.513   tsc --init
+#38 0.513   Creates a tsconfig.json with the recommended settings in the working directory.
+#38 0.513 
+#38 0.513   tsc -p ./path/to/tsconfig.json
+#38 0.513   Compiles the TypeScript project located at the specified path.
+#38 0.513 
+#38 0.513   tsc --help --all
+#38 0.513   An expanded version of this information, showing all possible compiler options
+#38 0.513 
+#38 0.513   tsc --noEmit
+#38 0.513   tsc --target esnext
+#38 0.514   Compiles the current project, with additional settings.
+#38 0.514 
+#38 0.514 COMMAND LINE FLAGS
+#38 0.514 
+#38 0.514 --help, -h
+#38 0.514 Print this message.
+#38 0.514 
+#38 0.514 --watch, -w
+#38 0.514 Watch input files.
+#38 0.514 
+#38 0.514 --all
+#38 0.514 Show all compiler options.
+#38 0.514 
+#38 0.514 --version, -v
+#38 0.514 Print the compiler's version.
+#38 0.514 
+#38 0.514 --init
+#38 0.514 Initializes a TypeScript project and creates a tsconfig.json file.
+#38 0.514 
+#38 0.514 --project, -p
+#38 0.514 Compile the project given the path to its configuration file, or to a folder with a 'tsconfig.json'.
+#38 0.514 
+#38 0.514 --showConfig
+#38 0.514 Print the final configuration instead of building.
+#38 0.514 
+#38 0.514 --build, -b
+#38 0.514 Build one or more projects and their dependencies, if out of date
+#38 0.514 
+#38 0.514 COMMON COMPILER OPTIONS
+#38 0.514 
+#38 0.514 --pretty
+#38 0.514 Enable color and formatting in TypeScript's output to make compiler errors easier to read.
+#38 0.514 type: boolean
+#38 0.514 default: true
+#38 0.514 
+#38 0.514 --declaration, -d
+#38 0.514 Generate .d.ts files from TypeScript and JavaScript files in your project.
+#38 0.514 type: boolean
+#38 0.514 default: `false`, unless `composite` is set
+#38 0.514 
+#38 0.514 --declarationMap
+#38 0.514 Create sourcemaps for d.ts files.
+#38 0.514 type: boolean
+#38 0.514 default: false
+#38 0.514 
+#38 0.514 --emitDeclarationOnly
+#38 0.515 Only output d.ts files and not JavaScript files.
+#38 0.515 type: boolean
+#38 0.515 default: false
+#38 0.515 
+#38 0.515 --sourceMap
+#38 0.515 Create source map files for emitted JavaScript files.
+#38 0.515 type: boolean
+#38 0.515 default: false
+#38 0.515 
+#38 0.515 --noEmit
+#38 0.515 Disable emitting files from a compilation.
+#38 0.515 type: boolean
+#38 0.515 default: false
+#38 0.515 
+#38 0.515 --target, -t
+#38 0.515 Set the JavaScript language version for emitted JavaScript and include compatible library declarations.
+#38 0.515 one of: es5, es6/es2015, es2016, es2017, es2018, es2019, es2020, es2021, es2022, es2023, es2024, esnext
+#38 0.515 default: es5
+#38 0.515 
+#38 0.515 --module, -m
+#38 0.515 Specify what module code is generated.
+#38 0.515 one of: none, commonjs, amd, umd, system, es6/es2015, es2020, es2022, esnext, node16, node18, node20, nodenext, preserve
+#38 0.515 default: undefined
+#38 0.515 
+#38 0.515 --lib
+#38 0.515 Specify a set of bundled library declaration files that describe the target runtime environment.
+#38 0.515 one or more: es5, es6/es2015, es7/es2016, es2017, es2018, es2019, es2020, es2021, es2022, es2023, es2024, esnext, dom, dom.iterable, dom.asynciterable, webworker, webworker.importscripts, webworker.iterable, webworker.asynciterable, scripthost, es2015.core, es2015.collection, es2015.generator, es2015.iterable, es2015.promise, es2015.proxy, es2015.reflect, es2015.symbol, es2015.symbol.wellknown, es2016.array.include, es2016.intl, es2017.arraybuffer, es2017.date, es2017.object, es2017.sharedmemory, es2017.string, es2017.intl, es2017.typedarrays, es2018.asyncgenerator, es2018.asynciterable/esnext.asynciterable, es2018.intl, es2018.promise, es2018.regexp, es2019.array, es2019.object, es2019.string, es2019.symbol/esnext.symbol, es2019.intl, es2020.bigint/esnext.bigint, es2020.date, es2020.promise, es2020.sharedmemory, es2020.string, es2020.symbol.wellknown, es2020.intl, es2020.number, es2021.promise, es2021.string, es2021.weakref/esnext.weakref, es2021.intl, es2022.array, es2022.error, es2022.intl, es2022.object, es2022.string, es2022.regexp, es2023.array, es2023.collection, es2023.intl, es2024.arraybuffer, es2024.collection, es2024.object/esnext.object, es2024.promise, es2024.regexp/esnext.regexp, es2024.sharedmemory, es2024.string/esnext.string, esnext.array, esnext.collection, esnext.intl, esnext.disposable, esnext.promise, esnext.decorators, esnext.iterator, esnext.float16, esnext.error, esnext.sharedmemory, decorators, decorators.legacy
+#38 0.515 default: undefined
+#38 0.515 
+#38 0.515 --allowJs
+#38 0.515 Allow JavaScript files to be a part of your program. Use the 'checkJs' option to get errors from these files.
+#38 0.515 type: boolean
+#38 0.515 default: false
+#38 0.515 
+#38 0.515 --checkJs
+#38 0.515 Enable error reporting in type-checked JavaScript files.
+#38 0.515 type: boolean
+#38 0.515 default: false
+#38 0.515 
+#38 0.515 --jsx
+#38 0.515 Specify what JSX code is generated.
+#38 0.515 one of: preserve, react, react-native, react-jsx, react-jsxdev
+#38 0.515 default: undefined
+#38 0.515 
+#38 0.515 --outFile
+#38 0.515 Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output.
+#38 0.515 
+#38 0.515 --outDir
+#38 0.515 Specify an output folder for all emitted files.
+#38 0.515 
+#38 0.515 --removeComments
+#38 0.515 Disable emitting comments.
+#38 0.515 type: boolean
+#38 0.515 default: false
+#38 0.515 
+#38 0.515 --strict
+#38 0.515 Enable all strict type-checking options.
+#38 0.515 type: boolean
+#38 0.515 default: false
+#38 0.515 
+#38 0.516 --types
+#38 0.516 Specify type package names to be included without being referenced in a source file.
+#38 0.516 
+#38 0.516 --esModuleInterop
+#38 0.516 Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility.
+#38 0.516 type: boolean
+#38 0.516 default: false
+#38 0.516 
+#38 0.516 You can learn about all of the compiler options at https://aka.ms/tsc
+#38 0.516 
+#38 0.525 npm error Lifecycle script `build` failed with error:
+#38 0.525 npm error code 1
+#38 0.526 npm error path /app/web
+#38 0.526 npm error workspace zhiliao-assistant@1.0.0
+#38 0.526 npm error location /app/web
+#38 0.526 npm error command failed
+#38 0.526 npm error command sh -c vue-tsc && vite build
+#38 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+#31 [linux/arm64 builder  9/16] RUN npm install --ignore-scripts
+#31 CANCELED
+------
+ > [linux/amd64 builder 16/16] RUN npm run build:
+0.516 
+0.516 You can learn about all of the compiler options at https://aka.ms/tsc
+0.516 
+0.525 npm error Lifecycle script `build` failed with error:
+0.525 npm error code 1
+0.526 npm error path /app/web
+0.526 npm error workspace zhiliao-assistant@1.0.0
+0.526 npm error location /app/web
+0.526 npm error command failed
+0.526 npm error command sh -c vue-tsc && vite build
+------
+Dockerfile:27
+--------------------
+  25 |     ENV VITE_API_URL=$VITE_API_URL
+  26 |     
+  27 | >>> RUN npm run build
+  28 |     
+  29 |     FROM nginx:alpine AS runner
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+Error: buildx failed with: ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
