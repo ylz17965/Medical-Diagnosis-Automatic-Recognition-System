@@ -242,8 +242,9 @@ export function useVTKVolumeRenderer(containerRef: Ref<HTMLElement | null>) {
       interactor.setInteractorStyle(style)
 
       mapper.value = vtk.value.vtkVolumeMapper.newInstance()
-      mapper.value.setSampleDistance(0.5)
-      mapper.value.setAutoAdjustSampleDistances(true)
+      mapper.value.setSampleDistance(1.0)
+      mapper.value.setAutoAdjustSampleDistances(false)
+      mapper.value.setMaximumSamplesPerRay(2000)
 
       volume.value = vtk.value.vtkVolume.newInstance()
       volume.value.setMapper(mapper.value)
@@ -262,7 +263,6 @@ export function useVTKVolumeRenderer(containerRef: Ref<HTMLElement | null>) {
       volume.value.getProperty().setSpecularPower(10)
 
       renderer.value.addVolume(volume.value)
-      renderer.value.resetCamera()
 
       startFPSMonitor()
 

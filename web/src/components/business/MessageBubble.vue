@@ -83,12 +83,35 @@ const renderedContent = computed(() => {
 })
 
 const hasCitations = computed(() => {
+  if (props.deepSearchResult?.citations && props.deepSearchResult.citations.length > 0) {
+    return true
+  }
+  if (props.citations && props.citations.length > 0) {
+    return true
+  }
   if (!props.sources || props.sources.length === 0) return false
   const citationPattern = /\[\d+\]/g
   const matches = props.content.match(citationPattern)
   if (!matches) return false
   const citedNumbers = new Set(matches.map(m => parseInt(m.slice(1, -1))))
   return citedNumbers.size > 0
+})
+
+const displayCitations = computed(() => {
+  if (props.deepSearchResult?.citations && props.deepSearchResult.citations.length > 0) {
+    return props.deepSearchResult.citations
+  }
+  if (props.citations && props.citations.length > 0) {
+    return props.citations
+  }
+  return []
+})
+
+const displaySearchSummary = computed(() => {
+  if (props.deepSearchResult?.searchSummary) {
+    return props.deepSearchResult.searchSummary
+  }
+  return `引用 ${props.sources?.length || 0} 条资料`
 })
 
 const formatTime = (date?: Date) => {
@@ -163,33 +186,76 @@ const handleAttest = async () => {
         
         <div v-if="hasCitations && !loading" class="message-citations">
           <button class="citations-toggle" @click="toggleCitations">
-            <span class="citations-summary">{{ deepSearchResult?.searchSummary || `引用 ${sources.length} 条资料` }}</span>
+            <span class="citations-summary">{{ displaySearchSummary }}</span>
             <IconChevronDown :class="['toggle-icon', { 'is-open': showCitations }]" />
           </button>
           
           <div v-if="showCitations" class="citations-panel">
             <div class="citations-header">
-              <span class="citations-title">引用资料({{ sources.length }})</span>
+              <span class="citations-title">引用资料({{ displayCitations.length > 0 ? displayCitations.length : sources.length }})</span>
             </div>
             <div class="citations-list">
-              <div
-                v-for="(source, index) in sources"
-                :key="index"
-                class="citation-item"
-                :class="{ 'is-expanded': isSourceExpanded(index) }"
-              >
-                <button class="citation-header" @click="toggleSourceExpand(index)">
-                  <div class="citation-index">{{ index + 1 }}</div>
-                  <div class="citation-info">
-                    <div class="citation-type">{{ source.source }}</div>
-                    <div class="citation-title">{{ source.content?.substring(0, 80) }}...</div>
+              <template v-if="displayCitations.length > 0">
+                <div
+                  v-for="(citation, index) in displayCitations"
+                  :key="citation.id"
+                  class="citation-item"
+                  :class="{ 'is-expanded': isSourceExpanded(index) }"
+                >
+                  <button class="citation-header" @click="toggleSourceExpand(index)">
+                    <div class="citation-index">{{ index + 1 }}</div>
+                    <div class="citation-info">
+                      <div class="citation-type-badge">{{ citation.typeLabel }}</div>
+                      <div class="citation-title">{{ citation.title }}</div>
+                      <div class="citation-meta">
+                        <span>{{ citation.authors }}</span>
+                        <span v-if="citation.impactFactor" class="impact-factor">IF: {{ citation.impactFactor.toFixed(2) }}</span>
+                      </div>
+                    </div>
+                    <IconChevronDown :class="['expand-icon', { 'is-open': isSourceExpanded(index) }]" />
+                  </button>
+                  <div v-if="isSourceExpanded(index)" class="citation-content">
+                    <div class="citation-detail">
+                      <div class="detail-row">
+                        <span class="detail-label">来源：</span>
+                        <span>{{ citation.journal }}, {{ citation.year }}</span>
+                      </div>
+                      <div v-if="citation.doi" class="detail-row">
+                        <span class="detail-label">DOI：</span>
+                        <a :href="`https://doi.org/${citation.doi}`" target="_blank" rel="noopener noreferrer" class="doi-link">{{ citation.doi }}</a>
+                      </div>
+                      <div v-if="citation.link" class="detail-row">
+                        <span class="detail-label">链接：</span>
+                        <a :href="citation.link" target="_blank" rel="noopener noreferrer" class="paper-link">查看原文</a>
+                      </div>
+                      <div class="detail-row citation-content-row">
+                        <span class="detail-label">引用内容：</span>
+                        <p class="citation-text">{{ citation.citationContent }}</p>
+                      </div>
+                    </div>
                   </div>
-                  <IconChevronDown :class="['expand-icon', { 'is-open': isSourceExpanded(index) }]" />
-                </button>
-                <div v-if="isSourceExpanded(index)" class="citation-content">
-                  {{ source.content }}
                 </div>
-              </div>
+              </template>
+              <template v-else>
+                <div
+                  v-for="(source, index) in sources"
+                  :key="index"
+                  class="citation-item"
+                  :class="{ 'is-expanded': isSourceExpanded(index) }"
+                >
+                  <button class="citation-header" @click="toggleSourceExpand(index)">
+                    <div class="citation-index">{{ index + 1 }}</div>
+                    <div class="citation-info">
+                      <div class="citation-type">{{ source.source }}</div>
+                      <div class="citation-title">{{ source.content?.substring(0, 80) }}...</div>
+                    </div>
+                    <IconChevronDown :class="['expand-icon', { 'is-open': isSourceExpanded(index) }]" />
+                  </button>
+                  <div v-if="isSourceExpanded(index)" class="citation-content">
+                    {{ source.content }}
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -698,6 +764,17 @@ const handleAttest = async () => {
   margin-bottom: var(--spacing-1);
 }
 
+.citation-type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--color-primary-gradient);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-inverse);
+  margin-bottom: var(--spacing-1);
+}
+
 .citation-title {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -716,6 +793,40 @@ const handleAttest = async () => {
   margin-top: var(--spacing-1);
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
+}
+
+.citation-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-sm);
+}
+
+.detail-label {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.citation-text {
+  margin: var(--spacing-1) 0 0 0;
+  padding: var(--spacing-2);
+  background: var(--color-fill-tertiary);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-primary);
+  font-style: italic;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.citation-content-row {
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .impact-factor {

@@ -7,6 +7,8 @@ import type {
 } from '../types/segmentation'
 import { DEFAULT_SEGMENTATION_CONFIG } from '../types/segmentation'
 
+export type { SegmentedLungs, SegmentationConfig, MeshData }
+
 export class LungSegmentation {
   private volumeData: Float32Array | null = null
   private shape: [number, number, number] = [0, 0, 0]

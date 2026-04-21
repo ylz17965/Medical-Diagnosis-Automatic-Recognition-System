@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { MainLayout } from '@/layouts'
+import { useUserStore } from '@/stores/user'
+import createLogger from '@/utils/logger'
+
+const log = createLogger('DigitalTwin')
+const router = useRouter()
+const userStore = useUserStore()
 
 interface OrganModel {
   id: string
@@ -9,6 +17,7 @@ interface OrganModel {
   indicators: Indicator[]
   position: { x: number; y: number; z: number }
   rotation: number
+  relatedIndicators?: string[]
 }
 
 interface Indicator {
@@ -19,84 +28,10 @@ interface Indicator {
   status: 'normal' | 'warning' | 'danger'
 }
 
-const organs = ref<OrganModel[]>([
-  {
-    id: 'heart',
-    name: '心脏',
-    nameEn: 'Heart',
-    color: '#EF4444',
-    position: { x: 0, y: 0, z: 0 },
-    rotation: 0,
-    indicators: [
-      { name: '心率', value: 72, unit: 'bpm', normalRange: [60, 100], status: 'normal' },
-      { name: '血压', value: 125, unit: 'mmHg', normalRange: [90, 140], status: 'normal' },
-      { name: '左室射血分数', value: 62, unit: '%', normalRange: [50, 70], status: 'normal' }
-    ]
-  },
-  {
-    id: 'lungs',
-    name: '肺部',
-    nameEn: 'Lungs',
-    color: '#10B981',
-    position: { x: 0, y: 0, z: 0 },
-    rotation: 0,
-    indicators: [
-      { name: 'FEV1', value: 3.2, unit: 'L', normalRange: [2.5, 4.0], status: 'normal' },
-      { name: 'FEV1/FVC', value: 78, unit: '%', normalRange: [70, 100], status: 'normal' },
-      { name: '肺结节', value: 0, unit: '个', normalRange: [0, 0], status: 'normal' }
-    ]
-  },
-  {
-    id: 'liver',
-    name: '肝脏',
-    nameEn: 'Liver',
-    color: '#F59E0B',
-    position: { x: 0, y: 0, z: 0 },
-    rotation: 0,
-    indicators: [
-      { name: 'ALT', value: 35, unit: 'U/L', normalRange: [0, 40], status: 'normal' },
-      { name: 'AST', value: 28, unit: 'U/L', normalRange: [0, 40], status: 'normal' },
-      { name: '脂肪肝', value: 0, unit: '级', normalRange: [0, 0], status: 'normal' }
-    ]
-  },
-  {
-    id: 'kidneys',
-    name: '肾脏',
-    nameEn: 'Kidneys',
-    color: '#8B5CF6',
-    position: { x: 0, y: 0, z: 0 },
-    rotation: 0,
-    indicators: [
-      { name: '肌酐', value: 85, unit: 'μmol/L', normalRange: [44, 133], status: 'normal' },
-      { name: 'eGFR', value: 95, unit: 'ml/min', normalRange: [90, 120], status: 'normal' },
-      { name: '尿蛋白', value: 0, unit: '+', normalRange: [0, 0], status: 'normal' }
-    ]
-  },
-  {
-    id: 'brain',
-    name: '大脑',
-    nameEn: 'Brain',
-    color: '#EC4899',
-    position: { x: 0, y: 0, z: 0 },
-    rotation: 0,
-    indicators: [
-      { name: '认知评分', value: 28, unit: '分', normalRange: [24, 30], status: 'normal' },
-      { name: '记忆测试', value: 85, unit: '%', normalRange: [70, 100], status: 'normal' }
-    ]
-  },
-  {
-    id: 'stomach',
-    name: '胃',
-    nameEn: 'Stomach',
-    color: '#06B6D4',
-    position: { x: 0, y: 0, z: 0 },
-    rotation: 0,
-    indicators: [
-      { name: '幽门螺杆菌', value: 0, unit: '', normalRange: [0, 0], status: 'normal' },
-      { name: '胃pH值', value: 2.5, unit: '', normalRange: [1.5, 3.5], status: 'normal' }
-    ]
-  }
-])
+const organs = ref<OrganModel[]>([])
+const isLoading = ref(true)
+const dataSource = ref<string>('default')
+const lastUpdated = ref<string>('')
 
 const selectedOrgan = ref<OrganModel | null>(null)
 const autoRotate = ref(true)
@@ -104,7 +39,61 @@ const rotationAngle = ref(0)
 
 let animationFrame: number
 
+const fetchDigitalTwinData = async () => {
+  try {
+    isLoading.value = true
+    const userId = userStore.user?.id || 'default'
+    const response = await fetch(`/api/v1/digital-twin/patients/${userId}`)
+    
+    if (!response.ok) {
+      const organsResponse = await fetch('/api/v1/digital-twin/organs')
+      if (organsResponse.ok) {
+        const organsData = await organsResponse.json()
+        organs.value = organsData.data.map((organ: OrganModel) => ({
+          ...organ,
+          position: { x: 0, y: 0, z: 0 },
+          rotation: 0,
+          indicators: organ.relatedIndicators?.map((name: string) => ({
+            name,
+            value: 0,
+            unit: '',
+            normalRange: [0, 100] as [number, number],
+            status: 'normal' as const,
+          })) || [],
+        }))
+        dataSource.value = 'default'
+      }
+      return
+    }
+    
+    const data = await response.json()
+    if (data.success && data.data) {
+      organs.value = data.data.organs.map((organ: OrganModel) => ({
+        ...organ,
+        position: { x: 0, y: 0, z: 0 },
+        rotation: 0,
+        indicators: organ.relatedIndicators?.map((name: string) => ({
+          name,
+          value: 0,
+          unit: '',
+          normalRange: [0, 100] as [number, number],
+          status: 'normal' as const,
+        })) || [],
+      }))
+      dataSource.value = 'patient_record'
+      lastUpdated.value = data.data.lastUpdated
+    }
+    
+    log.info('Digital twin data loaded', { source: dataSource.value })
+  } catch (error) {
+    log.error('Failed to fetch digital twin data', { error })
+  } finally {
+    isLoading.value = false
+  }
+}
+
 onMounted(() => {
+  fetchDigitalTwinData()
   startAnimation()
 })
 
@@ -188,10 +177,16 @@ const healthStatusText = computed(() => {
 </script>
 
 <template>
-  <div class="digital-twin-container">
-    <header class="twin-header">
-      <h1>数字孪生 - 器官健康可视化</h1>
-      <div class="health-score">
+  <MainLayout>
+    <div class="digital-twin-container">
+      <header class="twin-header">
+        <button class="back-btn" @click="router.push('/')" aria-label="返回首页">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1>数字孪生 - 器官健康可视化</h1>
+        <div class="health-score">
         <div class="score-circle" :style="{ '--score': overallHealthScore }">
           <span class="score-value">{{ overallHealthScore }}</span>
         </div>
@@ -319,7 +314,8 @@ const healthStatusText = computed(() => {
     <footer class="twin-footer">
       <p>数字孪生可视化仅供演示，实际数据请以体检报告为准</p>
     </footer>
-  </div>
+    </div>
+  </MainLayout>
 </template>
 
 <style scoped>
@@ -327,14 +323,33 @@ const healthStatusText = computed(() => {
   min-height: 100vh;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #fff;
-  padding: var(--spacing-6);
 }
 
 .twin-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: var(--spacing-4);
   margin-bottom: var(--spacing-6);
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: var(--radius-md);
+  color: #818cf8;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: #818cf8;
 }
 
 .twin-header h1 {

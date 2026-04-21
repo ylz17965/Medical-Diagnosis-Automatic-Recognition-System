@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import IconPlus from '@/components/icons/IconPlus.vue'
 import IconSettings from '@/components/icons/IconSettings.vue'
 import IconHelp from '@/components/icons/IconHelp.vue'
@@ -8,6 +9,9 @@ import IconSidebar from '@/components/icons/IconSidebar.vue'
 import IconMessage from '@/components/icons/IconMessage.vue'
 import IconClose from '@/components/icons/IconClose.vue'
 import IconLung from '@/components/icons/IconLung.vue'
+import IconHeart from '@/components/icons/IconHeart.vue'
+
+const route = useRoute()
 
 interface Conversation {
   id: string
@@ -165,22 +169,35 @@ const cancelDelete = () => {
       <div class="nav-divider" v-if="!collapsed"></div>
 
       <div class="nav-menu" v-if="!collapsed">
-        <a href="/lung-ct" class="nav-item">
+        <router-link to="/lung-ct" class="nav-item" :class="{ active: route.path === '/lung-ct' }">
           <IconLung class="nav-icon" />
           <span>肺部CT</span>
-        </a>
-        <a href="/lung-cancer" class="nav-item">
-          <IconMessage class="nav-icon" />
+        </router-link>
+        <router-link to="/lung-cancer" class="nav-item" :class="{ active: route.path === '/lung-cancer' }">
+          <IconLung class="nav-icon" />
           <span>肺癌早筛</span>
-        </a>
-        <a href="/hypertension" class="nav-item">
-          <IconMessage class="nav-icon" />
+        </router-link>
+        <router-link to="/hypertension" class="nav-item" :class="{ active: route.path === '/hypertension' }">
+          <IconHeart class="nav-icon" />
           <span>高血压管理</span>
-        </a>
-        <a href="/dashboard" class="nav-item">
-          <IconMessage class="nav-icon" />
+        </router-link>
+        <router-link to="/digital-twin" class="nav-item" :class="{ active: route.path === '/digital-twin' }">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            <path d="M2 12h20"/>
+          </svg>
+          <span>数字孪生</span>
+        </router-link>
+        <router-link to="/dashboard" class="nav-item" :class="{ active: route.path === '/dashboard' }">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
           <span>健康仪表盘</span>
-        </a>
+        </router-link>
       </div>
     </div>
 
@@ -471,6 +488,15 @@ const cancelDelete = () => {
 .nav-item:hover {
   background: var(--color-surface-hover);
   color: var(--color-text-primary);
+}
+
+.nav-item.active {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+.nav-item.active .nav-icon {
+  color: var(--color-primary);
 }
 
 .nav-icon {

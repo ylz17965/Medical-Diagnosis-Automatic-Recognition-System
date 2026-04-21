@@ -1,7 +1,6 @@
-// @ts-nocheck
-import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData';
-import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray';
-import dicomParser from 'dicom-parser';
+import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData'
+import vtkDataArray from '@kitware/vtk.js/Common/Core/DataArray'
+import dicomParser from 'dicom-parser'
 
 export interface DicomMetadata {
   patientName: string
@@ -27,20 +26,11 @@ export interface DicomImage {
   spacing: [number, number, number]
 }
 
-function getArrayMin(arr: Float32Array): number {
-  let min = arr[0]
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] < min) min = arr[i]
-  }
-  return min
-}
-
-function getArrayMax(arr: Float32Array): number {
-  let max = arr[0]
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] > max) max = arr[i]
-  }
-  return max
+interface DicomDataSet {
+  elements: Record<string, { dataOffset: number; length: number }>
+  uint16: (tag: string) => number | undefined
+  string: (tag: string) => string | undefined
+  byteArray: Uint8Array
 }
 
 function getPercentile(arr: Float32Array, percentile: number): number {
@@ -57,19 +47,17 @@ export async function loadDicomFiles(files: File[]): Promise<DicomImage[]> {
     try {
       const arrayBuffer = await file.arrayBuffer()
       const byteArray = new Uint8Array(arrayBuffer)
-      const dataSet = dicomParser.parseDicom(byteArray)
+      const dataSet = dicomParser.parseDicom(byteArray) as DicomDataSet
 
       const pixelDataElement = dataSet.elements.x7fe00010
       if (!pixelDataElement) {
-        console.warn(`No pixel data found in ${file.name}`)
         continue
       }
 
-      const rows = dataSet.uint16('x00280010')
-      const columns = dataSet.uint16('x00280011')
-      const bitsAllocated = dataSet.uint16('x00280100')
-      const pixelRepresentation = dataSet.uint16('x00280103') || 0
-      const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2'
+      const rows = dataSet.uint16('x00280010') ?? 0
+      const columns = dataSet.uint16('x00280011') ?? 0
+      const bitsAllocated = dataSet.uint16('x00280100') ?? 16
+      const pixelRepresentation = dataSet.uint16('x00280103') ?? 0
 
       let rawPixelData: Int16Array | Uint16Array
       const dataOffset = pixelDataElement.dataOffset
@@ -82,32 +70,21 @@ export async function loadDicomFiles(files: File[]): Promise<DicomImage[]> {
           rawPixelData = new Uint16Array(dataSet.byteArray.buffer, dataOffset, dataLength / 2)
         }
       } else if (bitsAllocated === 8) {
-        rawPixelData = new Uint8Array(dataSet.byteArray.buffer, dataOffset, dataLength)
+        rawPixelData = new Uint8Array(dataSet.byteArray.buffer, dataOffset, dataLength) as unknown as Uint16Array
       } else {
         rawPixelData = new Uint16Array(dataSet.byteArray.buffer, dataOffset, dataLength / 2)
       }
 
-      const sliceThickness = parseFloat(dataSet.string('x00180050') || '1')
+      const sliceThickness = parseFloat(dataSet.string('x00180050') ?? '1')
       const pixelSpacingStr = dataSet.string('x00280030')
       const pixelSpacing = pixelSpacingStr ? parseFloat(pixelSpacingStr.split('\\')[0]) : 1
-      const rescaleSlope = parseFloat(dataSet.string('x00281053') || '1')
-      const rescaleIntercept = parseFloat(dataSet.string('x00281052') || '0')
+      const rescaleSlope = parseFloat(dataSet.string('x00281053') ?? '1')
+      const rescaleIntercept = parseFloat(dataSet.string('x00281052') ?? '0')
       
       const windowCenterStr = dataSet.string('x00281050')
       const windowWidthStr = dataSet.string('x00281051')
       const windowCenter = windowCenterStr ? parseFloat(windowCenterStr.split('\\')[0]) : 40
       const windowWidth = windowWidthStr ? parseFloat(windowWidthStr.split('\\')[0]) : 400
-
-      console.log(`DICOM tags for ${file.name}:`, {
-        bitsAllocated,
-        pixelRepresentation,
-        photometricInterpretation,
-        rescaleSlope,
-        rescaleIntercept,
-        pixelSpacing,
-        windowCenter,
-        windowWidth
-      })
 
       const pixelData = new Float32Array(rawPixelData.length)
       for (let i = 0; i < rawPixelData.length; i++) {
@@ -116,22 +93,14 @@ export async function loadDicomFiles(files: File[]): Promise<DicomImage[]> {
 
       const p5 = getPercentile(pixelData, 5)
       const p95 = getPercentile(pixelData, 95)
-      
-      const minHU = getArrayMin(pixelData)
-      const maxHU = getArrayMax(pixelData)
-
-      console.log(`Loaded ${file.name}: ${columns}x${rows}, ${rawPixelData.length} pixels`)
-      console.log(`  Full range: ${minHU} to ${maxHU}`)
-      console.log(`  Display range (5th-95th percentile): ${p5.toFixed(0)} to ${p95.toFixed(0)}`)
-      console.log(`  Window: center=${windowCenter}, width=${windowWidth}`)
 
       images.push({
         imageId: `dicom:${file.name}`,
         metadata: {
-          patientName: dataSet.string('x00100010') || 'Unknown',
-          patientId: dataSet.string('x00100020') || '',
-          studyDate: dataSet.string('x00080020') || '',
-          seriesDescription: dataSet.string('x0008103e') || '',
+          patientName: dataSet.string('x00100010') ?? 'Unknown',
+          patientId: dataSet.string('x00100020') ?? '',
+          studyDate: dataSet.string('x00080020') ?? '',
+          seriesDescription: dataSet.string('x0008103e') ?? '',
           rows,
           columns,
           sliceThickness,
@@ -147,7 +116,7 @@ export async function loadDicomFiles(files: File[]): Promise<DicomImage[]> {
         spacing: [pixelSpacing, pixelSpacing, sliceThickness]
       })
     } catch (error) {
-      console.warn(`Failed to parse ${file.name}:`, error)
+      continue
     }
   }
 
@@ -174,7 +143,7 @@ function extractInstanceNumber(filename: string): number {
   return 0
 }
 
-export function createVTKImageData(dicomImages: DicomImage[]): any {
+export function createVTKImageData(dicomImages: DicomImage[]): vtkImageData {
   if (dicomImages.length === 0) {
     throw new Error('No DICOM images to process')
   }
@@ -189,7 +158,7 @@ export function createVTKImageData(dicomImages: DicomImage[]): any {
 
   const pixelSpacing = firstImage.spacing[0] || 1
   const sliceThickness = firstImage.spacing[2] || firstImage.metadata.sliceThickness || 1
-  imageData.setSpacing(pixelSpacing, pixelSpacing, sliceThickness)
+  imageData.setSpacing([pixelSpacing, pixelSpacing, sliceThickness])
 
   const scalars = vtkDataArray.newInstance({
     name: 'CT',
@@ -205,14 +174,6 @@ export function createVTKImageData(dicomImages: DicomImage[]): any {
   })
 
   imageData.getPointData().setScalars(scalars)
-
-  const scalarRange = scalars.getRange()
-  console.log('Created VTK ImageData:', {
-    dimensions: imageData.getDimensions(),
-    spacing: imageData.getSpacing(),
-    scalarRange: scalarRange,
-    is3D: numSlices > 1
-  })
 
   return imageData
 }

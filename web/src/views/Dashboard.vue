@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { MainLayout } from '@/layouts'
+
+const router = useRouter()
 
 const stats = ref({
   totalUsers: 12580,
@@ -57,11 +61,17 @@ const maxTrend = (arr: number[]) => Math.max(...arr, 1)
 </script>
 
 <template>
-  <div class="dashboard">
-    <header class="dashboard-header">
-      <h1 class="dashboard-title">AI智能医疗服务平台 · 数据大屏</h1>
-      <div class="dashboard-time">{{ currentTime }}</div>
-    </header>
+  <MainLayout>
+    <div class="dashboard">
+      <header class="dashboard-header">
+        <button class="back-btn" @click="router.push('/')" aria-label="返回首页">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1 class="dashboard-title">AI智能医疗服务平台 · 数据大屏</h1>
+        <div class="dashboard-time">{{ currentTime }}</div>
+      </header>
 
     <div class="dashboard-content">
       <div class="stats-row">
@@ -219,8 +229,9 @@ const maxTrend = (arr: number[]) => Math.max(...arr, 1)
           </div>
         </div>
       </div>
+      </div>
     </div>
-  </div>
+  </MainLayout>
 </template>
 
 <style scoped>
@@ -228,18 +239,37 @@ const maxTrend = (arr: number[]) => Math.max(...arr, 1)
   min-height: 100vh;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
   color: #fff;
-  padding: var(--spacing-6);
 }
 
 .dashboard-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: var(--spacing-4);
   padding: var(--spacing-4) var(--spacing-6);
   background: rgba(30, 41, 59, 0.8);
   border-radius: var(--radius-xl);
   margin-bottom: var(--spacing-6);
   border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: var(--radius-md);
+  color: #818cf8;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: #818cf8;
 }
 
 .dashboard-title {

@@ -25,7 +25,7 @@ export interface MHDHeader {
 
 function parseMHDHeader(mhdContent: string): MHDHeader {
   const lines = mhdContent.split('\n')
-  const header: any = {
+  const header: Record<string, unknown> = {
     NDims: 3,
     DimSize: [],
     ElementSpacing: [],
@@ -70,7 +70,7 @@ function parseMHDHeader(mhdContent: string): MHDHeader {
     }
   }
 
-  return header
+  return header as unknown as MHDHeader
 }
 
 function getBytesPerElement(elementType: string): number {
@@ -90,10 +90,6 @@ function getBytesPerElement(elementType: string): number {
     default:
       return 2
   }
-}
-
-function isSignedType(elementType: string): boolean {
-  return elementType.includes('CHAR') || elementType.includes('SHORT') || elementType.includes('INT')
 }
 
 export async function loadMHDFile(mhdFile: File, rawFile?: File): Promise<MHDData> {
@@ -120,15 +116,16 @@ export async function loadMHDFile(mhdFile: File, rawFile?: File): Promise<MHDDat
     header.Offset[2] || 0,
   ]
 
-  let rawFileToUse = rawFile
-  if (!rawFileToUse && header.ElementDataFile) {
-    const mhdPath = mhdFile.name
-    const rawFileName = header.ElementDataFile.replace('./', '')
-    console.log('Looking for raw file:', rawFileName)
-  }
-
-  if (!rawFileToUse) {
-    throw new Error('RAW file not found. Please select both .mhd and .raw files.')
+  let rawFileToUse: File
+  if (rawFile) {
+    rawFileToUse = rawFile
+  } else {
+    const rawFileName = mhdFile.name.replace('.mhd', '.raw')
+    const mhdFileDir = mhdFile.webkitRelativePath 
+      ? mhdFile.webkitRelativePath.replace(mhdFile.name, '') 
+      : ''
+    console.log('Looking for RAW file:', rawFileName, 'in directory:', mhdFileDir)
+    throw new Error('RAW file not provided. Please select both .mhd and .raw files.')
   }
 
   const rawBuffer = await rawFileToUse.arrayBuffer()
@@ -139,8 +136,6 @@ export async function loadMHDFile(mhdFile: File, rawFile?: File): Promise<MHDDat
   console.log('Expected bytes:', expectedBytes, 'Actual bytes:', rawBuffer.byteLength)
 
   let rawData: Int16Array | Uint16Array | Float32Array
-
-  const littleEndian = !header.ElementByteOrderMSB
 
   switch (header.ElementType) {
     case 'MET_SHORT':

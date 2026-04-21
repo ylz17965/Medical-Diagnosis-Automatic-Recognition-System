@@ -1,0 +1,17 @@
+{
+  "name": "lung_segmentation",
+  "status": "placeholder",
+  "input_shape": [
+    1,
+    1,
+    512,
+    512
+  ],
+  "output_shape": [
+    1,
+    1,
+    512,
+    512
+  ],
+  "note": "Please download the actual model file"
+}

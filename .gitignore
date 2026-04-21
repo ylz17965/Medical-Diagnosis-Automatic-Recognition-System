@@ -14,6 +14,7 @@ build/
 .env.*.local
 **/.env
 !.env.example
+!.env.docker
 
 # Logs
 *.log
@@ -37,6 +38,7 @@ ehthumbs.db
 *.swp
 *.swo
 *~
+.trae/
 
 # Editor directories and files
 *.suo
@@ -44,9 +46,6 @@ ehthumbs.db
 *.njsproj
 *.sln
 *.sw?
-
-# Trae IDE
-.trae/
 
 # Testing
 coverage/
@@ -71,33 +70,25 @@ uploads/
 *.db-journal
 prisma/*.db
 
-# Misc
-*.bat
-*.exe
-*.msi
-skills-lock.json
-
-# Documentation (keep only main docs)
+# Documentation
 *.md
 !README.md
-!CONTRIBUTING.md
-!PROJECT_DESCRIPTION.md
 !server/README.md
 !web/README.md
+!web/public/models/README.md
 
-# Project specific
+# Project specific (not needed)
 denglu.html
 xiangmu.txt
 
-# Data collection outputs
-data/pubmed/
-data/tcm/
-data/guidelines/
-data/processed/
-data/vectors/
-scripts/data_collection/data/
+# Data collection (not needed for deployment)
+data/
+scripts/
+docs/
+agency-agents/
+agents/
 
-# Python
+# Python (not needed for Node.js deployment)
 __pycache__/
 *.py[cod]
 *$py.class
@@ -110,12 +101,15 @@ env/
 *.pyc
 .pytest_cache/
 .mypy_cache/
+*.ipynb
+.ipynb_checkpoints/
 
-# Medical Imaging Data
+# Medical Imaging Data (large binary files - except ONNX models)
 *.dcm
 *.dicom
 *.mhd
 *.raw
+*.zraw
 *.nii
 *.nii.gz
 *.nrrd
@@ -126,31 +120,63 @@ LUNA16*/
 LIDC-IDRI/
 jsjsj_exercise_2_data/
 
-# VTK.js cache
+# ONNX Models - KEEP (required for lung segmentation)
+# web/public/models/*.onnx
+
+# VTK cache
 .vtk-cache/
+indexeddb/
+.conda/
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
+# Model checkpoints (not needed)
+*.pt
+*.pth
+*.ckpt
+*.safetensors
 
-# OS
-.DS_Store
-Thumbs.db
+# Large binary files
+*.bin
+*.gguf
 
-# Logs
-*.log
-npm-debug.log*
-logs/
+# Docker files (local only)
+daemon.json
+!.env.docker
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Contribution guides (not needed)
+CONTRIBUTING.md
+CONTRIBUTING_zh-CN.md
+PROJECT_DESCRIPTION.md
 
-# Temp files
-*.tmp
-*.temp
-.cache/
+# Word documents (not needed)
+*.doc
+*.docx
+
+# Temporary documents (not needed)
+temp_doc_content2.txt
+xiangmu_2.txt
+智疗助手_完善内容.txt
+
+# Word generation scripts (not needed)
+generate_word.ps1
+generate_word.py
+setup.ps1
+setup.sh
+
+# Server development scripts (not needed for production)
+server/scripts/
+server/tests/
+vitest.config.ts
+requirements.txt
+embedding_server.py
+generate_embeddings*.ts
+generate_embeddings*.py
+check-progress.ts
+clear-embeddings.ts
+test_cross_lingual.py
+
+# Web development scripts (not needed for production)
+web/scripts/
+web/scripts/**
+
+# Git files (not needed)
+.gitattributes

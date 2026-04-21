@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zhiliao-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zhiliao
+      POSTGRES_PASSWORD: zhiliao123
+      POSTGRES_DB: zhiliao
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zhiliao"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zhiliao-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: zhiliao-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zhiliao-network
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: zhiliao-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://zhiliao:zhiliao123@postgres:5432/zhiliao
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=http://localhost
+    env_file:
+      - ./server/.env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server/uploads:/app/uploads
+    networks:
+      - zhiliao-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:3000
+    container_name: zhiliao-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - zhiliao-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  zhiliao-network:
+    driver: bridge

@@ -1,14 +1,14 @@
-// @ts-nocheck
-import '@kitware/vtk.js/Rendering/Profiles/Volume';
-import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Volume'
+import '@kitware/vtk.js/Rendering/Profiles/Geometry'
 
-import vtkGenericRenderWindow from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow';
-import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
-import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
-import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper';
-import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice';
-import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
-import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkGenericRenderWindow from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow'
+import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper'
+import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume'
+import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper'
+import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice'
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction'
+import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction'
+import vtkImageData from '@kitware/vtk.js/Common/DataModel/ImageData'
 
 export interface WindowLevel {
   windowCenter: number
@@ -21,18 +21,84 @@ export const CT_WINDOWS = {
   bone: { windowCenter: 500, windowWidth: 2000 }
 }
 
+interface VtkObject {
+  delete(): void
+}
+
+interface VtkGenericRenderWindowObj extends VtkObject {
+  setContainer(container: HTMLElement | null): void
+  resize(): void
+  getRenderer(): VtkRendererObj
+  getRenderWindow(): VtkRenderWindowObj
+}
+
+interface VtkRendererObj extends VtkObject {
+  addActor(actor: unknown): void
+  addVolume(volume: unknown): void
+  removeViewProp(prop: unknown): void
+  getActiveCamera(): { setParallelProjection(value: boolean): void }
+  resetCamera(): void
+}
+
+interface VtkRenderWindowObj extends VtkObject {
+  render(): void
+  getInteractor(): { start(): void } | null
+}
+
+interface VtkImageMapperObj extends VtkObject {
+  setInputData(data: unknown): void
+  setZSlice(slice: number): void
+}
+
+interface VtkImageSliceObj extends VtkObject {
+  setMapper(mapper: unknown): void
+  getProperty(): { 
+    setRGBTransferFunction(index: number, fn: unknown): void
+    setInterpolationTypeToLinear(): void 
+  }
+}
+
+interface VtkVolumeMapperObj extends VtkObject {
+  setSampleDistance(distance: number): void
+  setInputData(data: unknown): void
+}
+
+interface VtkVolumeObj extends VtkObject {
+  setMapper(mapper: unknown): void
+  getProperty(): {
+    setRGBTransferFunction(idx: number, fn: unknown): void
+    setScalarOpacity(idx: number, fn: unknown): void
+    setScalarOpacityUnitDistance(idx: number, distance: number): void
+    setInterpolationTypeToFastLinear(): void
+    setShade(value: boolean): void
+    setAmbient(value: number): void
+    setDiffuse(value: number): void
+    setSpecular(value: number): void
+  }
+}
+
+interface VtkColorTransferFunctionObj extends VtkObject {
+  removeAllPoints(): void
+  addRGBPoint(x: number, r: number, g: number, b: number): void
+}
+
+interface VtkPiecewiseFunctionObj extends VtkObject {
+  removeAllPoints(): void
+  addPoint(x: number, y: number): void
+}
+
 export class VTKVolumeRenderer {
-  private genericRenderWindow: any = null
-  private renderer: any = null
-  private renderWindow: any = null
+  private genericRenderWindow: VtkGenericRenderWindowObj | null = null
+  private renderer: VtkRendererObj | null = null
+  private renderWindow: VtkRenderWindowObj | null = null
   private isInitialized = false
 
-  private imageMapper: any = null
-  private imageSlice: any = null
-  private volumeMapper: any = null
-  private volume: any = null
-  private colorFunction: any = null
-  private opacityFunction: any = null
+  private imageMapper: VtkImageMapperObj | null = null
+  private imageSlice: VtkImageSliceObj | null = null
+  private volumeMapper: VtkVolumeMapperObj | null = null
+  private volume: VtkVolumeObj | null = null
+  private colorFunction: VtkColorTransferFunctionObj | null = null
+  private opacityFunction: VtkPiecewiseFunctionObj | null = null
 
   private is3DMode = false
   private container: HTMLElement | null = null
@@ -42,37 +108,30 @@ export class VTKVolumeRenderer {
     this.initRenderer(container)
   }
 
-  private initRenderer(container: HTMLElement) {
+  private initRenderer(container: HTMLElement): void {
     try {
       this.genericRenderWindow = vtkGenericRenderWindow.newInstance({
         background: [0.04, 0.04, 0.04]
-      })
+      }) as VtkGenericRenderWindowObj
       
       this.genericRenderWindow.setContainer(container)
-      
-      const width = container.clientWidth || 600
-      const height = container.clientHeight || 500
       this.genericRenderWindow.resize()
       
       this.renderer = this.genericRenderWindow.getRenderer()
       this.renderWindow = this.genericRenderWindow.getRenderWindow()
       
       this.isInitialized = true
-      console.log('VTK Renderer initialized, container size:', width, 'x', height)
     } catch (error) {
-      console.error('Failed to initialize VTK renderer:', error)
       throw error
     }
   }
 
-  public setInputData(imageData: any, is3D: boolean = false) {
+  public setInputData(imageData: vtkImageData, is3D: boolean = false): void {
     if (!this.isInitialized) {
-      console.error('Renderer not initialized')
       return
     }
 
     this.is3DMode = is3D
-    console.log('Setting image data, is3D:', is3D, 'Dimensions:', imageData.getDimensions())
 
     this.clearActors()
 
@@ -87,64 +146,55 @@ export class VTKVolumeRenderer {
     })
   }
 
-  private forceRender() {
+  private forceRender(): void {
     if (!this.container || !this.isInitialized) {
-      console.error('Cannot render: container or renderer not initialized')
       return
     }
 
     const width = this.container.clientWidth || 600
     const height = this.container.clientHeight || 500
 
-    console.log('Forcing render with size:', width, 'x', height)
-
     if (width === 0 || height === 0) {
-      console.warn('Container has 0 size, waiting...')
       requestAnimationFrame(() => this.forceRender())
       return
     }
 
-    this.genericRenderWindow.resize()
-    this.renderWindow.render()
-
-    console.log('Render forced successfully')
+    this.genericRenderWindow?.resize()
+    this.renderWindow?.render()
   }
 
-  private clearActors() {
-    if (this.imageSlice) {
+  private clearActors(): void {
+    if (this.imageSlice && this.renderer) {
       this.renderer.removeViewProp(this.imageSlice)
       this.imageSlice = null
       this.imageMapper = null
     }
-    if (this.volume) {
+    if (this.volume && this.renderer) {
       this.renderer.removeViewProp(this.volume)
       this.volume = null
       this.volumeMapper = null
     }
   }
 
-  private init2DRendering(imageData: any) {
-    this.imageMapper = vtkImageMapper.newInstance()
+  private init2DRendering(imageData: vtkImageData): void {
+    this.imageMapper = vtkImageMapper.newInstance() as VtkImageMapperObj
     this.imageMapper.setInputData(imageData)
-    this.imageSlice = vtkImageSlice.newInstance()
-    this.colorFunction = vtkColorTransferFunction.newInstance()
+    this.imageSlice = vtkImageSlice.newInstance() as VtkImageSliceObj
+    this.colorFunction = vtkColorTransferFunction.newInstance() as VtkColorTransferFunctionObj
 
     this.imageSlice.setMapper(this.imageMapper)
 
     const property = this.imageSlice.getProperty()
-    property.setRGBTransferFunction(this.colorFunction)
+    property.setRGBTransferFunction(0, this.colorFunction)
     property.setInterpolationTypeToLinear()
 
     const dimensions = imageData.getDimensions()
-    console.log('Image dimensions:', dimensions)
 
     this.imageMapper.setZSlice(Math.floor(dimensions[2] / 2))
 
-    this.renderer.addActor(this.imageSlice)
+    this.renderer?.addActor(this.imageSlice)
 
     const scalars = imageData.getPointData().getScalars()
-    const scalarRange = scalars.getRange()
-    console.log('Scalar range:', scalarRange)
 
     this.colorFunction.removeAllPoints()
     
@@ -155,29 +205,27 @@ export class VTKVolumeRenderer {
     const p2 = sortedData[p2Index]
     const p98 = sortedData[p98Index]
     
-    console.log('Auto-adjusted display range (2nd-98th percentile):', p2.toFixed(0), 'to', p98.toFixed(0))
-    
     this.colorFunction.addRGBPoint(p2, 0, 0, 0)
     this.colorFunction.addRGBPoint(p2 + (p98 - p2) * 0.25, 0.25, 0.25, 0.25)
     this.colorFunction.addRGBPoint(p2 + (p98 - p2) * 0.5, 0.5, 0.5, 0.5)
     this.colorFunction.addRGBPoint(p2 + (p98 - p2) * 0.75, 0.75, 0.75, 0.75)
     this.colorFunction.addRGBPoint(p98, 1, 1, 1)
 
-    const camera = this.renderer.getActiveCamera()
-    camera.setParallelProjection(true)
-    this.renderer.resetCamera()
-
-    console.log('2D rendering initialized')
+    const camera = this.renderer?.getActiveCamera()
+    if (camera) {
+      camera.setParallelProjection(true)
+    }
+    this.renderer?.resetCamera()
   }
 
-  private init3DRendering(imageData: any) {
-    this.volumeMapper = vtkVolumeMapper.newInstance()
+  private init3DRendering(imageData: vtkImageData): void {
+    this.volumeMapper = vtkVolumeMapper.newInstance() as VtkVolumeMapperObj
     this.volumeMapper.setSampleDistance(0.5)
     this.volumeMapper.setInputData(imageData)
 
-    this.volume = vtkVolume.newInstance()
-    this.colorFunction = vtkColorTransferFunction.newInstance()
-    this.opacityFunction = vtkPiecewiseFunction.newInstance()
+    this.volume = vtkVolume.newInstance() as VtkVolumeObj
+    this.colorFunction = vtkColorTransferFunction.newInstance() as VtkColorTransferFunctionObj
+    this.opacityFunction = vtkPiecewiseFunction.newInstance() as VtkPiecewiseFunctionObj
 
     this.volume.setMapper(this.volumeMapper)
 
@@ -191,20 +239,19 @@ export class VTKVolumeRenderer {
     property.setDiffuse(0.9)
     property.setSpecular(0.2)
 
-    this.renderer.addVolume(this.volume)
+    this.renderer?.addVolume(this.volume)
 
-    const camera = this.renderer.getActiveCamera()
-    camera.setParallelProjection(false)
+    const camera = this.renderer?.getActiveCamera()
+    if (camera) {
+      camera.setParallelProjection(false)
+    }
 
-    this.renderer.resetCamera()
-
-    const scalarRange = imageData.getPointData().getScalars().getRange()
-    console.log('3D rendering initialized, scalar range:', scalarRange)
+    this.renderer?.resetCamera()
 
     this.setWindowPreset('lung')
   }
 
-  public setWindowLevel(windowCenter: number, windowWidth: number) {
+  public setWindowLevel(windowCenter: number, windowWidth: number): void {
     if (!this.isInitialized || !this.colorFunction) return
 
     this.colorFunction.removeAllPoints()
@@ -256,7 +303,7 @@ export class VTKVolumeRenderer {
     })
   }
 
-  public setWindowPreset(preset: 'lung' | 'mediastinal' | 'bone') {
+  public setWindowPreset(preset: 'lung' | 'mediastinal' | 'bone'): void {
     const { windowCenter, windowWidth } = CT_WINDOWS[preset]
     
     if (!this.is3DMode) {
@@ -318,18 +365,18 @@ export class VTKVolumeRenderer {
     })
   }
 
-  public render() {
+  public render(): void {
     if (!this.isInitialized) return
     this.forceRender()
   }
 
-  public resize(width: number, height: number) {
+  public resize(_width: number, _height: number): void {
     if (!this.isInitialized) return
-    this.genericRenderWindow.resize()
+    this.genericRenderWindow?.resize()
     this.forceRender()
   }
 
-  public dispose() {
+  public dispose(): void {
     if (!this.isInitialized) return
     
     this.clearActors()
@@ -342,9 +389,9 @@ export class VTKVolumeRenderer {
     this.isInitialized = false
   }
 
-  public startInteraction() {
+  public startInteraction(): void {
     if (!this.isInitialized) return
-    const interactor = this.renderWindow.getInteractor()
+    const interactor = this.renderWindow?.getInteractor()
     if (interactor) {
       interactor.start()
     }

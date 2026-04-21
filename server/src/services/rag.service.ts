@@ -2,6 +2,9 @@ import { bgeM3Client, BgeM3Client } from './bge-m3-client.service.js'
 import { RerankerService } from './reranker.service.js'
 import { config } from '../config/index.js'
 import { PrismaClient } from '@prisma/client'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('rag-service')
 
 export interface RAGContext {
   content: string
@@ -39,6 +42,8 @@ export class RAGService {
   private lastStatsCheck: number = 0
   private statsCacheDuration = 60000
   private isReady: boolean = false
+  private queryCache: Map<string, { results: RAGContext[]; timestamp: number }> = new Map()
+  private queryCacheTTL = 300000
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma
@@ -49,12 +54,42 @@ export class RAGService {
     this.topK = config.rag.topK
     this.rerankTopK = config.rag.rerankTopK
     this.similarityThreshold = config.rag.similarityThreshold
+    
+    setInterval(() => {
+      const now = Date.now()
+      for (const [key, value] of this.queryCache.entries()) {
+        if (now - value.timestamp > this.queryCacheTTL) {
+          this.queryCache.delete(key)
+        }
+      }
+    }, 60000)
+  }
+
+  private getCacheKey(query: string, category?: string, healthRecordId?: string): string {
+    return `${query}:${category || ''}:${healthRecordId || ''}`
+  }
+
+  private getFromCache(key: string): RAGContext[] | null {
+    const cached = this.queryCache.get(key)
+    if (cached && (Date.now() - cached.timestamp) < this.queryCacheTTL) {
+      log.debug('Cache hit for query')
+      return cached.results
+    }
+    return null
+  }
+
+  private setCache(key: string, results: RAGContext[]): void {
+    this.queryCache.set(key, { results, timestamp: Date.now() })
+    if (this.queryCache.size > 100) {
+      const oldestKey = this.queryCache.keys().next().value
+      if (oldestKey) this.queryCache.delete(oldestKey)
+    }
   }
 
   async initialize(): Promise<void> {
     if (this.isReady) return
     
-    console.log('🔄 正在连接 BGE-M3 嵌入服务...')
+    log.info('Connecting to BGE-M3 embedding service...')
     const ready = await this.embeddingClient.waitForReady(60000)
     
     if (!ready) {
@@ -62,7 +97,7 @@ export class RAGService {
     }
     
     this.isReady = true
-    console.log('✅ BGE-M3 嵌入服务已连接')
+    log.info('BGE-M3 embedding service connected')
   }
 
   private async checkKnowledgeBaseExists(): Promise<boolean> {
@@ -166,7 +201,7 @@ export class RAGService {
       })
     }
 
-    console.log(`[RAG] Semantic chunking: ${sections.length} sections -> ${chunks.length} chunks`)
+    log.debug({ sections: sections.length, chunks: chunks.length }, 'Semantic chunking completed')
     return chunks
   }
 
@@ -394,7 +429,7 @@ export class RAGService {
 
     merged.sort((a, b) => b.score - a.score)
     
-    console.log(`[RAG] Merged ${results.length} chunks into ${merged.length} results`)
+    log.debug({ input: results.length, output: merged.length }, 'Merged adjacent chunks')
     
     return merged
   }
@@ -518,8 +553,12 @@ export class RAGService {
     const merged = Array.from(mergedMap.values())
     merged.sort((a, b) => b.score - a.score)
 
-    console.log(`[RAG] Hybrid search: vector=${vectorResults.length}, keyword=${keywordResults.length}, merged=${merged.length}`)
-    console.log(`[RAG] Top scores: ${merged.slice(0, 3).map(r => r.score.toFixed(3)).join(', ')}`)
+    log.debug({ 
+      vectorResults: vectorResults.length, 
+      keywordResults: keywordResults.length, 
+      merged: merged.length,
+      topScores: merged.slice(0, 3).map(r => r.score.toFixed(3))
+    }, 'Hybrid search completed')
 
     return merged.slice(0, params.topK || this.topK)
   }
@@ -531,6 +570,12 @@ export class RAGService {
     topK?: number
     useHybrid?: boolean
   }): Promise<RAGContext[]> {
+    const cacheKey = this.getCacheKey(params.query, params.category, params.healthRecordId)
+    const cached = this.getFromCache(cacheKey)
+    if (cached) {
+      return cached.slice(0, params.topK || this.topK)
+    }
+
     const hasKB = await this.checkKnowledgeBaseExists()
     if (!hasKB) {
       return []
@@ -554,7 +599,7 @@ export class RAGService {
     const filteredResults = initialResults.filter(r => r.score >= this.similarityThreshold)
 
     if (filteredResults.length === 0) {
-      console.log('[RAG] All results filtered by threshold, returning top results anyway')
+      log.warn('All results filtered by threshold, returning top results anyway')
       return initialResults.slice(0, params.topK || this.topK)
     }
 
@@ -563,6 +608,8 @@ export class RAGService {
       filteredResults,
       params.topK || this.topK
     )
+
+    this.setCache(cacheKey, rerankedDocs)
 
     return rerankedDocs
   }

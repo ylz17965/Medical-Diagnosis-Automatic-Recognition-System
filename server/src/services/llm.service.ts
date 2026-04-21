@@ -2,6 +2,10 @@ import { config } from '../config/index.js'
 import { RAGService } from './rag.service.js'
 import { credibilityService, type SourceAnnotation } from './credibility.service.js'
 import { routeToAgent, getAgentSystemPrompt, loadAgent } from './agent.service.js'
+import { literatureService } from './literature.service.js'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('llm-service')
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
@@ -191,7 +195,7 @@ export class LLMService {
           })
         }
       } catch (error) {
-        console.error('RAG search error:', error)
+        log.error({ error }, 'RAG search error')
       }
     }
 
@@ -305,7 +309,7 @@ export class LLMService {
       try {
         if (this.ragService) {
           ragResults = await ragPromise
-          console.log('[LLMService] RAG search results:', ragResults.length)
+          log.debug({ count: ragResults.length }, 'RAG search results')
         }
         
         if (ragResults.length > 0) {
@@ -324,7 +328,7 @@ ${ragContext}
           })
         }
       } catch (error) {
-        console.error('RAG search error:', error)
+        log.error({ error }, 'RAG search error')
       }
     }
 
@@ -384,8 +388,21 @@ ${ragContext}
     const decoder = new TextDecoder()
     let buffer = ''
     const sources = ragResults.map(r => ({ source: r.source, content: r.content }))
-
+    
+    let literatureCitations: any[] = []
+    let literatureSearchResult: any = undefined
+    
     try {
+      if (userInput && userInput.length > 0) {
+        try {
+          literatureSearchResult = literatureService.deepSearch(userInput, 8)
+          literatureCitations = literatureSearchResult.citations || []
+          log.debug({ count: literatureCitations.length }, 'Literature search completed')
+        } catch (litError) {
+          log.error({ error: litError }, 'Literature search error')
+        }
+      }
+
       while (true) {
         const { done, value } = await reader.read()
         
@@ -396,8 +413,13 @@ ${ragContext}
             sources,
             needsFollowUp: enhancedPrompt.needsFollowUp,
             followUpQuestions: enhancedPrompt.followUpQuestions,
-            citations: [],
-            deepSearchResult: { totalSearched: ragResults.length, totalCited: ragResults.length, citations: [], searchSummary: `检索到 ${ragResults.length} 条相关资料` },
+            citations: literatureCitations,
+            deepSearchResult: literatureSearchResult || { 
+              totalSearched: ragResults.length, 
+              totalCited: 0, 
+              citations: [], 
+              searchSummary: `检索到 ${ragResults.length} 条相关资料` 
+            },
             agentUsed: agentInfo
           }
           break

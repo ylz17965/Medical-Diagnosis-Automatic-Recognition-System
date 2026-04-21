@@ -1,0 +1,49 @@
+{
+  "name": "lung-unet-resnet34",
+  "version": "1.0.0",
+  "description": "U-Net with ResNet34 encoder for lung segmentation from CT scans",
+  "architecture": {
+    "type": "UNet",
+    "encoder": "ResNet34",
+    "decoder": "UNet"
+  },
+  "input": {
+    "name": "input",
+    "shape": [1, 1, 512, 512],
+    "dtype": "float32",
+    "normalization": {
+      "method": "min_max",
+      "range": [0, 1]
+    }
+  },
+  "output": {
+    "name": "output",
+    "shape": [1, 1, 512, 512],
+    "dtype": "float32",
+    "labels": ["background", "lung"]
+  },
+  "performance": {
+    "dice_score": 0.98,
+    "iou": 0.96,
+    "inference_time_gpu_ms": 50,
+    "inference_time_wasm_ms": 200
+  },
+  "training": {
+    "dataset": "LIDC-IDRI",
+    "epochs": 100,
+    "optimizer": "Adam",
+    "learning_rate": 0.0001,
+    "loss_function": "DiceLoss"
+  },
+  "requirements": {
+    "onnx_runtime_version": "1.18.0",
+    "opset_version": 14
+  },
+  "license": "Apache-2.0",
+  "citation": {
+    "title": "Automatic lung segmentation in routine imaging is primarily a data diversity problem, not a methodology problem",
+    "authors": ["Hofmanninger, Johannes", "Prayer, Franziska", "Pan, Jeanny", "Röhrich, Sebastian", "Prosch, Helmut", "Langs, Georg"],
+    "journal": "European Radiology Experimental",
+    "year": 2020
+  }
+}
