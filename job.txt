@@ -1,188 +1,179 @@
-Run docker/build-push-action@v5
-GitHub Actions runtime token ACs
-Docker info
-Proxy configuration
-Buildx version
-Builder info
-/usr/bin/docker buildx build --build-arg VITE_API_URL=http://localhost:3000 --file ./web/Dockerfile --iidfile /home/runner/work/_temp/docker-actions-toolkit-egrRvy/build-iidfile-50bdf5682e.txt --label org.opencontainers.image.created=2026-04-21T10:13:34.498Z --label org.opencontainers.image.description=An AI‑powered system that automatically recognizes diseases from medical images and clinical data, combining deep learning with a scalable microservices backend for fast, interpretable diagnostic support. --label org.opencontainers.image.licenses= --label org.opencontainers.image.revision=a48a087d76fe5425e5e87b2eb87100b5d2c02b1f --label org.opencontainers.image.source=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System --label org.opencontainers.image.title=Medical-Diagnosis-Automatic-Recognition-System --label org.opencontainers.image.url=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System --label org.opencontainers.image.version=main --platform linux/amd64,linux/arm64 --attest type=provenance,mode=max,builder-id=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System/actions/runs/24716795541 --tag ghcr.io/ylz17965/medical-diagnosis-automatic-recognition-system:main --tag ghcr.io/ylz17965/medical-diagnosis-automatic-recognition-system:a48a087-web --metadata-file /home/runner/work/_temp/docker-actions-toolkit-egrRvy/build-metadata-01092c83ab.json --push .
-#0 building with "builder-ca72e991-0452-4c4c-bf6f-886743ca6278" instance using docker-container driver
+运行docker/build-push-action@v5
+GitHub Actions 运行时令牌 AC
+Docker 信息
+代理配置
+Buildx 版本
+建筑商信息
+/usr/bin/docker buildx build --build-arg VITE_API_URL=http：//localhost：3000 --file ./web/Dockerfile --iidfile /home/runner/work/_temp/docker-actions-toolkit-x5p8J5/build-iidfile-4de48aa2fd.txt --label org.opencontainers.image.created=2026-04-21T10：33：41.705Z --label org.opencontainers.image.description=一个由人工智能驱动的系统，能够自动从医学图像和临床数据识别疾病，结合深度学习与可扩展的微服务后端，实现快速且可解释的诊断支持。--label org.opencontainers.image.licenses= --label org.opencontainers.image.revision=e808ce651c9d15bd2df565ad45089822c20b22d1 --label org.opencontainers.image.source=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System--label org.opencontainers.image.title=Medical-Diagnosis-Automatic-Recognition-System --label org.opencontainers.image.url=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System--label org.opencontainers.image.version=main --platform linux/amd64，linux/arm64 --attest type=provenance，mode=max，builder-id=https://github.com/ylz17965/Medical-Diagnosis-Automatic-Recognition-System/actions/runs/24717631325--tag ghcr.io/ylz17965/medical-diagnosis-automatic-recognition-system:main --tag ghcr.io/ylz17965/medical-diagnosis-automatic-recognition-system:e808ce6-web --metadata-file /home/runner/work/_temp/docker-actions-toolkit-x5p8J5/build-metadata-8afa2f6165.json --push .
+#0 使用 docker-container 驱动构建的实例 “builder-a24ad043-4f42-481b-8ee5-85ef34e9bb10” 实例
 
-#1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 1.27kB done
-#1 DONE 0.0s
+#1 [内部] 从 Dockerfile 加载构建定义
+#1 transferring dockerfile： 1.31kB done
+#1 完成 0.0秒
 
-#2 [linux/arm64 internal] load metadata for docker.io/library/nginx:alpine
-#2 ...
+#2 [auth] library/nginx：pull token for registry-1.docker.io
+#2 完成 0.0秒
 
-#3 [auth] library/node:pull token for registry-1.docker.io
-#3 DONE 0.0s
+#3 [认证] library/node：pull 令牌 for registry-1.docker.io
+#3 完成 0.0
 
-#4 [auth] library/nginx:pull token for registry-1.docker.io
-#4 DONE 0.0s
+#4 [Linux/arm64 内部] 加载 docker.io/library/nginx:alpine 元数据
+#4 完成 0.5秒
 
-#5 [linux/arm64 internal] load metadata for docker.io/library/node:20-alpine
-#5 ...
+#5 [Linux/arm64 内部] 加载 docker.io/library/node:20-alpine 元数据
+#5 完成 0.5秒
 
-#6 [linux/amd64 internal] load metadata for docker.io/library/node:20-alpine
-#6 DONE 0.8s
+#6 [Linux/AMD64 内部] 加载 docker.io/library/node:20-alpine 元数据
+#6 完成 0.5秒
 
-#5 [linux/arm64 internal] load metadata for docker.io/library/node:20-alpine
-#5 DONE 0.8s
+#7 [Linux/AMD64 内部] 加载元数据 docker.io/library/nginx:alpine
+#7 完成 0.5秒
 
-#2 [linux/arm64 internal] load metadata for docker.io/library/nginx:alpine
-#2 DONE 0.9s
+#8 [内部] 加载 .dockerignore
+#8 转移上下文：866B 完成
+#8 完成 0.0秒
 
-#7 [internal] load .dockerignore
-#7 transferring context: 866B done
-#7 DONE 0.0s
+#9 [linux/arm64 构建器 1/16] 来自 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 决心 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 完成
+#9 完成 0.1秒
 
-#8 [linux/amd64 internal] load metadata for docker.io/library/nginx:alpine
-#8 DONE 0.9s
+#10 [linux/amd64 构建器 1/16] 来自 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#10 解决 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 完成
+#10 SHA256：FFF4E2C1B189bf87D63ad8bd07F7F4eb288d6f2b6a07a8bb44c60e8c075d2096 445B / 445B 0.1s 完成
+#10 sha256：b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 1.26MB / 1.26MB 0.1秒完成
+#10 sha256：6a0ac1617861a67b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 0.1s 完成
+#10 提取 SHA256：6A0ac1617861a677B045B7ff88545213EC31C0ff08763195A70A4A5adda577bb
+#10 sha256：4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 43.23MB / 43.23MB 0.2s 完成
+#10 提取SHA256：6A0ac1617861a677B045B7ff88545213EC31C0ff08763195A70A4A5adda577bb 0.2秒完成
+#10 提取SHA256：4feea04C154301DB6F4A496eFA397B3DB96603B1C009C797CFDde77Bea8B3287
+#10 ...
 
-#9 [linux/amd64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
-#9 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 done
-#9 DONE 0.1s
+#11 [linux/arm64 跑者 1/5] 来自 docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#11 解决 docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de 0.0秒完成
+#11 sha256：83fbf849ee89c6ab0fe1aadcf6a85dcc275070854ee1ca76ee88eb24d9f524af 1.40kB / 1.40kB 0.0s done
+#11 sha256：634f1d1ce0f777ef20ee9c698a3022175abda8611de03efb010559c7c411f23c 1.21kB / 1.21kB 0.1s 完成
+#11 sha256：662c8d6f66200adef0cf551c6decc52e200f0a30d11eb042708157398efaeb48 19.72MB / 19.72MB 0.2s 完成
+#11 sha256：10cbc192f783597fdf87a6e883b139c1b18228e8ee4313665026137d6a31077d 403B / 403B 0.1秒完成
+#11 sha256：a96b658a00feada62d1fac10d4f49ff5da15023f0e29708ff59127bf7b0e03d2 955B / 955B 0.0s 完成
+#11 SHA256：A89D14EF5abe21dda8850d86d557CFA12C57A34BDCBE1C782fb851ec0C52B750 628B / 628B 0.1s 完成
+#11 sha256：910c2a6cad6dc66c2058f7ef9d3dbb2dfded05a92d6ba4d7ebfc39fc3f3f7a1e3 1.89MB / 1.89MB 0.1s 完成
+#11 提取SHA256：910C2a6cad6dc66C2058F7EF9D3dbb2DFD05A92d6BA4D7EBFF39F3F74A1E3 0.3s 完成
+#11 完成 0.8秒
 
-#10 [linux/arm64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
-#10 resolve docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de 0.0s done
-#10 sha256:83fbf849ee89c6ab0fe1aadcf6a85dcc275070854ee1ca76ee88eb24d9f524af 1.40kB / 1.40kB 0.1s done
-#10 sha256:634f1d1ce0f777ef20ee9c698a3022175abda8611de03efb010559c7c411f23c 1.21kB / 1.21kB 0.1s done
-#10 sha256:662c8d6f66200adef0cf551c6decc52e200f0a30d11eb042708157398efaeb48 19.72MB / 19.72MB 0.2s done
-#10 sha256:10cbc192f783597fdf87a6e883b139c1b18228e8ee4313665026137d6a31077d 403B / 403B 0.1s done
-#10 sha256:a96b658a00feada62d1fac10d4f49ff5da15023f0e29708ff59127bf7b0e03d2 955B / 955B 0.1s done
-#10 sha256:a89d14ef5abe21dda8850d86d557cfa12c57a34bdcbe1c782fb851ec0c52b750 628B / 628B 0.1s done
-#10 sha256:910c2a6cad6dc66c2058f7ef9d3dbb2dfded05a92d6ba4d7ebfc39fc3f74a1e3 1.89MB / 1.89MB 0.1s done
-#10 extracting sha256:910c2a6cad6dc66c2058f7ef9d3dbb2dfded05a92d6ba4d7ebfc39fc3f74a1e3
-#10 extracting sha256:910c2a6cad6dc66c2058f7ef9d3dbb2dfded05a92d6ba4d7ebfc39fc3f74a1e3 0.3s done
-#10 DONE 1.0s
+#12 [linux/amd64 跑者 1/5] 来自 docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#12 解决 docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#12 SHA256：4a8b0b2A5b1937755263ac7ac4ee26db2906c13a5d70f1fb1875ba8e370cdd8f 1.40kB / 1.40kB 0.1s 完成
+#12 SHA256：AEE4E54B3865ee4d98545b6b49f9e8ab3b9b6ed114a2eafedc7a22e984ea5a68 956B / 956B 0.0s 完成
+#12 SHA256：453da7dbc73e7338c4e201ec3f3c4a5f7751adbf5a6f127792c1cd001a780721 1.21kB / 1.21kB 0.1s done
+#12 sha256：781ff50d2644f74714c0d5a4ffa3447bbfd4b293cfb1dc6a637722ae24c89241 404B / 404B 0.1s 完成
+#12 sha256：612c0c1df4c55a0bf145f84df03cb28de505e6a52fb8e49c9da7b143fc00ad2d 20.25MB / 20.25MB 0.25秒完成
+#12 sha256：583599bb7d382e9e9e986a9ff65204981307bfa71670a29f4190eedae93c4858be 627B / 627B 0.0s done
+#12 sha256：82736a35d0e7f1309edc13d09115410b81542cf8b91afff80deeace02b6f2f26 1.87MB / 1.87MB 0.1s 完成
+#12 提取SHA256：82736A35D0E7F1309edc13D09115410B81542cf8b91afff80deeace02b6f2f26 0.2s 完成
+#12 提取SHA256：583599bb7D382E9E9E986A9ff65204981307bfa71670a29f4190eedae93C4858 完成
+#12 提取SHA256：AEE4E54B3865ee4d98545B6B49F9E8AB3B9B6ED114A2eAfEdC7A22E984EA5A68 完成
+#12 提取 SHA256：781ff50D2644F74714C0D5A4Ffa3447bbfD4B293CFB1DC6A637722AE24C89241 完成
+#12 提取SHA256：453da7dbc73E7338C4E201EC3F3C4A5F7751adbf5a6f127792c1cd001a780721 完成
+#12 提取SHA256：4A8B0B2A5B1937755263ac7ac4ee26db2906c13a5d70f1fb1875ba8e370cdd8f 0.0s 完成
+#12 完成 0.9秒
 
-#11 [linux/amd64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
-#11 resolve docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de 0.0s done
-#11 sha256:612c0c1df4c55a0bf145f84df03cb28de505e6a52fb8e49c9da7b143fc00ad2d 20.25MB / 20.25MB 0.2s done
-#11 sha256:4a8b0b2a5b1937755263ac7ac4ee26db2906c13a5d70f1fb1875ba8e370cdd8f 1.40kB / 1.40kB 0.1s done
-#11 sha256:453da7dbc73e7338c4e201ec3f3c4a5f7751adbf5a6f127792c1cd001a780721 1.21kB / 1.21kB 0.1s done
-#11 sha256:781ff50d2644f74714c0d5a4ffa3447bbfd4b293cfb1dc6a637722ae24c89241 404B / 404B 0.1s done
-#11 sha256:aee4e54b3865ee4d98545b6b49f9e8ab3b9b6ed114a2eafedc7a22e984ea5a68 956B / 956B 0.1s done
-#11 sha256:583599bb7d382e9e986a9ff65204981307bfa71670a29f4190eedae93c4858be 627B / 627B 0.1s done
-#11 sha256:82736a35d0e7f1309edc13d09115410b81542cf8b91afff80deeace02b6f2f26 1.87MB / 1.87MB 0.1s done
-#11 extracting sha256:82736a35d0e7f1309edc13d09115410b81542cf8b91afff80deeace02b6f2f26
-#11 extracting sha256:82736a35d0e7f1309edc13d09115410b81542cf8b91afff80deeace02b6f2f26 0.3s done
-#11 extracting sha256:583599bb7d382e9e986a9ff65204981307bfa71670a29f4190eedae93c4858be 0.0s done
-#11 extracting sha256:aee4e54b3865ee4d98545b6b49f9e8ab3b9b6ed114a2eafedc7a22e984ea5a68 0.0s done
-#11 extracting sha256:781ff50d2644f74714c0d5a4ffa3447bbfd4b293cfb1dc6a637722ae24c89241 0.0s done
-#11 extracting sha256:453da7dbc73e7338c4e201ec3f3c4a5f7751adbf5a6f127792c1cd001a780721 done
-#11 extracting sha256:4a8b0b2a5b1937755263ac7ac4ee26db2906c13a5d70f1fb1875ba8e370cdd8f done
-#11 extracting sha256:612c0c1df4c55a0bf145f84df03cb28de505e6a52fb8e49c9da7b143fc00ad2d
-#11 ...
+#11 [linux/arm64 跑者 1/5] 来自 docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#11 提取SHA256：A89D14EF5aBe21dDA8850D86D557CFA12C57A34BDCBE1C782FB851EC0C52B750 完成
+#11 提取 SHA256：A96B658A00Feada62D1FAC10D4F49FF5DA15023F0E29708ff59127bf7B0E03D2 完成
+#11 提取SHA256：10cBCC192F783597FDF87a6E883B139C1B18228E8ee4313665026137d6A31077d 完成
+#11 提取SHA256：634F1D1C0F777ef20ee9c698a3022175abda8611de03efb010559c7C411f23c 完成
+#11 提取 SHA256：83FBF849ee89c6ab0FE1AADCF6A85DCC275070854ee1ca76ee88eb24D9F524af 0.0s 完成
+#11 提取 SHA256：662C8D6F66200adef0CF551C6decc52E200F0A30D11eb042708157398efaeb48
+#11 提取SHA256：662C8D6F66200adef0CF551C6decc52E200F0A30D11EB042708157398Efaeb48 0.9s 完成
+#11 完成 1.7秒
 
-#12 [internal] load build context
-#12 transferring context: 130.26MB 1.5s done
-#12 DONE 1.5s
-
-#10 [linux/arm64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
-#10 extracting sha256:a89d14ef5abe21dda8850d86d557cfa12c57a34bdcbe1c782fb851ec0c52b750 0.0s done
-#10 extracting sha256:a96b658a00feada62d1fac10d4f49ff5da15023f0e29708ff59127bf7b0e03d2 done
-#10 extracting sha256:10cbc192f783597fdf87a6e883b139c1b18228e8ee4313665026137d6a31077d done
-#10 extracting sha256:634f1d1ce0f777ef20ee9c698a3022175abda8611de03efb010559c7c411f23c done
-#10 extracting sha256:83fbf849ee89c6ab0fe1aadcf6a85dcc275070854ee1ca76ee88eb24d9f524af 0.0s done
-#10 extracting sha256:662c8d6f66200adef0cf551c6decc52e200f0a30d11eb042708157398efaeb48
-#10 extracting sha256:662c8d6f66200adef0cf551c6decc52e200f0a30d11eb042708157398efaeb48 0.8s done
-#10 DONE 1.8s
-
-#13 [linux/arm64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
-#13 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 done
-#13 sha256:cd322d0ddd02673e6c24a2158d1f12f6ec7c6fd9c0dc67123244d0f0eb0f8806 443B / 443B 0.1s done
-#13 sha256:13e45b12880fbbfe3554ecf6b70131ace701d0c2fd3e2fb9abb842ba2494cd40 1.26MB / 1.26MB 0.1s done
-#13 sha256:d17f077ada118cc762df373ff803592abf2dfa3ddafaa7381e364dd27a88fca7 4.20MB / 4.20MB 0.1s done
-#13 extracting sha256:d17f077ada118cc762df373ff803592abf2dfa3ddafaa7381e364dd27a88fca7 0.2s done
-#13 sha256:bda5d7ef971f8ede8ea80002d2ac886ef6807fe32cfe46c38704a7ba0429475d 43.55MB / 43.55MB 0.4s done
-#13 extracting sha256:bda5d7ef971f8ede8ea80002d2ac886ef6807fe32cfe46c38704a7ba0429475d
+#13 [内部] 加载构建上下文
 #13 ...
 
-#11 [linux/amd64 runner 1/5] FROM docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
-#11 extracting sha256:612c0c1df4c55a0bf145f84df03cb28de505e6a52fb8e49c9da7b143fc00ad2d 1.3s done
-#11 DONE 2.6s
+#12 [linux/amd64 跑者 1/5] 来自 docker.io/library/nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+#12 提取SHA256：612C0C1DF4C55A0bf145F84DF03CB28DE505E6A52FB8E49C9DA7B143FC00AD2D 1.0s 完成
+#12 完成 1.9秒
 
-#14 [linux/amd64 runner 2/5] RUN addgroup -g 101 -S nginx &&     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
-#14 0.079 addgroup: group 'nginx' in use
-#14 ...
+#13 [内部] 加载构建上下文
+#13 传输上下文：130.26MB 2.3秒完成
+#13 完成 2.5秒
 
-#15 [linux/arm64 runner 2/5] RUN addgroup -g 101 -S nginx &&     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
-#15 0.117 addgroup: group 'nginx' in use
-#15 DONE 1.1s
+#9 [linux/arm64 构建器 1/16] 来自 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 SHA256：cd322d0ddd02673e6c24a2158d1f12f6ec7c6fd9c0dc67123244d0f0eb0f8806 443B / 443B 0.1s done
+#9 sha256：13e45b12880fbbfe3554ecf6b70131ace701d0c2fd3e2fb9abb842ba2494cd40 1.26MB / 1.26MB 0.1秒完成
+#9 sha256：d17f077ada118cc762df373ff803592abf2dfa3ddafaa7381e364dd27a88fca7 4.20MB / 4.20MB 0.1s 完成
+#9 提取SHA256：D17F077ADA118cc762df373ff803592abf2dfa3ddafaa7381e364dd27a88fca7 0.3s 完成
+#9 sha256：bda5d7ef971f8ede8ea80002d2ac886ef6807fe32cfe46c38704a7ba 43.55MB / 43.55MB 0.3s
+#9 提取SHA256：BDA5D7ef971F8EDE8EA80002d2ac886ef6807fe32cfe46C38704A7BA0429475D
+#9 ...
 
-#14 [linux/amd64 runner 2/5] RUN addgroup -g 101 -S nginx &&     adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
-#14 DONE 0.3s
+#14 [linux/arm64 runner 2/5] RUN addgroup -g 101 -S nginx && adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx ||确实如此
+#14 0.156 addgroup：组 'nginx' 正在使用
+#14 完成 1.1秒
 
-#9 [linux/amd64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
-#9 sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 445B / 445B 0.1s done
-#9 sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 1.26MB / 1.26MB 0.2s done
-#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 43.23MB / 43.23MB 0.3s done
-#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 0.2s done
-#9 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 0.2s done
-#9 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287
-#9 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 2.7s done
-#9 DONE 3.2s
+#15 [linux/amd64 runner 2/5] 运行 addgroup -g 101 -S nginx && adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx ||确实如此
+#15 0.083 addgroup：组 'nginx' 正在使用
+#15 完成 1.0
 
-#13 [linux/arm64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
-#13 ...
+#9 [linux/arm64 构建器 1/16] 来自 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 ...
 
-#9 [linux/amd64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
-#9 extracting sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 0.0s done
-#9 extracting sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 done
-#9 DONE 3.2s
+#10 [linux/amd64 构建器 1/16] 来自 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#10 提取SHA256：4feea04C154301db6F4A496Efa397B3DB96603B1C009C797CFDde77BEA8B3287 2.8秒完成
+#10 完成3.1秒
 
-#16 [linux/amd64 builder  2/16] WORKDIR /app
-#16 DONE 0.1s
+#10 [linux/amd64 构建器 1/16] 来自 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#10 提取SHA256：B2CBFe903B0821005780971ddc5892edcc4C74C5A48D82E1D2B382edac3122 0.0s 完成
+#10 提取SHA256：FFF4E2C1B189Bf87D63AD8bd07F7F4EB288D6F2B6A07A8bb44C60E8C075D2096 0.0s 完成
+#10 完成 3.2秒
 
-#13 [linux/arm64 builder  1/16] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
-#13 extracting sha256:bda5d7ef971f8ede8ea80002d2ac886ef6807fe32cfe46c38704a7ba0429475d 2.6s done
-#13 extracting sha256:13e45b12880fbbfe3554ecf6b70131ace701d0c2fd3e2fb9abb842ba2494cd40 0.0s done
-#13 extracting sha256:cd322d0ddd02673e6c24a2158d1f12f6ec7c6fd9c0dc67123244d0f0eb0f8806
-#13 extracting sha256:cd322d0ddd02673e6c24a2158d1f12f6ec7c6fd9c0dc67123244d0f0eb0f8806 done
-#13 DONE 3.3s
+#9 [linux/arm64 构建器 1/16] 来自 docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 提取SHA256：BDA5D7ef971F8EDE8EA80002d2ac886ef6807fe32cfe46C38704A7BA0429475D 2.7s 完成
+#9 提取SHA256：13E45B12880fbbfe3554ECF6B70131Ace701D0C2Fd3E2FB9ABB842BA2494CD40 0.0秒完成
+#9 提取SHA256：CD322D0DDDd02673E6C24A2158D1F12F6EC7C6Fd9C0Dc67123244D0F0EB0F8806 完成
+#9 完成 3.2秒
 
-#17 [linux/arm64 builder  2/16] WORKDIR /app
-#17 DONE 0.0s
+#16 [linux/arm64 builder 2/16] WORKDIR /app
+#16 完成 0.0秒
 
-#18 [linux/arm64 builder  3/16] RUN apk add --no-cache openssl
-#18 ...
+#17 [linux/amd64 builder 2/16] WORKDIR /app
+#17 完成 0.0秒
 
-#19 [linux/amd64 builder  3/16] RUN apk add --no-cache openssl
-#19 0.544 (1/1) Installing openssl (3.5.6-r0)
-#19 0.561 Executing busybox-1.37.0-r30.trigger
-#19 0.567 OK: 11.7 MiB in 19 packages
-#19 DONE 0.6s
+#18 [Linux/AMD64 构建器 3/16] 运行 apk add --no-cache openssl
+#18 0.408 （1/1） 安装 openssl （3.5.6-r0）
+#18 0.417 执行busybox-1.37.0-r30.trigger
+#18 0.425 OK：19个包裹中11.7 MiB
+#18 完成 0.5秒
 
-#20 [linux/amd64 builder  4/16] RUN npm config set registry https://registry.npmmirror.com
-#20 DONE 0.7s
+#19 [linux/amd64 builder 4/16] 运行 npm 配置集注册表https://registry.npmmirror.com
+#19 完成 0.6秒
 
-#18 [linux/arm64 builder  3/16] RUN apk add --no-cache openssl
-#18 ...
+#20 [Linux/arm64 构建器 3/16] 运行 apk add --no-cache openssl
+#20 ...
 
-#21 [linux/amd64 builder  5/16] COPY package*.json ./
-#21 DONE 0.0s
+#21 [linux/amd64 builder 5/16] COPY package*.json ./
+#21 完成 0.0秒
 
-#22 [linux/amd64 builder  6/16] COPY web/package*.json ./web/
-#22 DONE 0.0s
+#22 [linux/amd64 构建器 6/16] 复制 web/package*.json ./web/
+#22 完成 0.0秒
 
-#23 [linux/amd64 builder  7/16] COPY server/package*.json ./server/
-#23 DONE 0.0s
+#23 [linux/amd64 builder 7/16] 复制服务器/package*.json ./server/
+#23 完成 0.0秒
 
-#24 [linux/amd64 builder  8/16] WORKDIR /app/web
-#24 DONE 0.0s
+#24 [linux/amd64 构建器 8/16] WORKDIR /app/web
+#24 完成 0.0秒
 
-#25 [linux/amd64 builder  9/16] RUN npm install --ignore-scripts
+#25 [linux/amd64 builder 9/16] 运行 npm 安装 --ignore-scripts
 #25 ...
 
-#18 [linux/arm64 builder  3/16] RUN apk add --no-cache openssl
-#18 2.292 (1/1) Installing openssl (3.5.6-r0)
-#18 2.350 Executing busybox-1.37.0-r30.trigger
-#18 2.414 OK: 11.9 MiB in 19 packages
-#18 DONE 2.5s
+#20 [Linux/arm64 构建器 3/16] 运行 apk add --no-cache openssl
+#20 2.492 （1/1） 安装 openssl （3.5.6-r0）
+#20 2.525 执行busybox-1.37.0-r30.trigger
+#20 2.591 OK：19个封装中11.9 MiB
+#20 完成 2.7秒
 
 #26 [linux/arm64 builder  4/16] RUN npm config set registry https://registry.npmmirror.com
-#26 DONE 4.8s
+#26 DONE 4.9s
 
 #25 [linux/amd64 builder  9/16] RUN npm install --ignore-scripts
 #25 ...
@@ -203,26 +194,26 @@ Builder info
 #31 ...
 
 #25 [linux/amd64 builder  9/16] RUN npm install --ignore-scripts
-#25 269.7 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
-#25 273.3 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
-#25 273.8 npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
-#25 274.2 npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
-#25 275.9 npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
-#25 279.4 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
-#25 280.0 npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
-#25 280.3 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
-#25 282.3 
-#25 282.3 added 490 packages in 5m
-#25 282.3 
-#25 282.3 79 packages are looking for funding
-#25 282.3   run `npm fund` for details
-#25 DONE 283.9s
+#25 162.6 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#25 165.7 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+#25 166.0 npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+#25 167.1 npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+#25 168.1 npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+#25 171.2 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#25 172.0 npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+#25 173.4 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#25 174.5 
+#25 174.5 added 490 packages in 3m
+#25 174.5 
+#25 174.6 79 packages are looking for funding
+#25 174.6   run `npm fund` for details
+#25 DONE 175.9s
 
 #31 [linux/arm64 builder  9/16] RUN npm install --ignore-scripts
 #31 ...
 
 #32 [linux/amd64 builder 10/16] COPY web/src web/src
-#32 DONE 0.3s
+#32 DONE 0.4s
 
 #31 [linux/arm64 builder  9/16] RUN npm install --ignore-scripts
 #31 ...
@@ -242,183 +233,192 @@ Builder info
 #37 [linux/amd64 builder 15/16] COPY web/tsconfig.node.json web/
 #37 DONE 0.0s
 
-#38 [linux/amd64 builder 16/16] RUN npm run build
-#38 0.231 
-#38 0.231 > zhiliao-assistant@1.0.0 build
-#38 0.231 > vue-tsc && vite build
-#38 0.231 
-#38 0.510 Version 5.9.3
-#38 0.513 tsc: The TypeScript Compiler - Version 5.9.3
-#38 0.513 
-#38 0.513 COMMON COMMANDS
-#38 0.513 
-#38 0.513   tsc
-#38 0.513   Compiles the current project (tsconfig.json in the working directory.)
-#38 0.513 
-#38 0.513   tsc app.ts util.ts
-#38 0.513   Ignoring tsconfig.json, compiles the specified files with default compiler options.
-#38 0.513 
-#38 0.513   tsc -b
-#38 0.513   Build a composite project in the working directory.
-#38 0.513 
-#38 0.513   tsc --init
-#38 0.513   Creates a tsconfig.json with the recommended settings in the working directory.
-#38 0.513 
-#38 0.513   tsc -p ./path/to/tsconfig.json
-#38 0.513   Compiles the TypeScript project located at the specified path.
-#38 0.513 
-#38 0.513   tsc --help --all
-#38 0.513   An expanded version of this information, showing all possible compiler options
-#38 0.513 
-#38 0.513   tsc --noEmit
-#38 0.513   tsc --target esnext
-#38 0.514   Compiles the current project, with additional settings.
-#38 0.514 
-#38 0.514 COMMAND LINE FLAGS
-#38 0.514 
-#38 0.514 --help, -h
-#38 0.514 Print this message.
-#38 0.514 
-#38 0.514 --watch, -w
-#38 0.514 Watch input files.
-#38 0.514 
-#38 0.514 --all
-#38 0.514 Show all compiler options.
-#38 0.514 
-#38 0.514 --version, -v
-#38 0.514 Print the compiler's version.
-#38 0.514 
-#38 0.514 --init
-#38 0.514 Initializes a TypeScript project and creates a tsconfig.json file.
-#38 0.514 
-#38 0.514 --project, -p
-#38 0.514 Compile the project given the path to its configuration file, or to a folder with a 'tsconfig.json'.
-#38 0.514 
-#38 0.514 --showConfig
-#38 0.514 Print the final configuration instead of building.
-#38 0.514 
-#38 0.514 --build, -b
-#38 0.514 Build one or more projects and their dependencies, if out of date
-#38 0.514 
-#38 0.514 COMMON COMPILER OPTIONS
-#38 0.514 
-#38 0.514 --pretty
-#38 0.514 Enable color and formatting in TypeScript's output to make compiler errors easier to read.
-#38 0.514 type: boolean
-#38 0.514 default: true
-#38 0.514 
-#38 0.514 --declaration, -d
-#38 0.514 Generate .d.ts files from TypeScript and JavaScript files in your project.
-#38 0.514 type: boolean
-#38 0.514 default: `false`, unless `composite` is set
-#38 0.514 
-#38 0.514 --declarationMap
-#38 0.514 Create sourcemaps for d.ts files.
-#38 0.514 type: boolean
-#38 0.514 default: false
-#38 0.514 
-#38 0.514 --emitDeclarationOnly
-#38 0.515 Only output d.ts files and not JavaScript files.
-#38 0.515 type: boolean
-#38 0.515 default: false
-#38 0.515 
-#38 0.515 --sourceMap
-#38 0.515 Create source map files for emitted JavaScript files.
-#38 0.515 type: boolean
-#38 0.515 default: false
-#38 0.515 
-#38 0.515 --noEmit
-#38 0.515 Disable emitting files from a compilation.
-#38 0.515 type: boolean
-#38 0.515 default: false
-#38 0.515 
-#38 0.515 --target, -t
-#38 0.515 Set the JavaScript language version for emitted JavaScript and include compatible library declarations.
-#38 0.515 one of: es5, es6/es2015, es2016, es2017, es2018, es2019, es2020, es2021, es2022, es2023, es2024, esnext
-#38 0.515 default: es5
-#38 0.515 
-#38 0.515 --module, -m
-#38 0.515 Specify what module code is generated.
-#38 0.515 one of: none, commonjs, amd, umd, system, es6/es2015, es2020, es2022, esnext, node16, node18, node20, nodenext, preserve
-#38 0.515 default: undefined
-#38 0.515 
-#38 0.515 --lib
-#38 0.515 Specify a set of bundled library declaration files that describe the target runtime environment.
-#38 0.515 one or more: es5, es6/es2015, es7/es2016, es2017, es2018, es2019, es2020, es2021, es2022, es2023, es2024, esnext, dom, dom.iterable, dom.asynciterable, webworker, webworker.importscripts, webworker.iterable, webworker.asynciterable, scripthost, es2015.core, es2015.collection, es2015.generator, es2015.iterable, es2015.promise, es2015.proxy, es2015.reflect, es2015.symbol, es2015.symbol.wellknown, es2016.array.include, es2016.intl, es2017.arraybuffer, es2017.date, es2017.object, es2017.sharedmemory, es2017.string, es2017.intl, es2017.typedarrays, es2018.asyncgenerator, es2018.asynciterable/esnext.asynciterable, es2018.intl, es2018.promise, es2018.regexp, es2019.array, es2019.object, es2019.string, es2019.symbol/esnext.symbol, es2019.intl, es2020.bigint/esnext.bigint, es2020.date, es2020.promise, es2020.sharedmemory, es2020.string, es2020.symbol.wellknown, es2020.intl, es2020.number, es2021.promise, es2021.string, es2021.weakref/esnext.weakref, es2021.intl, es2022.array, es2022.error, es2022.intl, es2022.object, es2022.string, es2022.regexp, es2023.array, es2023.collection, es2023.intl, es2024.arraybuffer, es2024.collection, es2024.object/esnext.object, es2024.promise, es2024.regexp/esnext.regexp, es2024.sharedmemory, es2024.string/esnext.string, esnext.array, esnext.collection, esnext.intl, esnext.disposable, esnext.promise, esnext.decorators, esnext.iterator, esnext.float16, esnext.error, esnext.sharedmemory, decorators, decorators.legacy
-#38 0.515 default: undefined
-#38 0.515 
-#38 0.515 --allowJs
-#38 0.515 Allow JavaScript files to be a part of your program. Use the 'checkJs' option to get errors from these files.
-#38 0.515 type: boolean
-#38 0.515 default: false
-#38 0.515 
-#38 0.515 --checkJs
-#38 0.515 Enable error reporting in type-checked JavaScript files.
-#38 0.515 type: boolean
-#38 0.515 default: false
-#38 0.515 
-#38 0.515 --jsx
-#38 0.515 Specify what JSX code is generated.
-#38 0.515 one of: preserve, react, react-native, react-jsx, react-jsxdev
-#38 0.515 default: undefined
-#38 0.515 
-#38 0.515 --outFile
-#38 0.515 Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output.
-#38 0.515 
-#38 0.515 --outDir
-#38 0.515 Specify an output folder for all emitted files.
-#38 0.515 
-#38 0.515 --removeComments
-#38 0.515 Disable emitting comments.
-#38 0.515 type: boolean
-#38 0.515 default: false
-#38 0.515 
-#38 0.515 --strict
-#38 0.515 Enable all strict type-checking options.
-#38 0.515 type: boolean
-#38 0.515 default: false
-#38 0.515 
-#38 0.516 --types
-#38 0.516 Specify type package names to be included without being referenced in a source file.
-#38 0.516 
-#38 0.516 --esModuleInterop
-#38 0.516 Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility.
-#38 0.516 type: boolean
-#38 0.516 default: false
-#38 0.516 
-#38 0.516 You can learn about all of the compiler options at https://aka.ms/tsc
-#38 0.516 
-#38 0.525 npm error Lifecycle script `build` failed with error:
-#38 0.525 npm error code 1
-#38 0.526 npm error path /app/web
-#38 0.526 npm error workspace zhiliao-assistant@1.0.0
-#38 0.526 npm error location /app/web
-#38 0.526 npm error command failed
-#38 0.526 npm error command sh -c vue-tsc && vite build
-#38 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+#38 [linux/amd64 builder 16/16] RUN npm run build -- --mode production || npx vite build
+#38 0.354 
+#38 0.354 > zhiliao-assistant@1.0.0 build
+#38 0.354 > vue-tsc && vite build --mode production
+#38 0.354 
+#38 0.796 Version 5.9.3
+#38 0.800 tsc: The TypeScript Compiler - Version 5.9.3
+#38 0.800 
+#38 0.800 COMMON COMMANDS
+#38 0.800 
+#38 0.800   tsc
+#38 0.800   Compiles the current project (tsconfig.json in the working directory.)
+#38 0.800 
+#38 0.800   tsc app.ts util.ts
+#38 0.800   Ignoring tsconfig.json, compiles the specified files with default compiler options.
+#38 0.800 
+#38 0.800   tsc -b
+#38 0.800   Build a composite project in the working directory.
+#38 0.800 
+#38 0.800   tsc --init
+#38 0.801   Creates a tsconfig.json with the recommended settings in the working directory.
+#38 0.801 
+#38 0.801   tsc -p ./path/to/tsconfig.json
+#38 0.801   Compiles the TypeScript project located at the specified path.
+#38 0.801 
+#38 0.801   tsc --help --all
+#38 0.801   An expanded version of this information, showing all possible compiler options
+#38 0.801 
+#38 0.801   tsc --noEmit
+#38 0.801   tsc --target esnext
+#38 0.801   Compiles the current project, with additional settings.
+#38 0.801 
+#38 0.801 COMMAND LINE FLAGS
+#38 0.801 
+#38 0.801 --help, -h
+#38 0.802 Print this message.
+#38 0.802 
+#38 0.802 --watch, -w
+#38 0.802 Watch input files.
+#38 0.802 
+#38 0.802 --all
+#38 0.802 Show all compiler options.
+#38 0.802 
+#38 0.802 --version, -v
+#38 0.802 Print the compiler's version.
+#38 0.802 
+#38 0.802 --init
+#38 0.802 Initializes a TypeScript project and creates a tsconfig.json file.
+#38 0.802 
+#38 0.802 --project, -p
+#38 0.802 Compile the project given the path to its configuration file, or to a folder with a 'tsconfig.json'.
+#38 0.802 
+#38 0.802 --showConfig
+#38 0.802 Print the final configuration instead of building.
+#38 0.802 
+#38 0.802 --build, -b
+#38 0.802 Build one or more projects and their dependencies, if out of date
+#38 0.802 
+#38 0.802 COMMON COMPILER OPTIONS
+#38 0.802 
+#38 0.802 --pretty
+#38 0.802 Enable color and formatting in TypeScript's output to make compiler errors easier to read.
+#38 0.802 type: boolean
+#38 0.802 默认：真
+#38 0.802
+#38 0.802 --declaration， -d
+#38 0.802 从项目中的 TypeScript 和 JavaScript 文件生成.d.ts文件。
+#38 0.802 类型：布尔
+#38 0.802 默认：'false'，除非设置了'复合'
+#38 0.802
+#38 0.802 --声明地图
+#38 0.802 为d.ts文件创建源图。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 --emitDeclarationOnly
+#38 0.803 只输出d.ts文件，不输出JavaScript文件。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 --sourceMap
+#38 0.803 为已发布的JavaScript文件创建源映射文件。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 --noEmit
+#38 0.803 禁用编译中的发送文件。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 --目标，-t
+#38 0.803 设置 JavaScript 语言版本用于发射 JavaScript，并包含兼容的库声明。
+#38 0.803 其中之一：ES5，ES6/ES2015，ES2016，ES2017，ES2018，ES2019，ES2020，ES2021，ES2022，ES2023，ES2024，ESnext。
+#38 0.803 默认：es5
+#38 0.803
+#38 0.803 --模，-m
+#38 0.803 指定生成的模块代码。
+#38 0.803 其中之一：无、CommonJS、AMD、UMD、System、ES6/ES2015、ES2020、ES2022、ES2022、ESnext、Node16、node18、node20、nodenext、preserve
+#38 0.803 默认：未定义
+#38 0.803
+#38 0.803 --lib
+#38 0.803 指定一组捆绑的库声明文件，描述目标运行时环境。
+#38 0.803 一个或多个：es5，es6/es2015，es7/es2016，es2017，es2018，es2019，es2020，es2021，es2022，es2023，es2024，esnext，dom，dom.iterable，dom.asynciterable，webworker，webworker.importscripts，webworker.iterable，webworker.asynciterable，scripthost，es2015.core，es2015.collection，es2015.generator，es2015.iterable，es2015.promise，es2015.proxy，es2015.reflect，es2015.symbol，es2015.symbol.wellknown，es2016.array.include，es2016.intl，es2017.arraybuffer，es2017.date，es2017.object， es2017.sharedmemory， es2017.string， es2017.intl， es2017.typedarrays， es2018.asyncgenerator， es2018.asynciterable/esnext.asynciterable， es2018.intl， es2018.Promise， es2018.RegEx， ES2019.array， es2019.object， es2019.string， es2019.string， es2019.int， es2020.bigint/esnext.bigint， es2020.date， es2020.promise， es2020.sharedmemory， es2020.string， es2020.symbol.wellknown， es2020.intl， es2020.number， es2021.promise， es2021.string， es2021.weakref/esnext.weakref，es2021.intl，es2022.array，es2022.error，es2022.intl，es2022.object，es2022.STRING，es2022.RegEx，es2023.array，es2023.collection，es2023.intl，es2024.arraybuffer，es2024.collection，es2024.object/esnext.object，es2024.promise，es2024.regexp/esnext.regexp，es2024.sharedmemory，es2024.STRING/ESnext.String，esnext.array，esnext.collection，esnext.intl，esnext.disposable，esnext.promise，esnext.decorators，esnext.iterator，esnext.float16，esnext.error，esnext.sharedmemory，装饰者，装饰者.遗产
+#38 0.803 默认：未定义
+#38 0.803
+#38 0.803 --allowJs
+#38 0.803 允许JavaScript文件成为你的程序的一部分。使用“checkJs”选项来获取这些文件的错误。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 --checkJs
+#38 0.803 启用类型检查的JavaScript文件中的错误报告。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 --jsx
+#38 0.803 指定生成的 JSX 代码。
+#38 0.803 其中之一：保留、反应、反应原生、React-jsx、React-jsxdev
+#38 0.803 默认：未定义
+#38 0.803
+#38 0.803 --outFile
+#38 0.803 指定一个将所有输出捆绑成一个JavaScript文件的文件。如果“声明”为真，也表示一个捆绑所有输出.d.ts文件。
+#38 0.803
+#38 0.803 --outDir
+#38 0.803 为所有发出的文件指定一个输出文件夹。
+#38 0.803
+#38 0.803 --removeComments
+#38 0.803 禁用发出评论。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 --严格
+#38 0.803 启用所有严格类型检查选项。
+#38 0.803 类型：布尔
+#38 0.803 默认：false
+#38 0.803
+#38 0.803 ——类型
+#38 0.803 指定类型包名称，但不在源文件中引用。
+#38 0.804
+#38 0.804 --esModuleInterop
+#38 0.804 发布额外的 JavaScript，以便更好地支持导入 CommonJS 模块。这使“allowSyntheticDefaultImports”实现类型兼容性。
+#38 0.804 类型：布尔
+#38 0.804 默认：false
+#38 0.804
+#38 0.804 你可以在https://aka.ms/tsc
+#38 0.804
+#38 0.818 npm 错误生命周期脚本“build”失败，错误：
+#38 0.819 NPM 错误代码 1
+#38 0.819 npm 错误路径 /app/web
+#38 0.819 NPM Error Workspace Zhiliao-assistant@1.0.0
+#38 0.819 NPM 错误位置 /app/web
+#38 0.819 NPM 错误命令失败
+#38 0.820 NPM 错误命令 SH -c vue-tsc & vite build --mode production
+#38 1.692 vite v5.4.21 制作构建......
+#38 1.739 ✓ 0 模块转换。
+#38 1.744 x 构建失败 17毫秒
+#38 构建过程中出现1.744错误：
+#38 1.744 无法解析进入模块“index.html”。
+#38 1.744 在 getRollupError （file:///app/node_modules/rollup/dist/es/shared/parseAst.js:406:41）
+#38 1.744 误差（file:///app/node_modules/rollup/dist/es/shared/parseAst.js:402:42）
+#38 1.744 在 ModuleLoader.loadEntryModule （file:///app/node_modules/rollup/dist/es/shared/node-entry.js:22141:20）
+#38 1.744 在异步 Promise.all（索引 0）
+#38 错误：进程 “/bin/sh -c npm 运行构建 -- --模式生产 ||NPX Vite 构建“未成功完成：退出代码：1
 
-#31 [linux/arm64 builder  9/16] RUN npm install --ignore-scripts
-#31 CANCELED
+#31 [linux/arm64 构建器 9/16] 运行 npm 安装 --ignore-scripts
+#31 取消
 ------
- > [linux/amd64 builder 16/16] RUN npm run build:
-0.516 
-0.516 You can learn about all of the compiler options at https://aka.ms/tsc
-0.516 
-0.525 npm error Lifecycle script `build` failed with error:
-0.525 npm error code 1
-0.526 npm error path /app/web
-0.526 npm error workspace zhiliao-assistant@1.0.0
-0.526 npm error location /app/web
-0.526 npm error command failed
-0.526 npm error command sh -c vue-tsc && vite build
+> [linux/amd64 构建器 16/16] 运行 npm 运行构建 -- --模式 生产 ||NPX Vite 构建：
+0.820 NPM 错误命令 SH -c vue-tsc & vite build --mode production
+1.692 vite v5.4.21 用于生产的构建......
+1.739 ✓ 0 模块转换。
+1.744 x 构建失败时间为17毫秒
+构建过程中出现1.744错误：
+1.744 无法解析进入模块“index.html”。
+1.744 at getRollupError （file:///app/node_modules/rollup/dist/es/shared/parseAst.js:406:41）
+误差1.744（file:///app/node_modules/rollup/dist/es/shared/parseAst.js:402:42）
+1.744 在 ModuleLoader.loadEntryModule （file:///app/node_modules/rollup/dist/es/shared/node-entry.js:22141:20）
+1.744 在异步 Promise.all（索引 0）
 ------
-Dockerfile:27
+Dockerfile：27
 --------------------
-  25 |     ENV VITE_API_URL=$VITE_API_URL
-  26 |     
-  27 | >>> RUN npm run build
-  28 |     
-  29 |     FROM nginx:alpine AS runner
+25 |ENV VITE_API_URL=$VITE_API_URL
+26 |
+27 |>>> 运行 npm 运行 构建 -- --模式 生产 ||NPX Vite 构建
+28 |
+29 |来自nginx：高山AS跑者
 --------------------
-ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
-Error: buildx failed with: ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+错误：构建失败：解决失败：进程“/bin/sh -c npm 运行构建 -- --mode production ||NPX Vite 构建“未成功完成：退出代码：1
+错误：buildx 失败后出现：ERROR： 构建失败：解决失败： process “/bin/sh -c npm 运行构建 -- --mode production ||NPX Vite 构建“未成功完成：退出代码：1

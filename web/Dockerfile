@@ -14,17 +14,12 @@ COPY server/package*.json ./server/
 WORKDIR /app/web
 RUN npm install --ignore-scripts
 
-COPY web/src web/src
-COPY web/public web/public
-COPY web/index.html web/
-COPY web/vite.config.ts web/
-COPY web/tsconfig.json web/
-COPY web/tsconfig.node.json web/
+COPY web web
 
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN npm run build -- --mode production || npx vite build
+RUN cd /app/web && npx vite build
 
 FROM nginx:alpine AS runner
 
