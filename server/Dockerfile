@@ -2,21 +2,21 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache openssl && \
-    npm config set registry https://registry.npmmirror.com
+RUN apk add --no-cache openssl
+RUN npm config set registry https://registry.npmmirror.com
 
-COPY server/package*.json server/
 COPY package*.json ./
+COPY server/package*.json ./server/
 
-RUN npm ci --workspace=server --omit=dev --ignore-scripts || \
-    (cd server && npm install --omit=dev --ignore-scripts)
+RUN npm ci --workspace=server --omit=dev --ignore-scripts
 
 COPY server/src server/src
 COPY server/prisma server/prisma
 COPY server/tsconfig.json server/
 
 WORKDIR /app/server
-RUN npx prisma generate && npm run build
+RUN npx prisma generate
+RUN npm run build
 
 FROM node:20-alpine AS runner
 

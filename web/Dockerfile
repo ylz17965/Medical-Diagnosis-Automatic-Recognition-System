@@ -4,15 +4,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache openssl && \
-    npm config set registry https://registry.npmmirror.com
+RUN apk add --no-cache openssl
+RUN npm config set registry https://registry.npmmirror.com
 
-COPY server/package*.json server/ 2>/dev/null || true
-COPY web/package*.json web/
 COPY package*.json ./
+COPY web/package*.json ./web/
+COPY server/package*.json ./server/
 
-RUN npm ci --workspace=web --omit=dev --ignore-scripts || \
-    (cd web && npm install --omit=dev --ignore-scripts)
+RUN npm ci --workspace=web --omit=dev --ignore-scripts
 
 COPY web/src web/src
 COPY web/public web/public
