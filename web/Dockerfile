@@ -2,24 +2,21 @@ ARG VITE_API_URL=http://localhost:3000
 
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /app/web
 
 RUN apk add --no-cache openssl
 RUN npm config set registry https://registry.npmmirror.com
 
-COPY package*.json ./
-COPY web/package*.json ./web/
-COPY server/package*.json ./server/
+COPY web/package*.json ./
 
-WORKDIR /app/web
 RUN npm install --ignore-scripts
 
-COPY web web
+COPY web ./
 
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN cd /app/web && npx vite build
+RUN npx vite build
 
 FROM nginx:alpine AS runner
 
