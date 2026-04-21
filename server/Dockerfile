@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY server/package*.json ./server/
 
 WORKDIR /app/server
-RUN npm install --omit=dev --ignore-scripts || npm install --omit=dev
+RUN npm install --ignore-scripts
 
 COPY server/src server/src
 COPY server/prisma server/prisma
@@ -17,6 +17,7 @@ COPY server/tsconfig.json server/
 
 RUN npx prisma generate
 RUN npm run build
+RUN npm prune --omit=dev
 
 FROM node:20-alpine AS runner
 

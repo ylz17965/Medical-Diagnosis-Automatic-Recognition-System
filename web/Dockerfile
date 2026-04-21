@@ -12,7 +12,7 @@ COPY web/package*.json ./web/
 COPY server/package*.json ./server/
 
 WORKDIR /app/web
-RUN npm install --omit=dev --ignore-scripts || npm install --omit=dev
+RUN npm install --ignore-scripts
 
 COPY web/src web/src
 COPY web/public web/public
