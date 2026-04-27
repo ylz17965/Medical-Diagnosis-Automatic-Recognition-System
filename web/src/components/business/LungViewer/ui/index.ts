@@ -1,7 +1,0 @@
-export { default as Viewport2D } from './Viewport2D.vue'
-export { default as SliceSlider } from './SliceSlider.vue'
-export { default as WindowLevel } from './WindowLevel.vue'
-export { default as VolumeViewer3D } from './VolumeViewer3D.vue'
-export { default as Toolbar } from './Toolbar.vue'
-export { default as NoduleList } from './NoduleList.vue'
-export { default as MeasurementPanel } from './MeasurementPanel.vue'

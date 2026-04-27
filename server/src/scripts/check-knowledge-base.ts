@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 import { RAGService } from '../services/rag.service.js'
+import { RedisCacheService } from '../services/redis-cache.service.js'
 
 const prisma = new PrismaClient()
+const redisCache = new RedisCacheService()
 
 async function checkKnowledgeBase() {
   console.log('========================================')
@@ -9,7 +11,8 @@ async function checkKnowledgeBase() {
   console.log('========================================\n')
 
   try {
-    const ragService = new RAGService(prisma)
+    await redisCache.connect()
+    const ragService = new RAGService(prisma, redisCache)
     
     console.log('【1. 数据库统计】')
     const stats = await ragService.getDocumentStats()
@@ -59,6 +62,7 @@ async function checkKnowledgeBase() {
   } catch (error) {
     console.error('检查失败:', error)
   } finally {
+    await redisCache.disconnect()
     await prisma.$disconnect()
   }
 }

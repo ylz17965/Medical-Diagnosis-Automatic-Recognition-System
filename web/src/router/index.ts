@@ -23,39 +23,15 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/user-test',
-      name: 'UserTest',
-      component: () => import('@/views/UserTest.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/lung-cancer',
-      name: 'LungCancerScreening',
-      component: () => import('@/views/LungCancerScreening.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/hypertension',
-      name: 'HypertensionManagement',
-      component: () => import('@/views/HypertensionManagement.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/Dashboard.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/digital-twin',
-      name: 'DigitalTwin',
-      component: () => import('@/views/DigitalTwin.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/lung-ct',
       name: 'LungCTView',
       component: () => import('@/views/LungCTView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/knowledge',
+      name: 'Knowledge',
+      component: () => import('@/views/KnowledgeView.vue'),
       meta: { requiresAuth: true }
     },
     {

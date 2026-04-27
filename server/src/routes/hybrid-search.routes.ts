@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { HybridSearchService } from '../services/hybrid-search.service.js'
 
 export default async function hybridSearchRoutes(fastify: FastifyInstance) {
-  const hybridSearch = new HybridSearchService(fastify.prisma)
+  const hybridSearch = new HybridSearchService(fastify.prisma, fastify.redisCache)
 
   fastify.addHook('onRequest', async () => {
     await hybridSearch.initialize()

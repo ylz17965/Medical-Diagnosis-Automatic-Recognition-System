@@ -20,7 +20,7 @@ export interface AgentRouterResult {
   defaultAgent?: boolean
 }
 
-const agentsDir = path.join(__dirname, '../../../agents')
+const agentsDir = path.join(__dirname, '../../agents')
 const agentCache = new Map<string, AgentDefinition>()
 
 function parseAgentMarkdown(content: string): AgentDefinition | null {
@@ -100,57 +100,70 @@ export function listAgents(): { id: string; name: string; description: string; e
 }
 
 export function routeToAgent(userMessage: string): AgentRouterResult {
-  const routingRules: { patterns: string[]; agentId: string }[] = [
+  const lowerMessage = userMessage.toLowerCase()
+  
+  const routingRules: { patterns: string[]; agentId: string; weight?: number }[] = [
     {
-      patterns: ['肺结节', '肺癌', '肺部', 'LDCT', 'Fleischner'],
-      agentId: 'medical/medical-lung-cancer-specialist'
+      patterns: ['头痛', '偏头痛', '搏动性', '恶心呕吐', '畏光', '神经内科', '头晕', '眩晕', 'migraine', '脑胀', '头疼'],
+      agentId: 'medical/medical-neurology-headache-specialist',
+      weight: 1.0
     },
     {
-      patterns: ['高血压', '血压', '降压', '心血管', '降压药'],
-      agentId: 'medical/medical-hypertension-specialist'
+      patterns: ['中医', '中药', '针灸', '体质', '养生', '辨证', '经络', '穴位', '推拿', '拔罐', '艾灸', '方剂'],
+      agentId: 'medical/medical-tcm-specialist',
+      weight: 1.0
     },
     {
-      patterns: ['头痛', '偏头痛', '搏动性', '恶心呕吐', '畏光', '神经内科', '头晕', '眩晕', ' migraine'],
-      agentId: 'medical/medical-neurology-headache-specialist'
+      patterns: ['感冒', '发烧', '咳嗽', '喉咙痛', '流鼻涕', '鼻塞', '发热', '咽痛', '打喷嚏'],
+      agentId: 'medical/general-assistant',
+      weight: 0.8
     },
     {
-      patterns: ['中医', '中药', '针灸', '体质', '养生', '辨证', '经络'],
-      agentId: 'medical/medical-tcm-specialist'
+      patterns: ['体检', '报告', '指标', '血常规', '肝功能', '肾功能', '血脂', '血糖', '尿酸'],
+      agentId: 'medical/general-assistant',
+      weight: 0.8
     },
     {
-      patterns: ['Vue', '前端', '组件', 'CSS', 'UI', '页面', '界面'],
-      agentId: 'engineering/engineering-frontend-developer'
+      patterns: ['Vue', '前端', '组件', 'CSS', 'UI', '页面', '界面', 'Vite', 'Pinia', 'Router'],
+      agentId: 'engineering/engineering-frontend-developer',
+      weight: 1.0
     },
     {
-      patterns: ['API', '后端', '服务器', '数据库', '接口', 'Node'],
-      agentId: 'engineering/engineering-backend-architect'
+      patterns: ['API', '后端', '服务器', '数据库', '接口', 'Node', 'Fastify', 'Express', '路由'],
+      agentId: 'engineering/engineering-backend-architect',
+      weight: 1.0
     },
     {
-      patterns: ['RAG', '向量', '嵌入', 'embedding', 'AI', '模型', 'LLM'],
-      agentId: 'engineering/engineering-ai-engineer'
+      patterns: ['RAG', '向量', '嵌入', 'embedding', 'AI', '模型', 'LLM', '大语言模型', '知识库'],
+      agentId: 'engineering/engineering-ai-engineer',
+      weight: 1.0
     },
     {
-      patterns: ['SQL', 'PostgreSQL', '查询', '索引', '性能', '优化'],
-      agentId: 'engineering/engineering-database-optimizer'
+      patterns: ['SQL', 'PostgreSQL', '查询', '索引', '性能', '优化', '慢查询', '执行计划'],
+      agentId: 'engineering/engineering-database-optimizer',
+      weight: 1.0
     },
     {
-      patterns: ['安全', '加密', '认证', '权限', 'HIPAA', '隐私'],
-      agentId: 'engineering/engineering-security-engineer'
+      patterns: ['安全', '加密', '认证', '权限', 'HIPAA', '隐私', 'JWT', 'Token', '密码'],
+      agentId: 'engineering/engineering-security-engineer',
+      weight: 1.0
     }
   ]
   
   let bestMatch: AgentRouterResult | null = null
   
   for (const rule of routingRules) {
-    for (const pattern of rule.patterns) {
-      if (userMessage.includes(pattern)) {
-        const matchCount = rule.patterns.filter(p => userMessage.includes(p)).length
-        const confidence = matchCount / rule.patterns.length
-        if (!bestMatch || confidence > bestMatch.confidence) {
-          bestMatch = {
-            agentId: rule.agentId,
-            confidence
-          }
+    const matchCount = rule.patterns.filter(p => lowerMessage.includes(p.toLowerCase())).length
+    
+    if (matchCount > 0) {
+      const baseConfidence = matchCount / rule.patterns.length
+      const weight = rule.weight || 1.0
+      const confidence = Math.min(baseConfidence * weight, 1.0)
+      
+      if (!bestMatch || confidence > bestMatch.confidence) {
+        bestMatch = {
+          agentId: rule.agentId,
+          confidence
         }
       }
     }
@@ -158,7 +171,7 @@ export function routeToAgent(userMessage: string): AgentRouterResult {
   
   if (!bestMatch) {
     return {
-      agentId: 'medical/medical-lung-cancer-specialist',
+      agentId: 'medical/general-assistant',
       confidence: 0.3,
       defaultAgent: true
     }

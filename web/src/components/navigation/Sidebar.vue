@@ -1,17 +1,38 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useSettingsStore } from '@/stores'
+import type { Theme } from '@/stores/settings'
 import IconPlus from '@/components/icons/IconPlus.vue'
 import IconSettings from '@/components/icons/IconSettings.vue'
-import IconHelp from '@/components/icons/IconHelp.vue'
 import IconLogout from '@/components/icons/IconLogout.vue'
 import IconSidebar from '@/components/icons/IconSidebar.vue'
 import IconMessage from '@/components/icons/IconMessage.vue'
 import IconClose from '@/components/icons/IconClose.vue'
 import IconLung from '@/components/icons/IconLung.vue'
-import IconHeart from '@/components/icons/IconHeart.vue'
+import IconBook from '@/components/icons/IconBook.vue'
+import IconSun from '@/components/icons/IconSun.vue'
+import IconMoon from '@/components/icons/IconMoon.vue'
 
 const route = useRoute()
+const settingsStore = useSettingsStore()
+
+const currentTheme = computed(() => settingsStore.settings.theme)
+const themeIcon = computed(() => {
+  if (currentTheme.value === 'dark') return IconMoon
+  if (currentTheme.value === 'light') return IconSun
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? IconMoon : IconSun
+})
+const themeLabel = computed(() => {
+  const labels: Record<Theme, string> = { light: '浅色', dark: '深色', system: '跟随系统' }
+  return labels[currentTheme.value]
+})
+
+const cycleTheme = () => {
+  const order: Theme[] = ['light', 'dark', 'system']
+  const idx = order.indexOf(currentTheme.value)
+  settingsStore.setTheme(order[(idx + 1) % order.length])
+}
 
 interface Conversation {
   id: string
@@ -43,7 +64,6 @@ const emit = defineEmits<{
   selectChat: [id: string]
   deleteChat: [id: string]
   settings: []
-  help: []
   logout: []
 }>()
 
@@ -97,10 +117,7 @@ const cancelDelete = () => {
           <img v-if="user?.avatar" :src="user.avatar" :alt="user.nickname" />
           <span v-else class="avatar-placeholder">{{ user?.nickname?.charAt(0) }}</span>
         </div>
-        <div class="user-details">
-          <span class="user-nickname">{{ user?.nickname }}</span>
-          <button class="edit-profile-btn" aria-label="编辑个人资料" @click="$emit('settings')">编辑资料</button>
-        </div>
+        <span class="user-nickname">{{ user?.nickname }}</span>
       </div>
       <button 
         class="collapse-btn" 
@@ -173,35 +190,23 @@ const cancelDelete = () => {
           <IconLung class="nav-icon" />
           <span>肺部CT</span>
         </router-link>
-        <router-link to="/lung-cancer" class="nav-item" :class="{ active: route.path === '/lung-cancer' }">
-          <IconLung class="nav-icon" />
-          <span>肺癌早筛</span>
-        </router-link>
-        <router-link to="/hypertension" class="nav-item" :class="{ active: route.path === '/hypertension' }">
-          <IconHeart class="nav-icon" />
-          <span>高血压管理</span>
-        </router-link>
-        <router-link to="/digital-twin" class="nav-item" :class="{ active: route.path === '/digital-twin' }">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            <path d="M2 12h20"/>
-          </svg>
-          <span>数字孪生</span>
-        </router-link>
-        <router-link to="/dashboard" class="nav-item" :class="{ active: route.path === '/dashboard' }">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"/>
-            <rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/>
-          </svg>
-          <span>健康仪表盘</span>
+        <router-link to="/knowledge" class="nav-item" :class="{ active: route.path === '/knowledge' }">
+          <IconBook class="nav-icon" />
+          <span>知识库</span>
         </router-link>
       </div>
     </div>
 
     <div class="sidebar-footer" :aria-hidden="collapsed">
+      <button 
+        class="footer-btn theme-btn" 
+        :aria-label="themeLabel"
+        :title="themeLabel"
+        @click="cycleTheme"
+      >
+        <component :is="themeIcon" aria-hidden="true" />
+        <span v-if="!collapsed">{{ themeLabel }}</span>
+      </button>
       <button 
         class="footer-btn" 
         :aria-label="collapsed ? '设置' : ''"
@@ -209,14 +214,6 @@ const cancelDelete = () => {
       >
         <IconSettings aria-hidden="true" />
         <span v-if="!collapsed">设置</span>
-      </button>
-      <button 
-        class="footer-btn" 
-        :aria-label="collapsed ? '帮助' : ''"
-        @click="$emit('help')"
-      >
-        <IconHelp aria-hidden="true" />
-        <span v-if="!collapsed">帮助</span>
       </button>
       <button 
         class="footer-btn logout" 
@@ -264,8 +261,8 @@ const cancelDelete = () => {
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
   background-color: var(--color-primary-bg);
   display: flex;
@@ -282,39 +279,18 @@ const cancelDelete = () => {
 }
 
 .avatar-placeholder {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
 }
 
-.user-details {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
 .user-nickname {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  letter-spacing: var(--letter-spacing-normal);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.edit-profile-btn {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-regular);
-  color: var(--color-text-secondary);
-  letter-spacing: var(--letter-spacing-caption);
-  text-align: left;
-  padding: 0;
-  transition: color var(--transition-fast);
-}
-
-.edit-profile-btn:hover {
-  color: var(--color-primary);
 }
 
 .collapse-btn {
@@ -627,6 +603,15 @@ const cancelDelete = () => {
 
 .footer-btn.logout:hover {
   color: var(--color-error);
+}
+
+.footer-btn.theme-btn {
+  color: var(--color-accent);
+}
+
+.footer-btn.theme-btn:hover {
+  background-color: var(--color-accent-bg);
+  color: var(--color-accent-dark);
 }
 
 .footer-btn :deep(svg) {

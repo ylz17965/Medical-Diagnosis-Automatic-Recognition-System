@@ -30,7 +30,7 @@ const configSchema = z.object({
   
   EMBEDDING_DIMENSION: z.coerce.number().default(1024),
   RAG_TOP_K: z.coerce.number().default(5),
-  RAG_RERANK_TOP_K: z.coerce.number().default(20),
+  RAG_RERANK_TOP_K: z.coerce.number().default(10),
   RAG_CHUNK_SIZE: z.coerce.number().default(512),
   RAG_CHUNK_OVERLAP: z.coerce.number().default(128),
   RAG_SIMILARITY_THRESHOLD: z.coerce.number().default(0.7),

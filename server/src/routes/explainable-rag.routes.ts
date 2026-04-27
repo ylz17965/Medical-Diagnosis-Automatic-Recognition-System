@@ -30,7 +30,7 @@ const reasoningChainSchema = z.object({
 })
 
 export default async function explainableRAGRoutes(fastify: FastifyInstance) {
-  const hybridSearch = new HybridSearchService(fastify.prisma)
+  const hybridSearch = new HybridSearchService(fastify.prisma, fastify.redisCache)
   const explainableRAG = new ExplainableRAGService()
 
   fastify.addHook('onRequest', async () => {

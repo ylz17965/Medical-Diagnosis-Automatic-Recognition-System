@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Sidebar } from '@/components/navigation'
-import { HelpModal } from '@/components/business'
 import { useUserStore } from '@/stores/user'
 import { useConversationStore } from '@/stores/conversation'
 
@@ -12,7 +11,6 @@ const conversationStore = useConversationStore()
 
 const sidebarCollapsed = ref(false)
 const isMobile = ref(false)
-const showHelpModal = ref(false)
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth < 1280
@@ -48,10 +46,6 @@ const handleSettings = () => {
   router.push('/profile')
 }
 
-const handleHelp = () => {
-  showHelpModal.value = true
-}
-
 const handleLogout = () => {
   userStore.logout()
   conversationStore.clearConversations()
@@ -71,7 +65,6 @@ const handleLogout = () => {
       @select-chat="handleSelectChat"
       @delete-chat="handleDeleteChat"
       @settings="handleSettings"
-      @help="handleHelp"
       @logout="handleLogout"
     />
     <main class="main-content">
@@ -84,7 +77,6 @@ const handleLogout = () => {
       class="sidebar-overlay"
       @click="sidebarCollapsed = true"
     />
-    <HelpModal v-model="showHelpModal" />
   </div>
 </template>
 

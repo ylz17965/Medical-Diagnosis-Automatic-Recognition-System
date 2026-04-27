@@ -1,5 +1,6 @@
-import { bgeM3Client, BgeM3Client } from './bge-m3-client.service.js'
 import { RerankerService } from './reranker.service.js'
+import { EmbeddingService } from './embedding.service.js'
+import { RedisCacheService } from './redis-cache.service.js'
 import { config } from '../config/index.js'
 import { PrismaClient } from '@prisma/client'
 import { createLogger } from '../utils/logger.js'
@@ -31,7 +32,8 @@ interface RAGSearchResult {
 
 export class RAGService {
   private prisma: PrismaClient
-  private embeddingClient: BgeM3Client
+  private embeddingService: EmbeddingService
+  private redisCache: RedisCacheService
   private rerankerService: RerankerService
   private chunkSize: number
   private chunkOverlap: number
@@ -42,62 +44,24 @@ export class RAGService {
   private lastStatsCheck: number = 0
   private statsCacheDuration = 60000
   private isReady: boolean = false
-  private queryCache: Map<string, { results: RAGContext[]; timestamp: number }> = new Map()
-  private queryCacheTTL = 300000
 
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: PrismaClient, redisCache: RedisCacheService) {
     this.prisma = prisma
-    this.embeddingClient = bgeM3Client
+    this.redisCache = redisCache
+    this.embeddingService = new EmbeddingService(redisCache)
     this.rerankerService = new RerankerService()
     this.chunkSize = config.rag.chunkSize
     this.chunkOverlap = config.rag.chunkOverlap
     this.topK = config.rag.topK
     this.rerankTopK = config.rag.rerankTopK
     this.similarityThreshold = config.rag.similarityThreshold
-    
-    setInterval(() => {
-      const now = Date.now()
-      for (const [key, value] of this.queryCache.entries()) {
-        if (now - value.timestamp > this.queryCacheTTL) {
-          this.queryCache.delete(key)
-        }
-      }
-    }, 60000)
-  }
-
-  private getCacheKey(query: string, category?: string, healthRecordId?: string): string {
-    return `${query}:${category || ''}:${healthRecordId || ''}`
-  }
-
-  private getFromCache(key: string): RAGContext[] | null {
-    const cached = this.queryCache.get(key)
-    if (cached && (Date.now() - cached.timestamp) < this.queryCacheTTL) {
-      log.debug('Cache hit for query')
-      return cached.results
-    }
-    return null
-  }
-
-  private setCache(key: string, results: RAGContext[]): void {
-    this.queryCache.set(key, { results, timestamp: Date.now() })
-    if (this.queryCache.size > 100) {
-      const oldestKey = this.queryCache.keys().next().value
-      if (oldestKey) this.queryCache.delete(oldestKey)
-    }
   }
 
   async initialize(): Promise<void> {
     if (this.isReady) return
-    
-    log.info('Connecting to BGE-M3 embedding service...')
-    const ready = await this.embeddingClient.waitForReady(60000)
-    
-    if (!ready) {
-      throw new Error('BGE-M3 嵌入服务未启动，请先运行: python embedding_server.py')
-    }
-    
+    log.info('RAG service initializing...')
     this.isReady = true
-    log.info('BGE-M3 embedding service connected')
+    log.info('RAG service ready')
   }
 
   private async checkKnowledgeBaseExists(): Promise<boolean> {
@@ -105,7 +69,6 @@ export class RAGService {
     if (this.hasKnowledgeBase !== null && (now - this.lastStatsCheck) < this.statsCacheDuration) {
       return this.hasKnowledgeBase
     }
-
     const chunkCount = await this.prisma.documentChunk.count()
     this.hasKnowledgeBase = chunkCount > 0
     this.lastStatsCheck = now
@@ -113,171 +76,150 @@ export class RAGService {
   }
 
   chunkText(text: string): ChunkResult[] {
-    const chunks: ChunkResult[] = []
-    const sentences = text.split(/[。！？\n]/).filter(s => s.trim())
-    
-    let currentChunk = ''
-    let chunkIndex = 0
-
-    for (const sentence of sentences) {
-      const trimmedSentence = sentence.trim()
-      if (!trimmedSentence) continue
-
-      if (currentChunk.length + trimmedSentence.length > this.chunkSize && currentChunk.length > 0) {
-        chunks.push({
-          content: currentChunk.trim(),
-          index: chunkIndex++,
-          tokenCount: Math.ceil(currentChunk.length / 4),
-        })
-        
-        const overlapStart = Math.max(0, currentChunk.length - this.chunkOverlap)
-        currentChunk = currentChunk.slice(overlapStart) + trimmedSentence
-      } else {
-        currentChunk += (currentChunk ? '' : '') + trimmedSentence
-      }
-    }
-
-    if (currentChunk.trim()) {
-      chunks.push({
-        content: currentChunk.trim(),
-        index: chunkIndex,
-        tokenCount: Math.ceil(currentChunk.length / 4),
-      })
-    }
-
-    return chunks
+    return this.recursiveCharacterSplit(text, this.chunkSize, this.chunkOverlap)
   }
 
-  chunkTextSemantic(text: string): ChunkResult[] {
+  private recursiveCharacterSplit(
+    text: string,
+    chunkSize: number,
+    chunkOverlap: number,
+    separators: string[] = ['\n\n', '。', '！', '？', '；', '\n', ' ', '']
+  ): ChunkResult[] {
     const chunks: ChunkResult[] = []
-    
-    const sections = text.split(/\n\n+/)
-    
-    let currentChunk = ''
+    const finalSeparator = separators[separators.length - 1]
+    const currentSeparators = separators.length > 0 ? separators : [finalSeparator]
+
+    const separator = currentSeparators[0]
+    const remainingSeparators = currentSeparators.slice(1)
+
+    const splits = separator === '' ? Array.from(text).map(c => c) : text.split(separator)
+    const goodSplits: string[] = []
+    let currentDoc: string[] = []
     let chunkIndex = 0
-    let currentSectionType: 'header' | 'content' = 'content'
 
-    for (const section of sections) {
-      const trimmedSection = section.trim()
-      if (!trimmedSection) continue
+    for (const split of splits) {
+      const s = split.trim()
+      if (!s) continue
 
-      const isHeader = /^[一二三四五六七八九十\d]+[、\.．\s]|^[【\[].*[\]】]|^[A-Z][A-Z\s]+:|^#{1,3}\s/.test(trimmedSection)
-      
-      if (isHeader && currentChunk.length > this.chunkSize * 0.3) {
-        if (currentChunk.trim()) {
-          chunks.push({
-            content: currentChunk.trim(),
-            index: chunkIndex++,
-            tokenCount: Math.ceil(currentChunk.length / 4),
-            metadata: { sectionType: currentSectionType },
-          })
+      if (s.length > chunkSize) {
+        if (currentDoc.length > 0) {
+          const merged = currentDoc.join(separator)
+          if (merged.trim()) {
+            if (merged.length <= chunkSize) {
+              chunks.push({ content: merged.trim(), index: chunkIndex++, tokenCount: Math.ceil(merged.length / 4) })
+            } else {
+              const subChunks = this.recursiveCharacterSplit(merged, chunkSize, chunkOverlap, remainingSeparators)
+              for (const sc of subChunks) {
+                chunks.push({ ...sc, index: chunkIndex++ })
+              }
+            }
+          }
+          currentDoc = []
         }
-        currentChunk = trimmedSection
-        currentSectionType = 'header'
-      } else if (currentChunk.length + trimmedSection.length > this.chunkSize && currentChunk.length > 0) {
-        chunks.push({
-          content: currentChunk.trim(),
-          index: chunkIndex++,
-          tokenCount: Math.ceil(currentChunk.length / 4),
-          metadata: { sectionType: currentSectionType },
-        })
-        
-        const sentences = trimmedSection.split(/[。！？]/).filter(s => s.trim())
-        const overlapText = sentences.slice(0, 2).join('。')
-        currentChunk = overlapText.length > 0 ? overlapText + '。' + trimmedSection : trimmedSection
-        currentSectionType = 'content'
+
+        const subChunks = this.recursiveCharacterSplit(s, chunkSize, chunkOverlap, remainingSeparators)
+        for (const sc of subChunks) {
+          chunks.push({ ...sc, index: chunkIndex++ })
+        }
       } else {
-        currentChunk += (currentChunk ? '\n\n' : '') + trimmedSection
-        if (!isHeader) currentSectionType = 'content'
+        const prospectiveLength = currentDoc.join(separator).length + (currentDoc.length > 0 ? separator.length : 0) + s.length
+        if (prospectiveLength <= chunkSize) {
+          currentDoc.push(s)
+        } else {
+          if (currentDoc.length > 0) {
+            const merged = currentDoc.join(separator)
+            if (merged.trim()) {
+              if (merged.length <= chunkSize) {
+                chunks.push({ content: merged.trim(), index: chunkIndex++, tokenCount: Math.ceil(merged.length / 4) })
+              } else {
+                const subChunks = this.recursiveCharacterSplit(merged, chunkSize, chunkOverlap, remainingSeparators)
+                for (const sc of subChunks) {
+                  chunks.push({ ...sc, index: chunkIndex++ })
+                }
+              }
+            }
+          }
+          currentDoc = [s]
+        }
       }
     }
 
-    if (currentChunk.trim()) {
-      chunks.push({
-        content: currentChunk.trim(),
-        index: chunkIndex,
-        tokenCount: Math.ceil(currentChunk.length / 4),
-        metadata: { sectionType: currentSectionType },
-      })
+    if (currentDoc.length > 0) {
+      const merged = currentDoc.join(separator)
+      if (merged.trim()) {
+        if (merged.length <= chunkSize) {
+          chunks.push({ content: merged.trim(), index: chunkIndex, tokenCount: Math.ceil(merged.length / 4) })
+        } else {
+          const subChunks = this.recursiveCharacterSplit(merged, chunkSize, chunkOverlap, remainingSeparators)
+          for (const sc of subChunks) {
+            chunks.push({ ...sc, index: chunkIndex++ })
+          }
+        }
+      }
     }
 
-    log.debug({ sections: sections.length, chunks: chunks.length }, 'Semantic chunking completed')
-    return chunks
+    const result = this.mergeSmallChunks(chunks, chunkSize, chunkOverlap)
+    return result.map((c, i) => ({ ...c, index: i }))
   }
 
-  chunkTextAdaptive(text: string, options?: { preferSemantic?: boolean }): ChunkResult[] {
-    const hasStructure = /[一二三四五六七八九十]+[、\.．]|#{1,3}\s|【.*】/.test(text)
-    
-    if (hasStructure || options?.preferSemantic) {
-      return this.chunkTextSemantic(text)
+  private mergeSmallChunks(chunks: ChunkResult[], chunkSize: number, chunkOverlap: number): ChunkResult[] {
+    if (chunks.length <= 1) return chunks
+
+    const merged: ChunkResult[] = []
+    let current = { ...chunks[0] }
+
+    for (let i = 1; i < chunks.length; i++) {
+      const prospectiveLength = current.content.length + chunks[i].content.length
+      if (prospectiveLength <= chunkSize * 0.5) {
+        current.content = current.content + '\n' + chunks[i].content
+        current.tokenCount = Math.ceil(current.content.length / 4)
+      } else {
+        merged.push(current)
+        current = { ...chunks[i] }
+      }
     }
-    
-    return this.chunkText(text)
+    merged.push(current)
+    return merged
+  }
+
+  async generateQueryEmbedding(query: string): Promise<number[]> {
+    const result = await this.embeddingService.generateEmbedding(query)
+    return result.embedding
   }
 
   async indexDocument(params: {
-    documentId?: string
-    healthRecordId?: string
     title: string
     content: string
     source: string
-    category?: string
+    category: string
     metadata?: Record<string, unknown>
+    healthRecordId?: string
   }): Promise<string> {
-    if (!this.isReady) {
-      await this.initialize()
-    }
-
-    const documentId = params.documentId || crypto.randomUUID()
-    
-    let knowledgeDoc = await this.prisma.knowledgeDocument.findUnique({
-      where: { id: documentId },
+    if (!this.isReady) await this.initialize()
+    const chunks = this.chunkText(params.content)
+    if (chunks.length === 0) throw new Error('无法分块：内容为空')
+    const documentId = `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}}`
+    await this.prisma.knowledgeDocument.create({
+      data: { id: documentId, title: params.title, content: params.content, source: params.source, category: params.category, metadata: JSON.parse(JSON.stringify(params.metadata || {})) },
     })
-
-    if (!knowledgeDoc) {
-      knowledgeDoc = await this.prisma.knowledgeDocument.create({
-        data: {
-          id: documentId,
-          title: params.title,
-          content: params.content,
-          source: params.source,
-          category: params.category || 'general',
-          metadata: (params.metadata || {}) as any,
-        },
-      })
-    }
-
-    const chunks = this.chunkTextAdaptive(params.content)
-    
-    await this.prisma.documentChunk.deleteMany({
-      where: { documentId },
-    })
-
     const dimension = config.rag.embeddingDimension
-
     for (const chunk of chunks) {
-      const embeddingResult = await this.embeddingClient.generateEmbedding(chunk.content)
-      
-      await this.prisma.$executeRaw`
-        INSERT INTO document_chunks (id, "documentId", "healthRecordId", content, "chunkIndex", embedding, "tokenCount", metadata, "createdAt")
-        VALUES (
-          gen_random_uuid(),
-          ${documentId},
-          ${params.healthRecordId || null},
-          ${chunk.content},
-          ${chunk.index},
-          ${`[${embeddingResult.embedding.join(',')}]`}::vector(${dimension}),
-          ${chunk.tokenCount},
-          ${JSON.stringify(params.metadata || {})}::json,
-          NOW()
-        )
-      `
+      const embeddingResult = await this.generateQueryEmbedding(chunk.content)
+      await this.prisma.$executeRawUnsafe(`
+        INSERT INTO document_chunks (id, "documentId", content, "chunkIndex", embedding, "tokenCount", metadata, "createdAt")
+        VALUES ($1, $2, $3, $4, $5::vector(${dimension}), $6, $7::json, NOW())
+      `, `chunk-${documentId}-${chunk.index}`, documentId, chunk.content, chunk.index, `[${embeddingResult.join(',')}]`, chunk.tokenCount, JSON.stringify(params.metadata || {}))
     }
-
     this.hasKnowledgeBase = true
     this.lastStatsCheck = Date.now()
-
     return documentId
+  }
+
+  async deleteDocument(documentId: string): Promise<void> {
+    if (!this.isReady) await this.initialize()
+    await this.prisma.documentChunk.deleteMany({ where: { documentId } })
+    await this.prisma.knowledgeDocument.delete({ where: { id: documentId } })
+    log.info({ documentId }, 'Document deleted')
   }
 
   async searchSimilar(params: {
@@ -287,44 +229,28 @@ export class RAGService {
     topK?: number
     mergeChunks?: boolean
   }): Promise<RAGContext[]> {
-    if (!this.isReady) {
-      await this.initialize()
-    }
-
+    if (!this.isReady) await this.initialize()
     const hasKB = await this.checkKnowledgeBaseExists()
-    if (!hasKB) {
-      return []
-    }
+    if (!hasKB) return []
 
-    const queryEmbedding = await this.embeddingClient.generateEmbedding(params.query)
+    const queryEmbedding = await this.generateQueryEmbedding(params.query)
     const topK = params.topK || this.rerankTopK
     const dimension = config.rag.embeddingDimension
 
     let whereClause = '1=1'
-    const queryParams: unknown[] = [
-      `[${queryEmbedding.embedding.join(',')}]`,
-      topK * 2,
-    ]
-
+    const queryParams: unknown[] = [`[${queryEmbedding.join(',')}]`, topK * 2]
     if (params.category) {
       whereClause += ` AND kd.category = $${queryParams.length + 1}`
       queryParams.push(params.category)
     }
-
     if (params.healthRecordId) {
       whereClause += ` AND dc."healthRecordId" = $${queryParams.length + 1}`
       queryParams.push(params.healthRecordId)
     }
 
     const sql = `
-      SELECT 
-        dc.content,
-        dc."documentId",
-        dc."chunkIndex",
-        kd.source,
-        kd.title,
-        1 - (dc.embedding <=> $1::vector(${dimension})) as score,
-        dc.metadata
+      SELECT dc.content, dc."documentId", dc."chunkIndex", kd.source, kd.title,
+        1 - (dc.embedding <=> $1::vector(${dimension})) as score, dc.metadata
       FROM document_chunks dc
       JOIN knowledge_documents kd ON dc."documentId" = kd.id
       WHERE ${whereClause}
@@ -332,105 +258,40 @@ export class RAGService {
       LIMIT $2
     `
 
-    const results = await this.prisma.$queryRawUnsafe<any[]>(
-      sql,
-      ...queryParams
-    )
+    const results = await this.prisma.$queryRawUnsafe<RAGSearchResult[]>(sql, ...queryParams)
+    const merged = params.mergeChunks !== false
+      ? this.mergeAdjacentChunks(results)
+      : results.map(r => ({ content: r.content, source: r.source, score: Number(r.score), documentId: r.documentId, chunkIndex: r.chunkIndex, metadata: r.metadata as Record<string, unknown> }))
 
-    if (params.mergeChunks === false) {
-      return results.map(r => ({
-        content: r.content,
-        source: r.source,
-        score: Number(r.score),
-        metadata: r.metadata as Record<string, unknown>,
-      }))
-    }
-
-    const mergedResults = this.mergeAdjacentChunks(results)
-    
-    return mergedResults.slice(0, params.topK || this.topK)
+    return merged.filter(r => r.score >= this.similarityThreshold).slice(0, params.topK || this.topK)
   }
 
   private mergeAdjacentChunks(results: RAGSearchResult[]): RAGContext[] {
     if (results.length === 0) return []
-
     const documentGroups = new Map<string, Map<number, RAGSearchResult[]>>()
-    
     for (const r of results) {
       const docId = r.documentId || 'unknown'
       const chunkIndex = r.chunkIndex ?? 0
-      
-      if (!documentGroups.has(docId)) {
-        documentGroups.set(docId, new Map())
-      }
+      if (!documentGroups.has(docId)) documentGroups.set(docId, new Map())
       const docChunks = documentGroups.get(docId)!
-      
-      if (!docChunks.has(chunkIndex)) {
-        docChunks.set(chunkIndex, [])
-      }
+      if (!docChunks.has(chunkIndex)) docChunks.set(chunkIndex, [])
       docChunks.get(chunkIndex)!.push(r)
     }
-
     const merged: RAGContext[] = []
-
     for (const [docId, chunkMap] of documentGroups) {
       const sortedIndexes = Array.from(chunkMap.keys()).sort((a, b) => a - b)
-      
-      let currentContent = ''
-      let currentScore = 0
-      let source = ''
-      let metadata: Record<string, unknown> = {}
-      let startIndex = -1
-
+      let currentContent = '', currentScore = 0, source = '', metadata: Record<string, unknown> = {}, startIndex = -1
       for (const chunkIndex of sortedIndexes) {
         const chunks = chunkMap.get(chunkIndex)!
-        const bestChunk = chunks.reduce((best, curr) => 
-          Number(curr.score) > Number(best.score) ? curr : best
-        )
-        
-        if (source === '') {
-          source = bestChunk.source
-          metadata = bestChunk.metadata || {}
-        }
-
-        if (startIndex === -1) {
-          startIndex = chunkIndex
-          currentContent = bestChunk.content
-          currentScore = Number(bestChunk.score)
-        } else if (chunkIndex === startIndex + 1 || chunkIndex === sortedIndexes[sortedIndexes.indexOf(chunkIndex) - 1]) {
-          if (!currentContent.includes(bestChunk.content)) {
-            currentContent += ' ' + bestChunk.content
-          }
-          currentScore = Math.max(currentScore, Number(bestChunk.score))
-          startIndex = chunkIndex
-        } else {
-          merged.push({
-            content: currentContent,
-            source,
-            score: currentScore,
-            metadata: { ...metadata, mergedChunks: sortedIndexes.length },
-          })
-          
-          currentContent = bestChunk.content
-          currentScore = Number(bestChunk.score)
-          startIndex = chunkIndex
-        }
+        const bestChunk = chunks.reduce((best, curr) => Number(curr.score) > Number(best.score) ? curr : best)
+        if (source === '') { source = bestChunk.source; metadata = bestChunk.metadata || {} }
+        if (startIndex === -1) { startIndex = chunkIndex; currentContent = bestChunk.content; currentScore = Number(bestChunk.score) }
+        else if (chunkIndex === startIndex + currentContent.split('\n').length) { currentContent += '\n' + bestChunk.content; currentScore = Math.max(currentScore, Number(bestChunk.score)) }
+        else { merged.push({ content: currentContent, source, score: currentScore, metadata: { ...metadata, documentId: docId, chunkIndex: startIndex } }); startIndex = chunkIndex; currentContent = bestChunk.content; currentScore = Number(bestChunk.score) }
       }
-
-      if (currentContent !== '') {
-        merged.push({
-          content: currentContent,
-          source,
-          score: currentScore,
-          metadata: { ...metadata, mergedChunks: sortedIndexes.length },
-        })
-      }
+      if (currentContent) merged.push({ content: currentContent, source, score: currentScore, metadata: { ...metadata, documentId: docId, chunkIndex: startIndex } })
     }
-
     merged.sort((a, b) => b.score - a.score)
-    
-    log.debug({ input: results.length, output: merged.length }, 'Merged adjacent chunks')
-    
     return merged
   }
 
@@ -440,68 +301,20 @@ export class RAGService {
     healthRecordId?: string
     topK?: number
   }): Promise<RAGContext[]> {
-    if (!this.isReady) {
-      await this.initialize()
-    }
-
+    if (!this.isReady) await this.initialize()
     const hasKB = await this.checkKnowledgeBaseExists()
-    if (!hasKB) {
-      return []
-    }
-
+    if (!hasKB) return []
     const topK = params.topK || this.rerankTopK
-    const searchTerms = params.query
-      .split(/[\s，。！？、；：]+/)
-      .filter(w => w.length >= 2)
-      .map(w => w.toLowerCase())
-      .slice(0, 10)
-
-    if (searchTerms.length === 0) {
-      return []
-    }
-
+    const searchTerms = params.query.split(/[\s，。！？、；：]+/).filter(w => w.length >= 2).map(w => w.toLowerCase()).slice(0, 10)
+    if (searchTerms.length === 0) return []
     let whereClause = '1=1'
     const queryParams: unknown[] = [topK]
-
-    for (const term of searchTerms) {
-      whereClause += ` AND LOWER(dc.content) LIKE $${queryParams.length + 1}`
-      queryParams.push(`%${term}%`)
-    }
-
-    if (params.category) {
-      whereClause += ` AND kd.category = $${queryParams.length + 1}`
-      queryParams.push(params.category)
-    }
-
-    if (params.healthRecordId) {
-      whereClause += ` AND dc."healthRecordId" = $${queryParams.length + 1}`
-      queryParams.push(params.healthRecordId)
-    }
-
-    const sql = `
-      SELECT 
-        dc.content,
-        kd.source,
-        kd.title,
-        0.5 as score,
-        dc.metadata
-      FROM document_chunks dc
-      JOIN knowledge_documents kd ON dc."documentId" = kd.id
-      WHERE ${whereClause}
-      LIMIT $1
-    `
-
-    const results = await this.prisma.$queryRawUnsafe<RAGContext[]>(
-      sql,
-      ...queryParams
-    )
-
-    return results.map(r => ({
-      content: r.content,
-      source: r.source,
-      score: Number(r.score),
-      metadata: r.metadata as Record<string, unknown>,
-    }))
+    for (const term of searchTerms) { whereClause += ` AND LOWER(dc.content) LIKE $${queryParams.length + 1}`; queryParams.push(`%${term}%`) }
+    if (params.category) { whereClause += ` AND kd.category = $${queryParams.length + 1}`; queryParams.push(params.category) }
+    if (params.healthRecordId) { whereClause += ` AND dc."healthRecordId" = $${queryParams.length + 1}`; queryParams.push(params.healthRecordId) }
+    const sql = `SELECT dc.content, kd.source, kd.title, 0.5 as score, dc.metadata FROM document_chunks dc JOIN knowledge_documents kd ON dc."documentId" = kd.id WHERE ${whereClause} LIMIT $1`
+    const results = await this.prisma.$queryRawUnsafe<RAGContext[]>(sql, ...queryParams)
+    return results.map(r => ({ content: r.content, source: r.source, score: Number(r.score), metadata: r.metadata as Record<string, unknown> }))
   }
 
   async searchHybrid(params: {
@@ -512,54 +325,20 @@ export class RAGService {
     vectorWeight?: number
   }): Promise<RAGContext[]> {
     const vectorWeight = params.vectorWeight ?? 0.7
-
     const [vectorResults, keywordResults] = await Promise.all([
       this.searchSimilar({ ...params, topK: params.topK || this.rerankTopK }),
       this.searchKeyword({ ...params, topK: Math.ceil((params.topK || this.rerankTopK) / 2) }),
     ])
-
     const mergedMap = new Map<string, { content: string; source: string; score: number; metadata?: Record<string, unknown>; vectorScore: number; keywordScore: number }>()
-
-    for (const r of vectorResults) {
-      const key = r.content.substring(0, 100)
-      mergedMap.set(key, {
-        content: r.content,
-        source: r.source,
-        score: r.score,
-        vectorScore: r.score,
-        keywordScore: 0,
-        metadata: r.metadata,
-      })
-    }
-
+    for (const r of vectorResults) { mergedMap.set(r.content.substring(0, 100), { content: r.content, source: r.source, score: r.score, vectorScore: r.score, keywordScore: 0, metadata: r.metadata }) }
     for (const r of keywordResults) {
       const key = r.content.substring(0, 100)
       const existing = mergedMap.get(key)
-      if (existing) {
-        existing.keywordScore = r.score
-        existing.score = existing.vectorScore * vectorWeight + r.score * (1 - vectorWeight)
-      } else {
-        mergedMap.set(key, {
-          content: r.content,
-          source: r.source,
-          score: r.score * (1 - vectorWeight),
-          vectorScore: 0,
-          keywordScore: r.score,
-          metadata: r.metadata,
-        })
-      }
+      if (existing) { existing.keywordScore = r.score; existing.score = existing.vectorScore * vectorWeight + r.score * (1 - vectorWeight) }
+      else { mergedMap.set(key, { content: r.content, source: r.source, score: r.score * (1 - vectorWeight), vectorScore: 0, keywordScore: r.score, metadata: r.metadata }) }
     }
-
     const merged = Array.from(mergedMap.values())
     merged.sort((a, b) => b.score - a.score)
-
-    log.debug({ 
-      vectorResults: vectorResults.length, 
-      keywordResults: keywordResults.length, 
-      merged: merged.length,
-      topScores: merged.slice(0, 3).map(r => r.score.toFixed(3))
-    }, 'Hybrid search completed')
-
     return merged.slice(0, params.topK || this.topK)
   }
 
@@ -570,115 +349,45 @@ export class RAGService {
     topK?: number
     useHybrid?: boolean
   }): Promise<RAGContext[]> {
-    const cacheKey = this.getCacheKey(params.query, params.category, params.healthRecordId)
-    const cached = this.getFromCache(cacheKey)
+    const cached = await this.redisCache.getCachedQueryResult(params.query, params.category)
     if (cached) {
+      log.debug({ query: params.query.slice(0, 30) }, 'RAG query cache hit (Redis)')
       return cached.slice(0, params.topK || this.topK)
     }
 
     const hasKB = await this.checkKnowledgeBaseExists()
-    if (!hasKB) {
-      return []
-    }
+    if (!hasKB) return []
 
     const initialResults = params.useHybrid !== false
-      ? await this.searchHybrid({
-          ...params,
-          topK: this.rerankTopK,
-          vectorWeight: 0.7,
-        })
-      : await this.searchSimilar({
-          ...params,
-          topK: this.rerankTopK,
-        })
+      ? await this.searchHybrid({ ...params, topK: params.topK || this.topK, vectorWeight: 0.7 })
+      : await this.searchSimilar({ ...params, topK: params.topK || this.topK })
 
-    if (initialResults.length === 0) {
-      return []
-    }
+    if (initialResults.length === 0) return []
 
-    const filteredResults = initialResults.filter(r => r.score >= this.similarityThreshold)
+    const results = initialResults.slice(0, params.topK || this.topK)
 
-    if (filteredResults.length === 0) {
-      log.warn('All results filtered by threshold, returning top results anyway')
-      return initialResults.slice(0, params.topK || this.topK)
-    }
+    await this.redisCache.setCachedQueryResult(params.query, params.category, results)
 
-    const rerankedDocs = await this.rerankerService.rerankWithDocuments(
-      params.query,
-      filteredResults,
-      params.topK || this.topK
-    )
-
-    this.setCache(cacheKey, rerankedDocs)
-
-    return rerankedDocs
+    return results
   }
 
   async buildContextForQuery(params: {
     query: string
     category?: string
     healthRecordId?: string
-    maxTokens?: number
+    topK?: number
   }): Promise<string> {
-    const maxTokens = params.maxTokens || 2000
-    const contexts = await this.searchWithRerank(params)
-    
-    let totalTokens = 0
-    const selectedContexts: RAGContext[] = []
-
-    for (const ctx of contexts) {
-      const tokenCount = Math.ceil(ctx.content.length / 4)
-      if (totalTokens + tokenCount > maxTokens) break
-      
-      selectedContexts.push(ctx)
-      totalTokens += tokenCount
-    }
-
-    if (selectedContexts.length === 0) {
-      return ''
-    }
-
-    const contextText = selectedContexts
-      .map((ctx, i) => `[参考资料 ${i + 1}]\n来源: ${ctx.source}\n内容: ${ctx.content}`)
-      .join('\n\n---\n\n')
-
-    return contextText
+    const results = await this.searchWithRerank({ query: params.query, category: params.category, healthRecordId: params.healthRecordId, topK: params.topK })
+    if (results.length === 0) return ''
+    return results.map((r, i) => `[资料${i + 1}] ${r.content}\n来源: ${r.source}\n相关度: ${(r.score * 100).toFixed(1)}%`).join('\n\n---\n\n')
   }
 
-  async deleteDocument(documentId: string): Promise<void> {
-    await this.prisma.documentChunk.deleteMany({
-      where: { documentId },
-    })
-    
-    await this.prisma.knowledgeDocument.delete({
-      where: { id: documentId },
-    })
-
-    this.hasKnowledgeBase = null
-    this.lastStatsCheck = 0
-  }
-
-  async getDocumentStats(): Promise<{
-    totalDocuments: number
-    totalChunks: number
-    categories: string[]
-  }> {
-    const [docCount, chunkCount, categories] = await Promise.all([
+  async getDocumentStats(): Promise<{ totalDocuments: number; totalChunks: number; categories: string[] }> {
+    const [totalDocuments, totalChunks, docResults] = await Promise.all([
       this.prisma.knowledgeDocument.count(),
       this.prisma.documentChunk.count(),
-      this.prisma.knowledgeDocument.findMany({
-        select: { category: true },
-        distinct: ['category'],
-      }),
+      this.prisma.knowledgeDocument.findMany({ select: { category: true } }),
     ])
-
-    this.hasKnowledgeBase = chunkCount > 0
-    this.lastStatsCheck = Date.now()
-
-    return {
-      totalDocuments: docCount,
-      totalChunks: chunkCount,
-      categories: categories.map(c => c.category),
-    }
+    return { totalDocuments, totalChunks, categories: [...new Set(docResults.map(d => d.category))] }
   }
 }

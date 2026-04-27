@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { RAGService, type RAGContext } from './rag.service.js'
+import { RedisCacheService } from './redis-cache.service.js'
 import { knowledgeGraph } from '../knowledge_graph/index.js'
 import type { Disease, Drug, Symptom, Examination } from '../knowledge_graph/schema.js'
 
@@ -37,9 +38,9 @@ export class HybridSearchService {
   private kgWeight: number
   private vectorWeight: number
 
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: PrismaClient, redisCache?: RedisCacheService) {
     this.prisma = prisma
-    this.ragService = new RAGService(prisma)
+    this.ragService = new RAGService(prisma, redisCache || new RedisCacheService())
     this.kgWeight = 0.4
     this.vectorWeight = 0.6
   }

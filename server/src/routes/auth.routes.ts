@@ -40,28 +40,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
       schema: {
         body: registerSchema,
         tags: ['auth'],
-        response: {
-          201: {
-            description: '注册成功',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              data: {
-                type: 'object',
-                properties: {
-                  user: { type: 'object' },
-                  accessToken: { type: 'string' },
-                },
-              },
-            },
-          },
-        },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof registerSchema>
       const result = await authService.register(body)
-      
+
       reply.setCookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: config.isProd,
@@ -69,7 +53,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         maxAge: 7 * 24 * 60 * 60,
         path: '/',
       })
-      
+
       return reply.status(201).send({
         success: true,
         data: {
@@ -86,27 +70,11 @@ export default async function authRoutes(fastify: FastifyInstance) {
       schema: {
         body: loginSchema,
         tags: ['auth'],
-        response: {
-          200: {
-            description: '登录成功',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              data: {
-                type: 'object',
-                properties: {
-                  user: { type: 'object' },
-                  accessToken: { type: 'string' },
-                },
-              },
-            },
-          },
-        },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof loginSchema>
-      
+
       let result
       if (body.phone && body.code) {
         result = await authService.loginWithCode({ phone: body.phone, code: body.code })
@@ -118,7 +86,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           error: { message: '请提供有效的登录凭证' },
         })
       }
-      
+
       reply.setCookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: config.isProd,
@@ -126,7 +94,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         maxAge: 7 * 24 * 60 * 60,
         path: '/',
       })
-      
+
       return reply.send({
         success: true,
         data: {
@@ -143,16 +111,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
       schema: {
         body: sendCodeSchema,
         tags: ['auth'],
-        response: {
-          200: {
-            description: '验证码发送成功',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-            },
-          },
-        },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -172,16 +130,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
       schema: {
         body: resetPasswordSchema,
         tags: ['auth'],
-        response: {
-          200: {
-            description: '密码重置成功',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-            },
-          },
-        },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -196,36 +144,20 @@ export default async function authRoutes(fastify: FastifyInstance) {
     {
       schema: {
         tags: ['auth'],
-        response: {
-          200: {
-            description: 'Token刷新成功',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              data: {
-                type: 'object',
-                properties: {
-                  accessToken: { type: 'string' },
-                  user: { type: 'object' },
-                },
-              },
-            },
-          },
-        },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const refreshToken = request.cookies.refreshToken
-      
+
       if (!refreshToken) {
         return reply.status(401).send({
           success: false,
           error: { message: '未提供刷新令牌' },
         })
       }
-      
+
       const result = await authService.refreshAccessToken(refreshToken)
-      
+
       reply.setCookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: config.isProd,
@@ -233,7 +165,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         maxAge: 7 * 24 * 60 * 60,
         path: '/',
       })
-      
+
       return reply.send({
         success: true,
         data: {
@@ -249,21 +181,11 @@ export default async function authRoutes(fastify: FastifyInstance) {
     {
       schema: {
         tags: ['auth'],
-        response: {
-          200: {
-            description: '登出成功',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-            },
-          },
-        },
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const refreshToken = request.cookies.refreshToken
-      
+
       if (refreshToken) {
         try {
           const decoded = require('jsonwebtoken').verify(refreshToken, config.jwt.secret) as { userId: string }
@@ -272,9 +194,9 @@ export default async function authRoutes(fastify: FastifyInstance) {
           // Ignore token verification errors during logout
         }
       }
-      
+
       reply.clearCookie('refreshToken')
-      
+
       return reply.send({
         success: true,
         message: '已登出',

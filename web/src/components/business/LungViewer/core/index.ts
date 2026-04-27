@@ -1,3 +1,1 @@
-export * from './VolumeRaycaster'
-export * from './LungLobesGeometry'
-export * from './BronchialTree'
+export { LungSegmentation } from './LungSegmentation'

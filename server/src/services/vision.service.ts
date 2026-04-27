@@ -37,6 +37,12 @@ export interface ReportInfo {
   summary?: string
 }
 
+export interface VisionOptions {
+  userApiKey?: string
+  userApiBaseUrl?: string
+  userVisionModel?: string
+}
+
 export class VisionService {
   private apiKey: string | undefined
   private baseUrl: string
@@ -50,12 +56,26 @@ export class VisionService {
     this.ocrModel = config.qwen.models.ocr
   }
 
-  private hasApiKey(): boolean {
-    return !!this.apiKey && this.apiKey.length > 0
+  private hasApiKey(apiKey?: string): boolean {
+    const key = apiKey || this.apiKey
+    return !!key && key.length > 0
   }
 
-  async recognizeDrug(imageBase64: string): Promise<DrugInfo> {
-    if (!this.hasApiKey()) {
+  private getEffectiveApiKey(options?: VisionOptions): string | undefined {
+    return options?.userApiKey || this.apiKey
+  }
+
+  private getEffectiveBaseUrl(options?: VisionOptions): string {
+    return options?.userApiBaseUrl || this.baseUrl
+  }
+
+  private getEffectiveVisionModel(options?: VisionOptions): string {
+    return options?.userVisionModel || this.visionModel
+  }
+
+  async recognizeDrug(imageBase64: string, options?: VisionOptions): Promise<DrugInfo> {
+    const effectiveApiKey = this.getEffectiveApiKey(options)
+    if (!this.hasApiKey(effectiveApiKey)) {
       throw new Error('QWEN_API_KEY is not configured')
     }
 
@@ -77,14 +97,16 @@ export class VisionService {
 请仔细识别药盒上的所有文字信息，如果某项信息无法识别，请填null。只返回JSON，不要其他说明文字。`
 
     try {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      const baseUrl = this.getEffectiveBaseUrl(options)
+      const model = this.getEffectiveVisionModel(options)
+      const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${effectiveApiKey}`,
         },
         body: JSON.stringify({
-          model: this.visionModel,
+          model,
           messages: [
             {
               role: 'user',
@@ -242,16 +264,93 @@ ${reportText}
     }
   }
 
-  async analyzeReport(imageBase64: string): Promise<ReportInfo> {
-    const reportText = await this.extractReportText(imageBase64)
-    return await this.parseReportItems(reportText)
+  async analyzeReport(imageBase64: string, options?: VisionOptions): Promise<ReportInfo> {
+    const effectiveApiKey = this.getEffectiveApiKey(options)
+    if (!this.hasApiKey(effectiveApiKey)) {
+      throw new Error('QWEN_API_KEY is not configured')
+    }
+
+    const prompt = `请分析这张体检报告图片，提取所有检验指标并以JSON格式返回：
+
+返回格式：
+{
+  "patientName": "患者姓名",
+  "reportDate": "报告日期",
+  "reportType": "报告类型",
+  "items": [
+    {
+      "name": "指标名称",
+      "value": "检测值",
+      "unit": "单位",
+      "referenceRange": "参考范围",
+      "isAbnormal": true/false,
+      "note": "备注"
+    }
+  ],
+  "abnormalItems": [异常指标数组，格式同items],
+  "summary": "报告摘要"
+}
+
+只返回JSON，不要其他说明文字。`
+
+    try {
+      const baseUrl = this.getEffectiveBaseUrl(options)
+      const model = this.getEffectiveVisionModel(options)
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${effectiveApiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+                { type: 'image_url', image_url: { url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}` } }
+              ]
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 4096,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Report analysis API failed: ${response.status} ${errorText}`)
+      }
+
+      const data = await response.json()
+      const content = data.choices?.[0]?.message?.content || ''
+
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]) as ReportInfo
+        }
+      } catch {
+        console.error('Failed to parse report JSON from vision model')
+      }
+
+      return {
+        items: [],
+        abnormalItems: [],
+        summary: content,
+      }
+    } catch (error) {
+      console.error('Report analysis error:', error)
+      throw error
+    }
   }
 
-  async analyzeImage(imageBase64: string, type: 'drug' | 'report'): Promise<DrugInfo | ReportInfo> {
+  async analyzeImage(imageBase64: string, type: 'drug' | 'report', options?: VisionOptions): Promise<DrugInfo | ReportInfo> {
     if (type === 'drug') {
-      return await this.recognizeDrug(imageBase64)
+      return this.recognizeDrug(imageBase64, options)
     } else {
-      return await this.analyzeReport(imageBase64)
+      return this.analyzeReport(imageBase64, options)
     }
   }
 }

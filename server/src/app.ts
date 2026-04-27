@@ -6,7 +6,7 @@ import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import { PrismaClient } from '@prisma/client'
-import Redis from 'ioredis'
+import { RedisCacheService } from './services/redis-cache.service.js'
 import {
   serializerCompiler,
   validatorCompiler,
@@ -27,16 +27,13 @@ import dialogRoutes from './routes/dialog.routes.js'
 import testRoutes from './tests/routes.js'
 import userTestRoutes from './tests/user-test-routes.js'
 import { federatedRoutes } from './routes/federated.routes.js'
-import { digitalTwinRoutes } from './routes/digital-twin.routes.js'
-import { blockchainRoutes } from './routes/blockchain.routes.js'
-import { lungCancerRoutes } from './routes/lung-cancer.routes.js'
-import { hypertensionRoutes } from './routes/hypertension.routes.js'
+import { dashboardRoutes } from './routes/dashboard.routes.js'
 import agentRoutes from './routes/agent.routes.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
     prisma: PrismaClient
-    redis: Redis | null
+    redisCache: RedisCacheService
   }
 }
 
@@ -74,8 +71,8 @@ await fastify.register(cors, {
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'x-session-id', 'x-api-key', 'x-api-base-url', 'x-model-complex', 'x-model-simple', 'x-model-vision', 'x-model-embedding'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range', 'Content-Type', 'Cache-Control', 'Connection'],
 })
 
 await fastify.register(cookie, {
@@ -123,13 +120,9 @@ await fastify.register(swaggerUi, {
 const prisma = new PrismaClient()
 fastify.decorate('prisma', prisma)
 
-let redis: Redis | null = null
-if (config.redisUrl) {
-  redis = new Redis(config.redisUrl)
-  fastify.decorate('redis', redis)
-} else {
-  fastify.decorate('redis', null)
-}
+const redisCache = new RedisCacheService()
+await redisCache.connect()
+fastify.decorate('redisCache', redisCache)
 
 fastify.setErrorHandler(errorHandler)
 
@@ -147,10 +140,7 @@ fastify.register(dialogRoutes, { prefix: '/api/v1/dialog' })
 fastify.register(testRoutes, { prefix: '/api/v1/tests' })
 fastify.register(userTestRoutes, { prefix: '/api/v1/user-test' })
 fastify.register(federatedRoutes, { prefix: '/api/v1/federated' })
-fastify.register(digitalTwinRoutes, { prefix: '/api/v1/digital-twin' })
-fastify.register(blockchainRoutes, { prefix: '/api/v1/blockchain' })
-fastify.register(lungCancerRoutes, { prefix: '/api/v1/lung-cancer' })
-fastify.register(hypertensionRoutes, { prefix: '/api/v1/hypertension' })
+fastify.register(dashboardRoutes, { prefix: '/api/v1/dashboard' })
 fastify.register(agentRoutes, { prefix: '/api/v1/agents' })
 
 fastify.get('/', async () => ({
@@ -203,7 +193,7 @@ const gracefulShutdown = async () => {
   console.log('\n🛑 Shutting down gracefully...')
   await fastify.close()
   await prisma.$disconnect()
-  if (redis) await redis.quit()
+  await redisCache.disconnect()
   process.exit(0)
 }
 

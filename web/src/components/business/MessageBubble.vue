@@ -5,17 +5,12 @@ import DOMPurify from 'dompurify'
 import IconAI from '@/components/icons/IconAI.vue'
 import IconCopy from '@/components/icons/IconCopy.vue'
 import IconChevronDown from '@/components/icons/IconChevronDown.vue'
-import BlockchainAttestation from './BlockchainAttestation.vue'
+import IconThumbsUp from '@/components/icons/IconThumbsUp.vue'
+import IconThumbsDown from '@/components/icons/IconThumbsDown.vue'
 import { useToast } from '@/composables'
+import { useConversationStore } from '@/stores'
 import type { Source, Citation, DeepSearchResult } from '@/services/api'
-
-interface BlockchainAttestationData {
-  txHash: string
-  blockNumber?: number
-  timestamp?: string
-  contentHash?: string
-  network?: string
-}
+import type { AgentUsed } from '@/stores/conversation'
 
 interface Props {
   type?: 'user' | 'ai'
@@ -29,7 +24,9 @@ interface Props {
   timestamp?: Date
   messageId?: string
   imageUrl?: string
-  attestation?: BlockchainAttestationData
+  feedback?: 'like' | 'dislike' | null
+  conversationId?: string
+  agentUsed?: AgentUsed
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -42,21 +39,36 @@ const props = withDefaults(defineProps<Props>(), {
   streaming: false,
   messageId: '',
   imageUrl: '',
-  attestation: undefined
+  feedback: null,
+  conversationId: '',
+  agentUsed: undefined,
 })
 
-const emit = defineEmits<{
-  sourceClick: [source: Source]
-  citationClick: [citation: Citation]
-  attest: [messageId: string]
-}>()
-
 const toast = useToast()
+const conversationStore = useConversationStore()
 const isCopied = ref(false)
 const showCitations = ref(false)
 const selectedCitation = ref<Citation | null>(null)
-const isAttesting = ref(false)
 const expandedSources = ref(new Set<number>())
+
+const emit = defineEmits<{
+  feedback: [messageId: string, type: 'like' | 'dislike' | null]
+}>()
+
+const handleFeedback = (type: 'like' | 'dislike') => {
+  const newFeedback = props.feedback === type ? null : type
+  if (props.conversationId && props.messageId) {
+    conversationStore.updateMessage(props.conversationId, props.messageId, {
+      feedback: newFeedback
+    })
+  }
+  emit('feedback', props.messageId, newFeedback)
+  if (newFeedback === 'like') {
+    toast.success('感谢反馈', '您的评价有助于改进回答质量')
+  } else if (newFeedback === 'dislike') {
+    toast.info('感谢反馈', '我们会努力改进回答质量')
+  }
+}
 
 const toggleSourceExpand = (index: number) => {
   if (expandedSources.value.has(index)) {
@@ -144,20 +156,6 @@ const formatImpactFactor = (if_: number | null) => {
   if (if_ === null) return ''
   return if_.toFixed(3)
 }
-
-const handleAttest = async () => {
-  if (!props.messageId || isAttesting.value) return
-  
-  isAttesting.value = true
-  try {
-    emit('attest', props.messageId)
-    toast.success('存证请求已发送', '正在将诊断建议上链...')
-  } catch (error) {
-    toast.error('存证失败', '请稍后重试')
-  } finally {
-    isAttesting.value = false
-  }
-}
 </script>
 
 <template>
@@ -165,6 +163,10 @@ const handleAttest = async () => {
     <div v-if="type === 'ai'" class="message-avatar">
       <div class="ai-avatar">
         <IconAI />
+      </div>
+      <div v-if="agentUsed && !loading" class="agent-badge">
+        <span class="agent-emoji">{{ agentUsed.emoji }}</span>
+        <span class="agent-name">{{ agentUsed.name }}</span>
       </div>
     </div>
     
@@ -283,37 +285,30 @@ const handleAttest = async () => {
           </div>
         </div>
         
-        <button
-          v-if="type === 'ai' && !loading && content"
-          :class="['copy-btn', { 'is-copied': isCopied }]"
-          :aria-label="isCopied ? '已复制' : '复制消息'"
-          @click="copyContent"
-        >
-          <IconCopy aria-hidden="true" />
-        </button>
+        <div class="message-actions" v-if="type === 'ai' && !loading && content">
+          <button
+            :class="['action-btn', 'feedback-btn', { active: feedback === 'like' }]"
+            :aria-label="feedback === 'like' ? '取消点赞' : '点赞'"
+            @click="handleFeedback('like')"
+          >
+            <IconThumbsUp aria-hidden="true" />
+          </button>
+          <button
+            :class="['action-btn', 'feedback-btn', { active: feedback === 'dislike' }]"
+            :aria-label="feedback === 'dislike' ? '取消点踩' : '点踩'"
+            @click="handleFeedback('dislike')"
+          >
+            <IconThumbsDown aria-hidden="true" />
+          </button>
+          <button
+            :class="['action-btn', 'copy-btn', { 'is-copied': isCopied }]"
+            :aria-label="isCopied ? '已复制' : '复制消息'"
+            @click="copyContent"
+          >
+            <IconCopy aria-hidden="true" />
+          </button>
+        </div>
         
-        <button
-          v-if="type === 'ai' && !loading && content && !attestation"
-          class="attest-btn"
-          :disabled="isAttesting"
-          @click="handleAttest"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path d="M2 17l10 5 10-5"/>
-            <path d="M2 12l10 5 10-5"/>
-          </svg>
-          <span>{{ isAttesting ? '存证中...' : '区块链存证' }}</span>
-        </button>
-        
-        <BlockchainAttestation
-          v-if="attestation"
-          :tx-hash="attestation.txHash"
-          :block-number="attestation.blockNumber"
-          :timestamp="attestation.timestamp"
-          :content-hash="attestation.contentHash"
-          :network="attestation.network"
-        />
       </div>
       
       <div v-if="timestamp" class="message-time">
@@ -409,6 +404,10 @@ const handleAttest = async () => {
 }
 
 .message-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1);
   flex-shrink: 0;
 }
 
@@ -426,6 +425,31 @@ const handleAttest = async () => {
 .ai-avatar :deep(svg) {
   width: 20px;
   height: 20px;
+}
+
+.agent-badge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  background-color: var(--color-primary-bg);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.agent-emoji {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.agent-name {
+  font-size: 9px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  line-height: 1.2;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-avatar {
@@ -907,10 +931,22 @@ const handleAttest = async () => {
   word-break: break-word;
 }
 
-.copy-btn {
+.message-actions {
   position: absolute;
   top: var(--spacing-2);
   right: var(--spacing-2);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.message-content:hover .message-actions {
+  opacity: 1;
+}
+
+.action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -918,56 +954,29 @@ const handleAttest = async () => {
   height: 28px;
   color: var(--color-text-quaternary);
   border-radius: var(--radius-md);
-  opacity: 0;
   transition: all var(--transition-fast);
 }
 
-.copy-btn:hover {
+.action-btn:hover {
   background-color: var(--color-fill-tertiary);
   color: var(--color-text-secondary);
 }
 
-.copy-btn.is-copied {
-  color: var(--color-success);
-}
-
-.message-content:hover .copy-btn {
-  opacity: 1;
-}
-
-.copy-btn :deep(svg) {
+.action-btn :deep(svg) {
   width: 16px;
   height: 16px;
 }
 
-.attest-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  margin-top: var(--spacing-2);
-  padding: var(--spacing-1) var(--spacing-2);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: var(--radius-md);
-  color: #818cf8;
-  font-size: var(--font-size-xs);
-  cursor: pointer;
-  transition: all var(--transition-fast);
+.feedback-btn.active {
+  color: var(--color-primary);
 }
 
-.attest-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
-  border-color: rgba(99, 102, 241, 0.5);
+.feedback-btn.active:hover {
+  background-color: var(--color-primary-bg);
 }
 
-.attest-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.attest-btn svg {
-  width: 14px;
-  height: 14px;
+.copy-btn.is-copied {
+  color: var(--color-success);
 }
 
 .message-time {
@@ -1124,6 +1133,10 @@ const handleAttest = async () => {
   }
   
   .copy-btn {
+    opacity: 1;
+  }
+
+  .message-actions {
     opacity: 1;
   }
 

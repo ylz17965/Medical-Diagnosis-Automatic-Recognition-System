@@ -22,7 +22,7 @@ export default async function imageRoutes(fastify: FastifyInstance) {
   await fastify.register(multipart)
   
   const visionService = new VisionService()
-  const ragService = new RAGService(fastify.prisma)
+  const ragService = new RAGService(fastify.prisma, fastify.redisCache)
   const llmService = new LLMService(ragService)
 
   fastify.post(
@@ -79,10 +79,24 @@ export default async function imageRoutes(fastify: FastifyInstance) {
       try {
         const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`
         
-        const result = await visionService.analyzeImage(base64Image, imageType)
-        
-        let interpretation: string | undefined
-        
+        const userApiKey = request.headers['x-api-key'] as string | undefined
+        const userApiBaseUrl = request.headers['x-api-base-url'] as string | undefined
+        const userVisionModel = request.headers['x-model-vision'] as string | undefined
+        const visionOptions = userApiKey ? { userApiKey, userApiBaseUrl, userVisionModel } : undefined
+
+        const result = await visionService.analyzeImage(base64Image, imageType, visionOptions)
+
+        reply.raw.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        })
+
+        const resultData = JSON.stringify({ type: imageType, result })
+        reply.raw.write(`data: ${JSON.stringify({ event: 'result', data: resultData })}\n\n`)
+
+        let interpretationPrompt = ''
+
         if (imageType === 'drug') {
           const drugInfo = result as DrugInfo
           const drugName = drugInfo.name || drugInfo.genericName || '未知药品'
@@ -93,19 +107,15 @@ export default async function imageRoutes(fastify: FastifyInstance) {
             topK: 3,
           })
           
-          if (ragResults.length > 0) {
-            const context = ragResults.map(r => r.content).join('\n\n')
-            interpretation = await llmService.chat({
-              messages: [
-                { 
-                  role: 'user', 
-                  content: `请根据以下药品信息和参考资料，为用户提供详细的用药指导。
+          const ragContext = ragResults.length > 0
+            ? `\n参考资料：\n${ragResults.map(r => r.content).join('\n\n')}`
+            : ''
+
+          interpretationPrompt = `请根据以下药品信息，为用户提供详细的用药指导。
 
 药品信息：
 ${JSON.stringify(drugInfo, null, 2)}
-
-参考资料：
-${context}
+${ragContext}
 
 请用通俗易懂的语言解释：
 1. 这个药品主要用来治疗什么疾病
@@ -113,35 +123,7 @@ ${context}
 3. 需要注意的事项和禁忌
 4. 可能的副作用
 
-最后请加上免责声明。` 
-                }
-              ],
-              modelType: 'complex',
-              useRAG: false,
-            })
-          } else {
-            interpretation = await llmService.chat({
-              messages: [
-                { 
-                  role: 'user', 
-                  content: `请根据以下药品信息，为用户提供详细的用药指导。
-
-药品信息：
-${JSON.stringify(drugInfo, null, 2)}
-
-请用通俗易懂的语言解释：
-1. 这个药品主要用来治疗什么疾病
-2. 正确的用法用量
-3. 需要注意的事项和禁忌
-4. 可能的副作用
-
-最后请加上免责声明。` 
-                }
-              ],
-              modelType: 'complex',
-              useRAG: false,
-            })
-          }
+最后请加上免责声明。`
         } else {
           const reportInfo = result as ReportInfo
           
@@ -156,21 +138,17 @@ ${JSON.stringify(drugInfo, null, 2)}
               topK: 5,
             })
             
-            if (ragResults.length > 0) {
-              const context = ragResults.map(r => r.content).join('\n\n')
-              interpretation = await llmService.chat({
-                messages: [
-                  { 
-                    role: 'user', 
-                    content: `请解读以下体检报告中的异常指标。
+            const ragContext = ragResults.length > 0
+              ? `\n参考资料：\n${ragResults.map(r => r.content).join('\n\n')}`
+              : ''
+
+            interpretationPrompt = `请解读以下体检报告中的异常指标。
 
 异常指标：
 ${reportInfo.abnormalItems.map(item => 
   `- ${item.name}: ${item.value}${item.unit || ''}（参考范围：${item.referenceRange || '未知'}）`
 ).join('\n')}
-
-参考资料：
-${context}
+${ragContext}
 
 请为每个异常指标提供：
 1. 指标的含义
@@ -178,43 +156,9 @@ ${context}
 3. 生活建议
 4. 是否需要就医
 
-最后请加上免责声明。` 
-                  }
-                ],
-                modelType: 'complex',
-                useRAG: false,
-              })
-            } else {
-              interpretation = await llmService.chat({
-                messages: [
-                  { 
-                    role: 'user', 
-                    content: `请解读以下体检报告中的异常指标。
-
-异常指标：
-${reportInfo.abnormalItems.map(item => 
-  `- ${item.name}: ${item.value}${item.unit || ''}（参考范围：${item.referenceRange || '未知'}）`
-).join('\n')}
-
-请为每个异常指标提供：
-1. 指标的含义
-2. 可能的原因
-3. 生活建议
-4. 是否需要就医
-
-最后请加上免责声明。` 
-                  }
-                ],
-                modelType: 'complex',
-                useRAG: false,
-              })
-            }
+最后请加上免责声明。`
           } else {
-            interpretation = await llmService.chat({
-              messages: [
-                { 
-                  role: 'user', 
-                  content: `请为以下体检报告提供整体解读和建议。
+            interpretationPrompt = `请为以下体检报告提供整体解读和建议。
 
 报告摘要：
 ${reportInfo.summary || '无明显异常'}
@@ -224,29 +168,36 @@ ${reportInfo.summary || '无明显异常'}
 2. 健康生活建议
 3. 后续体检建议
 
-最后请加上免责声明。` 
-                }
-              ],
-              modelType: 'complex',
-              useRAG: false,
-            })
+最后请加上免责声明。`
           }
         }
 
-        return reply.send({
-          success: true,
-          data: {
-            type: imageType,
-            result,
-            interpretation,
-          },
+        const stream = llmService.chatStream({
+          messages: [{ role: 'user', content: interpretationPrompt }],
+          modelType: 'simple',
+          useRAG: false,
+          useAgent: false,
+          userApiKey,
+          userApiBaseUrl,
+          userSimpleModel: request.headers['x-model-simple'] as string | undefined,
         })
+
+        for await (const chunk of stream) {
+          if (chunk.content) {
+            reply.raw.write(`data: ${JSON.stringify({ event: 'chunk', data: chunk.content })}\n\n`)
+          }
+          if (chunk.done) {
+            reply.raw.write(`data: ${JSON.stringify({ event: 'done' })}\n\n`)
+          }
+        }
+
+        reply.raw.end()
       } catch (error) {
         console.error('Image analysis error:', error)
-        return reply.status(500).send({
-          success: false,
-          error: { message: error instanceof Error ? error.message : '图片分析失败' },
-        })
+        if (!reply.raw.writableEnded) {
+          reply.raw.write(`data: ${JSON.stringify({ event: 'error', data: error instanceof Error ? error.message : '图片分析失败' })}\n\n`)
+          reply.raw.end()
+        }
       }
     }
   )
@@ -292,7 +243,11 @@ ${reportInfo.summary || '无明显异常'}
 
       try {
         const base64Image = `data:${data.mimetype};base64,${buffer.toString('base64')}`
-        const result = await visionService.recognizeDrug(base64Image)
+        const userApiKey = request.headers['x-api-key'] as string | undefined
+        const userApiBaseUrl = request.headers['x-api-base-url'] as string | undefined
+        const userVisionModel = request.headers['x-model-vision'] as string | undefined
+        const visionOptions = userApiKey ? { userApiKey, userApiBaseUrl, userVisionModel } : undefined
+        const result = await visionService.recognizeDrug(base64Image, visionOptions)
         
         return reply.send({
           success: true,
@@ -349,7 +304,11 @@ ${reportInfo.summary || '无明显异常'}
 
       try {
         const base64Image = `data:${data.mimetype};base64,${buffer.toString('base64')}`
-        const result = await visionService.analyzeReport(base64Image)
+        const userApiKey = request.headers['x-api-key'] as string | undefined
+        const userApiBaseUrl = request.headers['x-api-base-url'] as string | undefined
+        const userVisionModel = request.headers['x-model-vision'] as string | undefined
+        const visionOptions = userApiKey ? { userApiKey, userApiBaseUrl, userVisionModel } : undefined
+        const result = await visionService.analyzeReport(base64Image, visionOptions)
         
         return reply.send({
           success: true,

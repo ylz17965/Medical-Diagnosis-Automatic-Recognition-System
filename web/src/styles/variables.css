@@ -65,6 +65,15 @@
   --color-fill-tertiary: rgba(120, 120, 128, 0.06);
   --color-fill-quaternary: rgba(120, 120, 128, 0.04);
   
+  --color-risk-low: #10B981;
+  --color-risk-low-bg: rgba(16, 185, 129, 0.1);
+  --color-risk-moderate: #F59E0B;
+  --color-risk-moderate-bg: rgba(245, 158, 11, 0.1);
+  --color-risk-high: #F97316;
+  --color-risk-high-bg: rgba(249, 115, 22, 0.1);
+  --color-risk-very-high: #EF4444;
+  --color-risk-very-high-bg: rgba(239, 68, 68, 0.1);
+  
   --color-separator: rgba(60, 60, 67, 0.1);
   --color-separator-opaque: #C6C6C8;
   
@@ -254,6 +263,15 @@
   --color-fill-secondary: rgba(94, 92, 230, 0.16);
   --color-fill-tertiary: rgba(120, 120, 128, 0.12);
   --color-fill-quaternary: rgba(120, 120, 128, 0.08);
+  
+  --color-risk-low: #34D399;
+  --color-risk-low-bg: rgba(52, 211, 153, 0.15);
+  --color-risk-moderate: #FBBF24;
+  --color-risk-moderate-bg: rgba(251, 191, 36, 0.15);
+  --color-risk-high: #FB923C;
+  --color-risk-high-bg: rgba(251, 146, 60, 0.15);
+  --color-risk-very-high: #F87171;
+  --color-risk-very-high-bg: rgba(248, 113, 113, 0.15);
   
   --color-separator: rgba(84, 84, 88, 0.6);
   --color-separator-opaque: #38383A;

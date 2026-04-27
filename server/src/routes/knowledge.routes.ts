@@ -18,7 +18,7 @@ const searchSchema = z.object({
 })
 
 export default async function knowledgeRoutes(fastify: FastifyInstance) {
-  const ragService = new RAGService(fastify.prisma)
+  const ragService = new RAGService(fastify.prisma, fastify.redisCache)
 
   fastify.get(
     '/stats',

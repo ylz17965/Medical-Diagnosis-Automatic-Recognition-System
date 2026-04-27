@@ -11,46 +11,31 @@ const sendMessageSchema = z.object({
   type: z.enum(['CHAT', 'SEARCH', 'REPORT', 'DRUG']).optional(),
   useRAG: z.boolean().optional(),
   useAgent: z.boolean().optional(),
+  modelType: z.enum(['auto', 'complex', 'simple']).optional(),
 })
 
-const RagCategories: Record<string, string> = {
-  CHAT: 'general',
-  SEARCH: 'general',
+const RagCategories: Record<string, string | undefined> = {
+  CHAT: undefined,
+  SEARCH: undefined,
   REPORT: 'medical_report',
   DRUG: 'drug_info',
 }
 
 const ModelTypes: Record<string, 'complex' | 'simple'> = {
   CHAT: 'simple',
-  SEARCH: 'complex',
+  SEARCH: 'simple',
   REPORT: 'complex',
-  DRUG: 'complex',
+  DRUG: 'simple',
 }
 
 const MAX_HISTORY_MESSAGES = 20
 
-const guestSessions: Map<string, Array<{ role: string; content: string; timestamp: number }>> = new Map()
-
 const GUEST_SESSION_TIMEOUT = 30 * 60 * 1000
 
-function cleanupGuestSessions() {
-  const now = Date.now()
-  for (const [sessionId, messages] of guestSessions.entries()) {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1]
-      if (now - lastMessage.timestamp > GUEST_SESSION_TIMEOUT) {
-        guestSessions.delete(sessionId)
-      }
-    }
-  }
-}
-
-setInterval(cleanupGuestSessions, 5 * 60 * 1000)
-
 export default async function chatRoutes(fastify: FastifyInstance) {
-  const ragService = new RAGService(fastify.prisma)
+  const ragService = new RAGService(fastify.prisma, fastify.redisCache)
   const llmService = new LLMService(ragService)
-  const kgRagSync = new KnowledgeGraphRAGSync(fastify.prisma)
+  const kgRagSync = new KnowledgeGraphRAGSync(fastify.prisma, fastify.redisCache)
 
   fastify.get(
     '/health',
@@ -85,9 +70,14 @@ export default async function chatRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as z.infer<typeof sendMessageSchema>
-      const { content, conversationId, type = 'CHAT', useRAG = true, useAgent = true } = body
+      const { content, conversationId, type = 'CHAT', useRAG = true, useAgent = true, modelType } = body
       const userId = request.user?.userId
       const isGuest = !userId
+      
+      const userApiKey = request.headers['x-api-key'] as string | undefined
+      const userApiBaseUrl = request.headers['x-api-base-url'] as string | undefined
+      const userComplexModel = request.headers['x-model-complex'] as string | undefined
+      const userSimpleModel = request.headers['x-model-simple'] as string | undefined
       
       const sessionId = request.headers['x-session-id'] as string || 
                         `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -133,8 +123,8 @@ export default async function chatRoutes(fastify: FastifyInstance) {
       }
 
       if (isGuest) {
-        const sessionMessages = guestSessions.get(sessionId) || []
-        previousMessages = sessionMessages.map(m => ({
+        const sessionMessages = await fastify.redisCache.getChatContext(sessionId) || []
+        previousMessages = sessionMessages.map((m: any) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
         }))
@@ -161,13 +151,18 @@ export default async function chatRoutes(fastify: FastifyInstance) {
       let agentUsed: { id: string; name: string; emoji: string } | undefined
 
       try {
+        const resolvedModelType = modelType && modelType !== 'auto' ? modelType : ModelTypes[type]
         const stream = llmService.chatStream({
           messages,
           useRAG,
           useAgent,
           ragCategory: RagCategories[type],
-          modelType: ModelTypes[type],
+          modelType: resolvedModelType,
           temperature: 0.7,
+          userApiKey,
+          userApiBaseUrl,
+          userComplexModel,
+          userSimpleModel,
         })
 
         for await (const chunk of stream) {
@@ -199,15 +194,8 @@ export default async function chatRoutes(fastify: FastifyInstance) {
         }
 
         if (isGuest) {
-          const sessionMessages = guestSessions.get(sessionId) || []
-          sessionMessages.push(
-            { role: 'user', content, timestamp: Date.now() },
-            { role: 'assistant', content: fullResponse, timestamp: Date.now() }
-          )
-          if (sessionMessages.length > MAX_HISTORY_MESSAGES * 2) {
-            sessionMessages.splice(0, sessionMessages.length - MAX_HISTORY_MESSAGES * 2)
-          }
-          guestSessions.set(sessionId, sessionMessages)
+          await fastify.redisCache.appendChatMessage(sessionId, { role: 'user', content })
+          await fastify.redisCache.appendChatMessage(sessionId, { role: 'assistant', content: fullResponse })
         }
 
         reply.raw.write(`data: ${JSON.stringify({ 
@@ -246,15 +234,25 @@ export default async function chatRoutes(fastify: FastifyInstance) {
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const body = request.body as { content: string; type?: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'; useRAG?: boolean; useAgent?: boolean }
-      const { content, type = 'CHAT', useRAG = true, useAgent = true } = body
+      const body = request.body as { content: string; type?: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'; useRAG?: boolean; useAgent?: boolean; modelType?: 'auto' | 'complex' | 'simple' }
+      const { content, type = 'CHAT', useRAG = true, useAgent = true, modelType } = body
 
+      const userApiKey = request.headers['x-api-key'] as string | undefined
+      const userApiBaseUrl = request.headers['x-api-base-url'] as string | undefined
+      const userComplexModel = request.headers['x-model-complex'] as string | undefined
+      const userSimpleModel = request.headers['x-model-simple'] as string | undefined
+
+      const resolvedModelType = modelType && modelType !== 'auto' ? modelType : ModelTypes[type]
       const response = await llmService.chat({
         messages: [{ role: 'user', content }],
         useRAG,
         useAgent,
         ragCategory: RagCategories[type],
-        modelType: ModelTypes[type],
+        modelType: resolvedModelType,
+        userApiKey,
+        userApiBaseUrl,
+        userComplexModel,
+        userSimpleModel,
       })
 
       return reply.send({

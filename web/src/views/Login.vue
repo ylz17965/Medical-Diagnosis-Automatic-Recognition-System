@@ -6,6 +6,7 @@ import IconPhone from '@/components/icons/IconPhone.vue'
 import IconLock from '@/components/icons/IconLock.vue'
 import IconUser from '@/components/icons/IconUser.vue'
 import { useUserStore } from '@/stores'
+import { authApi, setAccessToken } from '@/services/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,6 +30,7 @@ const errors = ref<Record<string, string>>({})
 const codeSent = ref(false)
 const countdown = ref(0)
 const resetStep = ref(1)
+const receivedCode = ref('')
 
 const isLogin = computed(() => authMode.value === 'login')
 const isRegister = computed(() => authMode.value === 'register')
@@ -59,19 +61,9 @@ const credentialValue = computed({
   }
 })
 
-const handleSendCode = () => {
-  const targetValid = loginMethod.value === 'phone' ? isPhoneValid.value : isEmailValid.value
-  const target = loginMethod.value === 'phone' ? 'phone' : 'email'
-  
-  if (!targetValid) {
-    errors.value[target] = loginMethod.value === 'phone' ? '请输入正确的手机号' : '请输入正确的邮箱'
-    return
-  }
-  
-  errors.value = {}
+const startCountdown = () => {
   codeSent.value = true
   countdown.value = 60
-  
   const timer = setInterval(() => {
     countdown.value--
     if (countdown.value <= 0) {
@@ -80,44 +72,71 @@ const handleSendCode = () => {
   }, 1000)
 }
 
-const handleSendCodeForReset = () => {
-  if (!isEmailValid.value) {
-    errors.value.email = '请输入正确的邮箱'
+const handleSendCode = async () => {
+  if (!isPhoneValid.value) {
+    errors.value.phone = '请输入正确的手机号'
     return
   }
-  
+
   errors.value = {}
-  codeSent.value = true
-  countdown.value = 60
-  
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
+  const purpose = isRegister.value ? 'REGISTER' as const : isForgot.value ? 'RESET_PASSWORD' as const : 'LOGIN' as const
+
+  try {
+    const result = await authApi.sendCode(loginForm.value.phone, purpose)
+    if (!result.success) {
+      errors.value.code = result.error?.message || '验证码发送失败'
+      return
     }
-  }, 1000)
+    if (result.data?.code) {
+      receivedCode.value = result.data.code
+      loginForm.value.code = result.data.code
+    }
+    startCountdown()
+  } catch {
+    errors.value.code = '验证码发送失败，请检查网络连接'
+  }
+}
+
+const handleSendCodeForReset = async () => {
+  if (!isPhoneValid.value) {
+    errors.value.phone = '请输入正确的手机号'
+    return
+  }
+
+  errors.value = {}
+
+  try {
+    const result = await authApi.sendCode(loginForm.value.phone, 'RESET_PASSWORD')
+    if (!result.success) {
+      errors.value.code = result.error?.message || '验证码发送失败'
+      return
+    }
+    if (result.data?.code) {
+      receivedCode.value = result.data.code
+      loginForm.value.code = result.data.code
+    }
+    startCountdown()
+  } catch {
+    errors.value.code = '验证码发送失败，请检查网络连接'
+  }
 }
 
 const handleVerifyCode = () => {
   errors.value = {}
-  
-  if (!loginForm.value.email) {
-    errors.value.email = '请输入邮箱'
+
+  if (!loginForm.value.phone) {
+    errors.value.phone = '请输入手机号'
     return
   }
-  if (!isEmailValid.value) {
-    errors.value.email = '请输入正确的邮箱'
+  if (!isPhoneValid.value) {
+    errors.value.phone = '请输入正确的手机号'
     return
   }
   if (!loginForm.value.code) {
     errors.value.code = '请输入验证码'
     return
   }
-  if (loginForm.value.code !== '123456') {
-    errors.value.code = '验证码错误'
-    return
-  }
-  
+
   resetStep.value = 2
 }
 
@@ -132,20 +151,16 @@ const validateForm = () => {
   }
   
   if (isForgot.value && resetStep.value === 1) {
-    if (!loginForm.value.email) {
-      errors.value.email = '请输入邮箱'
+    if (!loginForm.value.phone) {
+      errors.value.phone = '请输入手机号'
       return false
     }
-    if (!isEmailValid.value) {
-      errors.value.email = '请输入正确的邮箱'
+    if (!isPhoneValid.value) {
+      errors.value.phone = '请输入正确的手机号'
       return false
     }
     if (!loginForm.value.code) {
       errors.value.code = '请输入验证码'
-      return false
-    }
-    if (loginForm.value.code !== '123456') {
-      errors.value.code = '验证码错误'
       return false
     }
     return true
@@ -156,8 +171,8 @@ const validateForm = () => {
       errors.value.password = '请输入新密码'
       return false
     }
-    if (loginForm.value.password.length < 6) {
-      errors.value.password = '密码至少6位'
+    if (loginForm.value.password.length < 8) {
+      errors.value.password = '密码至少8位'
       return false
     }
     if (loginForm.value.password !== loginForm.value.confirmPassword) {
@@ -192,38 +207,30 @@ const validateForm = () => {
       errors.value.code = '请输入验证码'
       return false
     }
-    if (loginForm.value.code !== '123456') {
-      errors.value.code = '验证码错误'
-      return false
-    }
   }
-  
+
   if (isLogin.value && loginMethod.value === 'email') {
     if (!loginForm.value.password) {
       errors.value.password = '请输入密码'
       return false
     }
-    if (loginForm.value.password.length < 6) {
-      errors.value.password = '密码至少6位'
+    if (loginForm.value.password.length < 8) {
+      errors.value.password = '密码至少8位'
       return false
     }
   }
-  
+
   if (isRegister.value) {
     if (!loginForm.value.code) {
       errors.value.code = '请输入验证码'
-      return false
-    }
-    if (loginForm.value.code !== '123456') {
-      errors.value.code = '验证码错误'
       return false
     }
     if (!loginForm.value.password) {
       errors.value.password = '请输入密码'
       return false
     }
-    if (loginForm.value.password.length < 6) {
-      errors.value.password = '密码至少6位'
+    if (loginForm.value.password.length < 8) {
+      errors.value.password = '密码至少8位'
       return false
     }
     if (loginForm.value.password !== loginForm.value.confirmPassword) {
@@ -237,33 +244,53 @@ const validateForm = () => {
 
 const handleSubmit = async () => {
   if (!validateForm()) return
-  
+
   loading.value = true
-  
+
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
     if (isForgot.value && resetStep.value === 2) {
+      const result = await authApi.resetPassword(loginForm.value.phone, loginForm.value.code, loginForm.value.password)
+      if (!result.success) {
+        errors.value.submit = result.error?.message || '重置密码失败'
+        return
+      }
       resetStep.value = 3
-      loading.value = false
       return
     }
-    
-    if (isForgot.value && resetStep.value === 1) {
-      loading.value = false
-      return
+
+    if (isForgot.value && resetStep.value === 1) return
+
+    if (isRegister.value) {
+      const result = await authApi.register(loginForm.value.phone, loginForm.value.password, loginForm.value.code, loginForm.value.nickname || undefined)
+      if (!result.success) {
+        errors.value.submit = result.error?.message || '注册失败'
+        return
+      }
+      if (result.data) {
+        setAccessToken(result.data.accessToken)
+        userStore.login(result.data.user, result.data.accessToken)
+      }
+    } else if (isLogin.value) {
+      let result
+      if (loginMethod.value === 'phone') {
+        result = await authApi.login(loginForm.value.phone, undefined, loginForm.value.code)
+      } else {
+        result = await authApi.login(loginForm.value.phone, loginForm.value.password, undefined, loginForm.value.email)
+      }
+      if (!result.success) {
+        errors.value.submit = result.error?.message || '登录失败'
+        return
+      }
+      if (result.data) {
+        setAccessToken(result.data.accessToken)
+        userStore.login(result.data.user, result.data.accessToken)
+      }
     }
-    
-    userStore.login({
-      id: '1',
-      phone: loginForm.value.phone || loginForm.value.email,
-      nickname: loginForm.value.nickname || '用户' + (loginForm.value.phone || loginForm.value.email).slice(-4)
-    }, 'mock-token-' + Date.now())
-    
+
     const redirect = route.query.redirect as string
     router.push(redirect || '/')
   } catch {
-    errors.value.submit = isLogin.value ? '登录失败，请重试' : '注册失败，请重试'
+    errors.value.submit = isLogin.value ? '登录失败，请检查网络连接' : '注册失败，请重试'
   } finally {
     loading.value = false
   }
@@ -300,6 +327,7 @@ const resetForm = () => {
   codeSent.value = false
   countdown.value = 0
   resetStep.value = 1
+  receivedCode.value = ''
 }
 </script>
 
@@ -374,7 +402,7 @@ const resetForm = () => {
                 </Input>
                 
                 <p v-if="loginMethod === 'phone' && codeSent && countdown > 0" class="code-hint">
-                  模拟验证码：<strong>123456</strong>
+                  验证码已发送<span v-if="receivedCode" class="code-display">验证码：<strong>{{ receivedCode }}</strong></span>
                 </p>
                 
                 <div class="form-row">
@@ -451,7 +479,7 @@ const resetForm = () => {
                 </Input>
                 
                 <p v-if="codeSent && countdown > 0" class="code-hint">
-                  模拟验证码：<strong>123456</strong>
+                  验证码已发送<span v-if="receivedCode" class="code-display">验证码：<strong>{{ receivedCode }}</strong></span>
                 </p>
                 
                 <Input
@@ -502,14 +530,15 @@ const resetForm = () => {
                 <div v-if="resetStep === 1" key="step1" class="reset-step">
                   <form class="auth-form" @submit.prevent="handleVerifyCode">
                     <Input
-                      v-model="loginForm.email"
-                      type="email"
-                      label="邮箱"
-                      placeholder="请输入邮箱"
-                      :error="errors.email"
+                      v-model="loginForm.phone"
+                      type="tel"
+                      label="手机号"
+                      placeholder="请输入手机号"
+                      :error="errors.phone"
+                      :maxlength="11"
                     >
                       <template #prefix>
-                        <IconUser />
+                        <IconPhone />
                       </template>
                     </Input>
                     
@@ -528,7 +557,7 @@ const resetForm = () => {
                         <button
                           type="button"
                           class="code-btn"
-                          :disabled="!isEmailValid || countdown > 0"
+                          :disabled="!isPhoneValid || countdown > 0"
                           @click="handleSendCodeForReset"
                         >
                           {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
@@ -537,7 +566,7 @@ const resetForm = () => {
                     </Input>
                     
                     <p v-if="codeSent && countdown > 0" class="code-hint">
-                      模拟验证码：<strong>123456</strong>
+                      验证码已发送<span v-if="receivedCode" class="code-display">验证码：<strong>{{ receivedCode }}</strong></span>
                     </p>
                     
                     <p v-if="errors.submit" class="error-message" role="alert">{{ errors.submit }}</p>
@@ -940,6 +969,21 @@ const resetForm = () => {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   margin: calc(var(--spacing-1) * -1) 0 0 0;
+}
+
+.code-display {
+  margin-left: var(--spacing-2);
+  padding: 2px 8px;
+  background-color: var(--color-primary-bg);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.code-display strong {
+  letter-spacing: 2px;
 }
 
 .error-message {

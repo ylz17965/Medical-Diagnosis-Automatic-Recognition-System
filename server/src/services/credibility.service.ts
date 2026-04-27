@@ -1,5 +1,3 @@
-import authoritativeSources from '../data/authoritative_sources.json' with { type: 'json' }
-import followupRules from '../data/followup_rules.json' with { type: 'json' }
 import systemPromptConfig from '../data/system_prompt_config.json' with { type: 'json' }
 
 interface FollowUpResult {
@@ -30,6 +28,27 @@ interface SessionState {
   pregnancyStatus?: boolean
   symptomDetails?: Map<string, any>
   askedQuestions: Set<string>
+}
+
+const followupRules = {
+  followUpRules: [
+    {
+      id: 'symptom_details',
+      name: '症状细节',
+      triggers: { keywords: ['感冒', '发烧', '咳嗽', '头痛', '胃不舒服', '胸痛', '头晕', '肚子疼'] },
+      questions: ['请问您这个症状持续多久了？', '还有其他伴随症状吗？'],
+      priority: 'high',
+      purpose: '了解症状的详细信息'
+    },
+    {
+      id: 'chronic_disease_symptom',
+      name: '慢性病患者症状',
+      triggers: { keywords: ['感冒', '发烧', '咳嗽', '头痛', '胃不舒服'] },
+      questions: ['您是否有糖尿病、高血压等慢性基础疾病史？'],
+      priority: 'high',
+      purpose: '评估慢性病患者的风险'
+    }
+  ]
 }
 
 class CredibilityService {
@@ -129,25 +148,10 @@ class CredibilityService {
     return true
   }
 
-  findRelevantSources(userInput: string): SourceAnnotation[] {
-    const input = userInput.toLowerCase()
-    const relevantSources: SourceAnnotation[] = []
-
-    for (const topic of authoritativeSources.topics) {
-      const isRelevant = topic.keywords.some((k: string) => input.includes(k.toLowerCase()))
-      
-      if (isRelevant) {
-        const primarySource = topic.sources[0]
-        relevantSources.push({
-          topic: topic.name,
-          source: primarySource.name,
-          citation: primarySource.citation,
-          timeSensitivity: topic.timeSensitivity
-        })
-      }
-    }
-
-    return relevantSources
+  findRelevantSources(_userInput: string): SourceAnnotation[] {
+    // 不再使用固定的authoritative_sources.json
+    // 文献引用由llm.service.ts通过literatureService提供
+    return []
   }
 
   formatSourceAnnotation(source: SourceAnnotation): string {

@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, onUnmounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { MainLayout } from '@/layouts'
 import { MessageBubble, FeatureEntry, AnchorSidebar } from '@/components/business'
 import type { FeatureType } from '@/components/business'
-import { LungVolume3D } from '@/components/business/LungViewer'
 import IconSend from '@/components/icons/IconSend.vue'
 import IconUpload from '@/components/icons/IconUpload.vue'
 import IconCamera from '@/components/icons/IconCamera.vue'
 import IconMic from '@/components/icons/IconMic.vue'
+import IconChevronDown from '@/components/icons/IconChevronDown.vue'
+import IconDownload from '@/components/icons/IconDownload.vue'
 import { useChat, useToast } from '@/composables'
 import { useSpeechRecognition } from '@/composables/useSpeechRecognition'
 import type { ConversationTurn } from '@/composables/useConversationTurns'
-
-const router = useRouter()
+import type { ModelType } from '@/stores/settings'
+import { exportToMarkdown } from '@/utils/export'
 
 const {
   inputMessage,
@@ -35,10 +35,48 @@ const {
   setScrollCallback,
   userStore,
   conversationStore,
+  settingsStore,
   conversationTurns
 } = useChat()
 
 const toast = useToast()
+const showModelDropdown = ref(false)
+
+const currentModelType = computed(() => settingsStore.settings.modelType)
+const modelOptions: { value: ModelType; label: string; desc: string }[] = [
+  { value: 'auto', label: '智能选择', desc: '根据问题复杂度自动选择模型' },
+  { value: 'complex', label: '深度分析', desc: '适合复杂诊断、病理分析' },
+  { value: 'simple', label: '快速回答', desc: '适合简单问答、快速咨询' },
+]
+const currentModelLabel = computed(() => {
+  return modelOptions.find(o => o.value === currentModelType.value)?.label || '智能选择'
+})
+
+const selectModel = (type: ModelType) => {
+  settingsStore.setModelType(type)
+  showModelDropdown.value = false
+}
+
+const toggleModelDropdown = () => {
+  showModelDropdown.value = !showModelDropdown.value
+}
+
+const closeModelDropdown = () => {
+  showModelDropdown.value = false
+}
+
+const handleExport = () => {
+  const conversation = conversationStore.activeConversation
+  if (!conversation || conversation.messages.length === 0) {
+    toast.warning('无法导出', '当前对话为空')
+    return
+  }
+  exportToMarkdown(
+    conversation.title || '智疗助手对话',
+    conversation.messages
+  )
+  toast.success('导出成功', '对话已导出为Markdown文件')
+}
 const {
   isListening: isRecording,
   isSupported: isSpeechSupported,
@@ -65,14 +103,6 @@ const HIGHLIGHT_DURATION = 3000
 const showAnchorSidebar = computed(() => conversationTurns.turnCount.value > 0)
 
 const handleFeatureClick = (type: FeatureType) => {
-  if (type === 'lung') {
-    router.push('/lung-cancer')
-    return
-  }
-  if (type === 'heart') {
-    router.push('/hypertension')
-    return
-  }
   setMode(type)
   nextTick(() => scrollToBottom())
 }
@@ -260,6 +290,8 @@ onMounted(() => {
       scrollToBottom(false)
     }
   })
+
+  document.addEventListener('click', closeModelDropdown)
 })
 
 onUnmounted(() => {
@@ -267,6 +299,7 @@ onUnmounted(() => {
   if (scrollDebounceTimer.value) {
     clearTimeout(scrollDebounceTimer.value)
   }
+  document.removeEventListener('click', closeModelDropdown)
 })
 </script>
 
@@ -277,36 +310,24 @@ onUnmounted(() => {
         <div v-if="!hasMessages" key="welcome" class="welcome-section">
           <div class="welcome-header">
             <h1 class="welcome-title">您好，{{ userStore.user?.nickname || '用户' }}</h1>
-            <p class="welcome-subtitle">我是您的AI健康助手，有什么可以帮您的吗？</p>
+            <p class="welcome-subtitle">有什么健康问题可以帮您？</p>
           </div>
           
           <div class="feature-grid">
             <FeatureEntry type="search" @click="handleFeatureClick('search')" />
-            <FeatureEntry type="qa" @click="handleFeatureClick('qa')" />
             <FeatureEntry type="report" @click="handleFeatureClick('report')" />
             <FeatureEntry type="drug" @click="handleFeatureClick('drug')" />
-            <FeatureEntry type="lung" @click="handleFeatureClick('lung')" />
-            <FeatureEntry type="heart" @click="handleFeatureClick('heart')" />
-            <FeatureEntry type="lung-ct" @click="handleFeatureClick('lung-ct')" />
-          </div>
-          
-          <div class="quick-questions">
-            <p class="quick-title">您可以这样问我：</p>
-            <div class="question-list">
-              <button class="question-item" @click="inputMessage = '头痛应该怎么办？'">
-                头痛应该怎么办？
-              </button>
-              <button class="question-item" @click="inputMessage = '如何预防感冒？'">
-                如何预防感冒？
-              </button>
-              <button class="question-item" @click="inputMessage = '体检报告怎么看？'">
-                体检报告怎么看？
-              </button>
-            </div>
           </div>
         </div>
         
         <div v-else key="chat" class="chat-section">
+          <div class="chat-toolbar" v-if="hasMessages">
+            <span class="toolbar-title">{{ conversationStore.activeConversation?.title }}</span>
+            <button class="toolbar-btn" @click="handleExport" aria-label="导出对话" title="导出为Markdown">
+              <IconDownload aria-hidden="true" />
+              <span class="toolbar-btn-text">导出</span>
+            </button>
+          </div>
           <div ref="messagesContainer" class="messages-container" @scroll="handleScroll">
             <template v-for="message in conversationStore.activeConversation?.messages" :key="message.id">
               <MessageBubble
@@ -321,6 +342,10 @@ onUnmounted(() => {
                 :citations="message.citations"
                 :deep-search-result="message.deepSearchResult"
                 :image-url="message.imageUrl"
+                :feedback="message.feedback"
+                :conversation-id="conversationStore.activeId"
+                :message-id="message.id"
+                :agent-used="message.agentUsed"
                 :class="{ 'highlight-flash': isMessageHighlighted(message.id) }"
               />
             </template>
@@ -332,19 +357,15 @@ onUnmounted(() => {
             @anchor-click="handleAnchorClick"
           />
           
-          <div v-if="currentMode === 'report' || currentMode === 'drug' || currentMode === 'lung-ct'" class="upload-area">
-            <div v-if="currentMode === 'lung-ct'">
-              <LungVolume3D :width="500" :height="400"></LungVolume3D>
-            </div>
-            <div v-if="currentMode !== 'lung-ct'">
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*,.pdf"
-                hidden
-                @change="handleFileChange"
-              />
-              <div
+          <div v-if="currentMode === 'report' || currentMode === 'drug'" class="upload-area">
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*,.pdf"
+              hidden
+              @change="handleFileChange"
+            />
+            <div
               :class="['upload-box', { 'is-dragging': isDragging, 'is-uploading': isUploading }]"
               role="button"
               :tabindex="isUploading ? -1 : 0"
@@ -386,13 +407,33 @@ onUnmounted(() => {
                 <p class="upload-hint">支持 PDF、JPG、PNG 格式</p>
               </template>
             </div>
-            </div>
           </div>
         </div>
       </Transition>
       
       <div class="input-section">
         <div class="input-container">
+          <div class="model-selector">
+            <button class="model-selector-btn" @click="toggleModelDropdown" :aria-expanded="showModelDropdown" aria-haspopup="listbox">
+              <span class="model-label">{{ currentModelLabel }}</span>
+              <IconChevronDown :class="['model-chevron', { 'is-open': showModelDropdown }]" />
+            </button>
+            <Transition name="dropdown">
+              <div v-if="showModelDropdown" class="model-dropdown" role="listbox" @click.stop>
+                <button
+                  v-for="option in modelOptions"
+                  :key="option.value"
+                  :class="['model-option', { active: currentModelType === option.value }]"
+                  role="option"
+                  :aria-selected="currentModelType === option.value"
+                  @click="selectModel(option.value)"
+                >
+                  <span class="model-option-label">{{ option.label }}</span>
+                  <span class="model-option-desc">{{ option.desc }}</span>
+                </button>
+              </div>
+            </Transition>
+          </div>
           <div class="input-wrapper">
             <div class="textarea-wrapper">
               <textarea
@@ -536,55 +577,12 @@ onUnmounted(() => {
 }
 
 .feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-4);
+  display: flex;
+  gap: var(--spacing-5);
   margin-bottom: var(--spacing-8);
   width: 100%;
-  max-width: 640px;
-}
-
-.quick-questions {
-  width: 100%;
-  max-width: 480px;
-}
-
-.quick-title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-tertiary);
-  margin: 0 0 var(--spacing-3) 0;
-  letter-spacing: var(--letter-spacing-normal);
-}
-
-.question-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
+  max-width: 540px;
   justify-content: center;
-}
-
-.question-item {
-  padding: var(--spacing-2) var(--spacing-4);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  letter-spacing: var(--letter-spacing-normal);
-  transition: all var(--transition-fast);
-}
-
-.question-item:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background-color: var(--color-fill-primary);
-}
-
-.question-item:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
 }
 
 .chat-section {
@@ -593,6 +591,47 @@ onUnmounted(() => {
   flex-direction: column;
   min-height: 0;
   position: relative;
+}
+
+.chat-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.toolbar-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-3);
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.toolbar-btn:hover {
+  background-color: var(--color-fill-tertiary);
+  color: var(--color-primary);
+}
+
+.toolbar-btn :deep(svg) {
+  width: 16px;
+  height: 16px;
 }
 
 .messages-container {
@@ -742,6 +781,100 @@ onUnmounted(() => {
 .input-container {
   max-width: 800px;
   margin: 0 auto;
+}
+
+.model-selector {
+  position: relative;
+  margin-bottom: var(--spacing-2);
+}
+
+.model-selector-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-3);
+  background-color: var(--color-fill-tertiary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.model-selector-btn:hover {
+  background-color: var(--color-fill-primary);
+  color: var(--color-primary);
+}
+
+.model-chevron {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--transition-fast);
+}
+
+.model-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.model-dropdown {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  min-width: 240px;
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-1);
+  z-index: var(--z-index-dropdown);
+}
+
+.model-option {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+
+.model-option:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.model-option.active {
+  background-color: var(--color-primary-bg);
+}
+
+.model-option-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.model-option.active .model-option-label {
+  color: var(--color-primary);
+}
+
+.model-option-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+.dropdown-enter-active {
+  transition: all 0.15s ease-out;
+}
+
+.dropdown-leave-active {
+  transition: all 0.1s ease-in;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
 }
 
 .input-wrapper {
@@ -915,7 +1048,8 @@ onUnmounted(() => {
 
 @media (max-width: 767px) {
   .feature-grid {
-    grid-template-columns: repeat(2, 1fr);
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
   }
 
   .welcome-section {

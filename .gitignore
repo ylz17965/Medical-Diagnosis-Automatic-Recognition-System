@@ -1,14 +1,20 @@
-# Dependencies
+# ============================================
+# Node.js / Dependencies
+# ============================================
 node_modules/
 **/node_modules/
 
+# ============================================
 # Build outputs
+# ============================================
 dist/
 **/dist/
 build/
 *.tsbuildinfo
 
+# ============================================
 # Environment files
+# ============================================
 .env
 .env.local
 .env.*.local
@@ -16,14 +22,18 @@ build/
 !.env.example
 !.env.docker
 
+# ============================================
 # Logs
+# ============================================
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 logs/
 
+# ============================================
 # OS files
+# ============================================
 .DS_Store
 .DS_Store?
 ._*
@@ -32,63 +42,116 @@ logs/
 Thumbs.db
 ehthumbs.db
 
-# IDE
+# ============================================
+# IDE / Editor
+# ============================================
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 .trae/
-
-# Editor directories and files
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Testing
+# ============================================
+# Testing / Coverage
+# ============================================
 coverage/
 .nyc_output/
 
+# ============================================
 # Cache
+# ============================================
 .cache/
 .parcel-cache/
 .eslintcache
+.conda/
+.vtk-cache/
+indexeddb/
 
+# ============================================
 # Temporary files
+# ============================================
 *.tmp
 *.temp
 *.bak
 *.bak.*
 
+# ============================================
 # Uploads (user uploaded files)
+# ============================================
 uploads/
 
+# ============================================
 # Database
+# ============================================
 *.db
 *.db-journal
 prisma/*.db
 
-# Documentation
-*.md
-!README.md
-!server/README.md
-!web/README.md
-!web/public/models/README.md
+# ============================================
+# Trae AI skill lock
+# ============================================
+skills-lock.json
 
-# Project specific (not needed)
+# ============================================
+# Build logs
+# ============================================
+job.txt
+
+# ============================================
+# Embedding checkpoints (generated during RAG build)
+# ============================================
+server/.embedding_checkpoint*.json
+server/RAG_REBUILD_PLAN.md
+
+# ============================================
+# Documentation (not needed for deployment)
+# ============================================
+INSTALL_GUIDE.md
+OPTIMIZATION_GUIDE.md
+COMMERCIALIZATION_PLAN.md
+PROJECT_DESCRIPTION.md
+LUNG_3D_VISUALIZATION_PLAN.md
+LUNG_3D_VISUALIZATION_OPTIMIZATION_PLAN.md
+作品申报材料.md
+CONTRIBUTING.md
+CONTRIBUTING_zh-CN.md
+
+# ============================================
+# Project specific temp files
+# ============================================
 denglu.html
 xiangmu.txt
+xiangmu_2.txt
+temp_doc_content2.txt
+智疗助手_完善内容.txt
 
-# Data collection (not needed for deployment)
+# ============================================
+# Word documents (generated, not needed)
+# ============================================
+*.doc
+*.docx
+generate_word.ps1
+generate_word.py
+
+# ============================================
+# Data collection scripts (not needed for deployment)
+# ============================================
+scripts/data_collection/
+scripts/demo/
 data/
-scripts/
 docs/
 agency-agents/
 agents/
 
+# ============================================
 # Python (not needed for Node.js deployment)
+# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -104,7 +167,9 @@ env/
 *.ipynb
 .ipynb_checkpoints/
 
-# Medical Imaging Data (large binary files - except ONNX models)
+# ============================================
+# Medical Imaging Data (large binary files)
+# ============================================
 *.dcm
 *.dicom
 *.mhd
@@ -120,51 +185,37 @@ LUNA16*/
 LIDC-IDRI/
 jsjsj_exercise_2_data/
 
+# ============================================
 # ONNX Models - KEEP (required for lung segmentation)
+# ============================================
 # web/public/models/*.onnx
 
-# VTK cache
-.vtk-cache/
-indexeddb/
-.conda/
+# ============================================
+# ONNX Runtime WASM files (bundled by Vite in build)
+# ============================================
+web/public/wasm/
 
-# Model checkpoints (not needed)
+# ============================================
+# Model / ML checkpoints (not needed)
+# ============================================
 *.pt
 *.pth
 *.ckpt
 *.safetensors
-
-# Large binary files
 *.bin
 *.gguf
 
-# Docker files (local only)
+# ============================================
+# Docker (local only)
+# ============================================
 daemon.json
-!.env.docker
 
-# Contribution guides (not needed)
-CONTRIBUTING.md
-CONTRIBUTING_zh-CN.md
-PROJECT_DESCRIPTION.md
-
-# Word documents (not needed)
-*.doc
-*.docx
-
-# Temporary documents (not needed)
-temp_doc_content2.txt
-xiangmu_2.txt
-智疗助手_完善内容.txt
-
-# Word generation scripts (not needed)
-generate_word.ps1
-generate_word.py
-setup.ps1
-setup.sh
-
-# Server development scripts (not needed for production)
+# ============================================
+# Server dev scripts (not needed for deployment)
+# ============================================
 server/scripts/
 server/tests/
+server/src/tests/
 vitest.config.ts
 requirements.txt
 embedding_server.py
@@ -174,9 +225,12 @@ check-progress.ts
 clear-embeddings.ts
 test_cross_lingual.py
 
-# Web development scripts (not needed for production)
+# ============================================
+# Web dev scripts (not needed for deployment)
+# ============================================
 web/scripts/
-web/scripts/**
 
+# ============================================
 # Git files (not needed)
+# ============================================
 .gitattributes

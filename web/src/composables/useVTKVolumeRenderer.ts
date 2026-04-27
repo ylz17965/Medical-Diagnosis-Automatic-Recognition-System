@@ -262,8 +262,6 @@ export function useVTKVolumeRenderer(containerRef: Ref<HTMLElement | null>) {
       volume.value.getProperty().setSpecular(0.3)
       volume.value.getProperty().setSpecularPower(10)
 
-      renderer.value.addVolume(volume.value)
-
       startFPSMonitor()
 
       isReady.value = true
@@ -307,10 +305,21 @@ export function useVTKVolumeRenderer(containerRef: Ref<HTMLElement | null>) {
 
       mapper.value.setInputData(imageData.value)
       
+      if (renderer.value && volume.value) {
+        const volumes = renderer.value.getVolumesByReference()
+        if (!volumes || volumes.length === 0) {
+          renderer.value.addVolume(volume.value)
+        }
+      }
+      
       applyWindowPreset('lung')
 
-      if (renderer.value && !isDisposed) {
-        renderer.value.resetCamera()
+      if (renderer.value && !isDisposed && imageData.value) {
+        try {
+          renderer.value.resetCamera()
+        } catch {
+          console.warn('resetCamera failed, volume may not be ready')
+        }
       }
       
       if (renderWindow.value && !isDisposed) {

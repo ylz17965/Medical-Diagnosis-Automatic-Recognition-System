@@ -2,6 +2,19 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
 export type Theme = 'light' | 'dark' | 'system'
+export type ModelType = 'auto' | 'complex' | 'simple'
+
+export interface ApiKeyConfig {
+  qwen: {
+    apiKey: string
+    baseUrl: string
+    complexModel: string
+    simpleModel: string
+    visionModel: string
+    embeddingModel: string
+  }
+  useCustomKey: boolean
+}
 
 export interface Settings {
   theme: Theme
@@ -9,6 +22,20 @@ export interface Settings {
   soundEnabled: boolean
   fontSize: 'small' | 'medium' | 'large'
   language: string
+  modelType: ModelType
+  apiKeys: ApiKeyConfig
+}
+
+const defaultApiKeys: ApiKeyConfig = {
+  qwen: {
+    apiKey: '',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    complexModel: 'qwen-max',
+    simpleModel: 'qwen3.5-flash',
+    visionModel: 'qwen3-vl-plus',
+    embeddingModel: 'text-embedding-v3',
+  },
+  useCustomKey: false,
 }
 
 const defaultSettings: Settings = {
@@ -16,7 +43,9 @@ const defaultSettings: Settings = {
   notifications: true,
   soundEnabled: true,
   fontSize: 'medium',
-  language: 'zh-CN'
+  language: 'zh-CN',
+  modelType: 'auto',
+  apiKeys: { ...defaultApiKeys },
 }
 
 const fontSizeMap = {
@@ -40,6 +69,41 @@ export const useSettingsStore = defineStore('settings', () => {
     settings.value.theme = theme
     applyTheme(theme)
     saveToStorage()
+  }
+
+  const setModelType = (modelType: ModelType) => {
+    settings.value.modelType = modelType
+    saveToStorage()
+  }
+
+  const updateApiKeys = (updates: Partial<ApiKeyConfig>) => {
+    settings.value.apiKeys = { ...settings.value.apiKeys, ...updates }
+    if (updates.qwen) {
+      settings.value.apiKeys.qwen = { ...settings.value.apiKeys.qwen, ...updates.qwen }
+    }
+    saveToStorage()
+  }
+
+  const setUseCustomKey = (use: boolean) => {
+    settings.value.apiKeys.useCustomKey = use
+    saveToStorage()
+  }
+
+  const getApiHeaders = (): Record<string, string> => {
+    if (!settings.value.apiKeys.useCustomKey || !settings.value.apiKeys.qwen.apiKey) {
+      return {}
+    }
+    return {
+      'x-api-key': settings.value.apiKeys.qwen.apiKey,
+      'x-api-base-url': settings.value.apiKeys.qwen.baseUrl,
+      'x-model-complex': settings.value.apiKeys.qwen.complexModel,
+      'x-model-simple': settings.value.apiKeys.qwen.simpleModel,
+      'x-model-vision': settings.value.apiKeys.qwen.visionModel,
+    }
+  }
+
+  const hasCustomKey = () => {
+    return settings.value.apiKeys.useCustomKey && !!settings.value.apiKeys.qwen.apiKey
   }
 
   const applyTheme = (theme: Theme) => {
@@ -97,6 +161,11 @@ export const useSettingsStore = defineStore('settings', () => {
     settings,
     updateSettings,
     setTheme,
+    setModelType,
+    updateApiKeys,
+    setUseCustomKey,
+    getApiHeaders,
+    hasCustomKey,
     loadFromStorage,
     resetSettings
   }

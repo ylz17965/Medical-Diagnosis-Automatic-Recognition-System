@@ -63,7 +63,7 @@ interface Message {
 
 interface Conversation {
   id: string
-  type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' | 'LUNG' | 'HEART'
+  type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG'
   title: string
   messages: Message[]
   createdAt: string
@@ -123,6 +123,27 @@ const defaultRetryConfig: RetryConfig = {
 }
 
 let accessToken: string | null = localStorage.getItem('accessToken')
+
+function getCustomApiHeaders(): Record<string, string> {
+  const stored = localStorage.getItem('settings')
+  if (!stored) return {}
+  try {
+    const settings = JSON.parse(stored)
+    if (!settings.apiKeys?.useCustomKey || !settings.apiKeys?.qwen?.apiKey) return {}
+    const q = settings.apiKeys.qwen
+    const headers: Record<string, string> = {
+      'x-api-key': q.apiKey,
+      'x-api-base-url': q.baseUrl,
+    }
+    if (q.complexModel) headers['x-model-complex'] = q.complexModel
+    if (q.simpleModel) headers['x-model-simple'] = q.simpleModel
+    if (q.visionModel) headers['x-model-vision'] = q.visionModel
+    if (q.embeddingModel) headers['x-model-embedding'] = q.embeddingModel
+    return headers
+  } catch {
+    return {}
+  }
+}
 
 function getSessionId(): string {
   let sessionId = localStorage.getItem('chatSessionId')
@@ -206,6 +227,7 @@ async function fetchApi<T>(
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
+    ...getCustomApiHeaders(),
   }
 
   if (accessToken) {
@@ -245,22 +267,28 @@ async function fetchApi<T>(
 }
 
 export const authApi = {
-  login: (phone: string, password: string) =>
+  login: (phone: string, password?: string, code?: string, email?: string) =>
     fetchWithRetry<LoginResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ phone, password }),
+      body: JSON.stringify({ phone, password, code, email }),
     }),
 
-  register: (phone: string, password: string, code: string) =>
+  register: (phone: string, password: string, code: string, nickname?: string) =>
     fetchWithRetry<LoginResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ phone, password, code }),
+      body: JSON.stringify({ phone, password, code, nickname }),
     }),
 
-  sendCode: (phone: string) =>
-    fetchWithRetry<void>('/auth/send-code', {
+  sendCode: (phone: string, purpose: 'REGISTER' | 'LOGIN' | 'RESET_PASSWORD' = 'LOGIN') =>
+    fetchWithRetry<{ message: string; code?: string }>('/auth/send-code', {
       method: 'POST',
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone, type: 'PHONE', purpose }),
+    }),
+
+  resetPassword: (phone: string, code: string, newPassword: string) =>
+    fetchWithRetry<void>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ phone, code, newPassword }),
     }),
 
   logout: () =>
@@ -268,10 +296,6 @@ export const authApi = {
       method: 'POST',
     }),
 
-  refresh: () =>
-    fetchWithRetry<{ accessToken: string; user: User }>('/auth/refresh', {
-      method: 'POST',
-    }),
 }
 
 export const chatApi = {
@@ -285,29 +309,38 @@ export const chatApi = {
       sources?: Source[]
       citations?: Citation[]
       deepSearchResult?: DeepSearchResult
+      agentUsed?: { id: string; name: string; emoji: string }
     }) => Promise<void> | void,
     conversationId?: string,
-    type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' | 'LUNG' | 'HEART' = 'CHAT',
+    type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' = 'CHAT',
+    modelType?: 'auto' | 'complex' | 'simple',
   ): Promise<void> => {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       'x-session-id': getSessionId(),
+      ...getCustomApiHeaders(),
     }
 
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`
     }
 
+    const body: Record<string, unknown> = {
+      content,
+      conversationId,
+      type,
+      useRAG: true,
+    }
+
+    if (modelType && modelType !== 'auto') {
+      body.modelType = modelType
+    }
+
     const response = await fetch(`${API_BASE_URL}/chat/stream`, {
       method: 'POST',
       headers,
       credentials: 'include',
-      body: JSON.stringify({
-        content,
-        conversationId,
-        type,
-        useRAG: true,
-      }),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
@@ -353,34 +386,6 @@ export const chatApi = {
       reader.releaseLock()
     }
   },
-
-  complete: (content: string, type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' = 'CHAT') =>
-    fetchWithRetry<{ content: string }>('/chat/complete', {
-      method: 'POST',
-      body: JSON.stringify({ content, type, useRAG: true }),
-    }),
-
-  health: () =>
-    fetchWithRetry<{ llm: string; rag: { documents: number; chunks: number } }>('/chat/health'),
-}
-
-export const conversationApi = {
-  list: (page = 1, limit = 20) =>
-    fetchWithRetry<Conversation[]>(`/conversations?page=${page}&limit=${limit}`),
-
-  get: (id: string) =>
-    fetchWithRetry<Conversation>(`/conversations/${id}`),
-
-  create: (type: 'CHAT' | 'SEARCH' | 'REPORT' | 'DRUG' = 'CHAT', title?: string) =>
-    fetchWithRetry<Conversation>('/conversations', {
-      method: 'POST',
-      body: JSON.stringify({ type, title }),
-    }),
-
-  delete: (id: string) =>
-    fetchWithRetry<void>(`/conversations/${id}`, {
-      method: 'DELETE',
-    }),
 }
 
 export const userApi = {
@@ -402,6 +407,44 @@ export const userApi = {
     fetchWithRetry<void>('/users/me', {
       method: 'DELETE',
     }),
+
+  uploadAvatar: async (file: File): Promise<ApiResponse<User>> => {
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    const headers: HeadersInit = {}
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: { message: data.error?.message || '头像上传失败' },
+        }
+      }
+
+      return {
+        success: true,
+        data: data.data,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: { message: error instanceof Error ? error.message : '网络错误' },
+      }
+    }
+  },
 }
 
 export const imageApi = {
@@ -449,81 +492,82 @@ export const imageApi = {
     }
   },
 
-  recognizeDrug: async (file: File): Promise<ApiResponse<DrugInfo>> => {
+  analyzeStream: async (
+    file: File,
+    type: 'drug' | 'report',
+    onProgress?: (progress: number) => void
+  ): Promise<Response> => {
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('type', type)
 
     const headers: HeadersInit = {}
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`
     }
+    const customHeaders = getCustomApiHeaders()
+    Object.assign(headers, customHeaders)
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/image/recognize-drug`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: formData,
-      })
+    onProgress?.(50)
 
-      const data = await response.json()
+    const response = await fetch(`${API_BASE_URL}/image/analyze`, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: formData,
+    })
 
-      if (!response.ok) {
-        return {
-          success: false,
-          error: { message: data.error?.message || '药品识别失败' },
-        }
-      }
-
-      return {
-        success: true,
-        data: data.data,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: { message: error instanceof Error ? error.message : '网络错误' },
-      }
-    }
-  },
-
-  extractReport: async (file: File): Promise<ApiResponse<ReportInfo>> => {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const headers: HeadersInit = {}
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/image/extract-report`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: formData,
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: { message: data.error?.message || '报告提取失败' },
-        }
-      }
-
-      return {
-        success: true,
-        data: data.data,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: { message: error instanceof Error ? error.message : '网络错误' },
-      }
-    }
+    onProgress?.(100)
+    return response
   },
 }
 
 export type { User, Message, Conversation, DrugInfo, ReportItem, ReportInfo, ImageAnalyzeResponse, Source, Citation, DeepSearchResult }
+
+interface KnowledgeDocument {
+  id: string
+  title: string
+  content: string
+  source: string
+  category: string
+  metadata: Record<string, unknown>
+  chunkCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+interface KnowledgeStats {
+  totalDocuments: number
+  totalChunks: number
+  categories: string[]
+}
+
+export const knowledgeApi = {
+  getStats: () => fetchWithRetry<KnowledgeStats>('/knowledge/stats'),
+
+  getDocuments: (params?: { category?: string; page?: number; limit?: number }) => {
+    const query = new URLSearchParams()
+    if (params?.category) query.set('category', params.category)
+    if (params?.page) query.set('page', String(params.page))
+    if (params?.limit) query.set('limit', String(params.limit))
+    const qs = query.toString()
+    return fetchWithRetry<{ documents: KnowledgeDocument[]; total: number }>(`/knowledge/documents${qs ? '?' + qs : ''}`)
+  },
+
+  createDocument: (data: { title: string; content: string; source: string; category: string }) =>
+    fetchWithRetry<{ id: string }>('/knowledge/documents', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  deleteDocument: (id: string) =>
+    fetchWithRetry<void>(`/knowledge/documents/${id}`, {
+      method: 'DELETE',
+    }),
+
+  search: (query: string, category?: string, topK?: number) =>
+    fetchWithRetry<Source[]>('/knowledge/search', {
+      method: 'POST',
+      body: JSON.stringify({ query, category, topK }),
+    }),
+}

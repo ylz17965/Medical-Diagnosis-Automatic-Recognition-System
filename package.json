@@ -8,9 +8,11 @@
     "server"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
+    "dev": "npm run deps && concurrently \"npm run dev:web\" \"npm run dev:server\"",
+    "dev:quick": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
     "dev:web": "npm run dev --workspace=web",
     "dev:server": "npm run dev --workspace=server",
+    "deps": "powershell -ExecutionPolicy Bypass -File scripts/start-dev.ps1",
     "build": "npm run build --workspace=web && npm run build --workspace=server",
     "build:web": "npm run build --workspace=web",
     "build:server": "npm run build --workspace=server",

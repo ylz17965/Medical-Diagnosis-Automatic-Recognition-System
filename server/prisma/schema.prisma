@@ -233,3 +233,18 @@ model DocumentChunk {
   @@index([healthRecordId])
   @@map("document_chunks")
 }
+
+model FederatedSearchRecord {
+  id            String   @id @default(uuid())
+  userId        String
+  query         String
+  hospitalNodes Json     @default("[]")
+  results       Json     @default("[]")
+  aggregated    Boolean  @default(false)
+  privacyBudget Float    @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("federated_search_records")
+}

@@ -1,26 +1,42 @@
 import { ref } from 'vue'
+import { userApi } from '@/services/api'
 
 export function useAvatarModal() {
   const showModal = ref(false)
   const loading = ref(false)
+  const error = ref('')
 
   const open = () => {
+    error.value = ''
     showModal.value = true
   }
 
   const close = () => {
     showModal.value = false
+    error.value = ''
   }
 
-  const changeAvatar = async (onSuccess: (avatarUrl: string) => void) => {
+  const uploadAvatar = async (file: File, onSuccess: (avatarUrl: string) => void) => {
     loading.value = true
+    error.value = ''
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const newAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + Date.now()
-      onSuccess(newAvatar)
+      const result = await userApi.uploadAvatar(file)
+
+      if (!result.success) {
+        error.value = result.error?.message || '头像上传失败'
+        return false
+      }
+
+      if (result.data?.avatarUrl) {
+        onSuccess(result.data.avatarUrl)
+      }
+
       close()
       return true
+    } catch {
+      error.value = '头像上传失败，请重试'
+      return false
     } finally {
       loading.value = false
     }
@@ -29,8 +45,9 @@ export function useAvatarModal() {
   return {
     showModal,
     loading,
+    error,
     open,
     close,
-    changeAvatar
+    uploadAvatar
   }
 }

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { RAGService } from './rag.service.js'
+import { RedisCacheService } from './redis-cache.service.js'
 import { knowledgeGraph } from '../knowledge_graph/index.js'
 import type { Disease, Drug, Examination, Symptom } from '../knowledge_graph/schema.js'
 
@@ -7,9 +8,9 @@ export class KnowledgeGraphRAGSync {
   private prisma: PrismaClient
   private ragService: RAGService
 
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: PrismaClient, redisCache?: RedisCacheService) {
     this.prisma = prisma
-    this.ragService = new RAGService(prisma)
+    this.ragService = new RAGService(prisma, redisCache || new RedisCacheService())
   }
 
   async syncToRAG(): Promise<{ synced: number; categories: string[] }> {
@@ -24,7 +25,6 @@ export class KnowledgeGraphRAGSync {
       const content = this.buildDiseaseContent(disease)
       
       await this.ragService.indexDocument({
-        documentId: disease.id,
         title: disease.name,
         content,
         source: `知识图谱 - 疾病: ${disease.name}`,
@@ -47,7 +47,6 @@ export class KnowledgeGraphRAGSync {
       const content = this.buildDrugContent(drug)
       
       await this.ragService.indexDocument({
-        documentId: drug.id,
         title: drug.name,
         content,
         source: `知识图谱 - 药品: ${drug.name}`,
@@ -69,7 +68,6 @@ export class KnowledgeGraphRAGSync {
       const content = this.buildExaminationContent(exam)
       
       await this.ragService.indexDocument({
-        documentId: exam.id,
         title: exam.name,
         content,
         source: `知识图谱 - 检查: ${exam.name}`,
@@ -91,7 +89,6 @@ export class KnowledgeGraphRAGSync {
       const content = this.buildSymptomContent(symptom)
       
       await this.ragService.indexDocument({
-        documentId: symptom.id,
         title: symptom.name,
         content,
         source: `知识图谱 - 症状: ${symptom.name}`,

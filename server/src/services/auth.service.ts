@@ -207,7 +207,7 @@ export class AuthService {
     target: string
     type: 'PHONE' | 'EMAIL'
     purpose: 'REGISTER' | 'LOGIN' | 'RESET_PASSWORD' 
-  }): Promise<{ success: boolean; message: string }> {
+  }): Promise<{ success: boolean; message: string; code?: string }> {
     const code = Math.random().toString().slice(-6)
     
     await this.fastify.prisma.verificationCode.create({
@@ -222,6 +222,7 @@ export class AuthService {
 
     if (config.isDev) {
       console.log(`[DEV] 验证码已发送到 ${data.target}: ${code}`)
+      return { success: true, message: '验证码已发送', code }
     }
 
     return { success: true, message: '验证码已发送' }

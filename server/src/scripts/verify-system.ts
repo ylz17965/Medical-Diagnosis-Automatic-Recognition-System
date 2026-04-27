@@ -1,8 +1,10 @@
 import { PrismaClient } from '@prisma/client'
 import { RAGService } from '../services/rag.service.js'
+import { RedisCacheService } from '../services/redis-cache.service.js'
 import { listAgents, routeToAgent, loadAgent } from '../services/agent.service.js'
 
 const prisma = new PrismaClient()
+const redisCache = new RedisCacheService()
 
 async function verify() {
   console.log('========================================')
@@ -13,7 +15,7 @@ async function verify() {
     console.log('【1. 向量数据库验证】')
     console.log('--------------------------')
     
-    const ragService = new RAGService(prisma)
+    const ragService = new RAGService(prisma, redisCache)
     const stats = await ragService.getDocumentStats()
     
     console.log(`✅ 文档总数: ${stats.totalDocuments}`)
@@ -91,6 +93,7 @@ async function verify() {
   } catch (error) {
     console.error('验证失败:', error)
   } finally {
+    await redisCache.disconnect()
     await prisma.$disconnect()
   }
 }

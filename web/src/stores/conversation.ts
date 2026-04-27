@@ -29,6 +29,12 @@ export interface DeepSearchResult {
   searchSummary: string
 }
 
+export interface AgentUsed {
+  id: string
+  name: string
+  emoji: string
+}
+
 export interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -40,6 +46,8 @@ export interface Message {
   loading?: boolean
   streaming?: boolean
   imageUrl?: string
+  feedback?: 'like' | 'dislike' | null
+  agentUsed?: AgentUsed
 }
 
 export interface Conversation {

@@ -44,6 +44,10 @@ export interface ChatCompletionOptions {
   modelType?: 'complex' | 'simple'
   sessionId?: string
   useAgent?: boolean
+  userApiKey?: string
+  userApiBaseUrl?: string
+  userComplexModel?: string
+  userSimpleModel?: string
 }
 
 export interface StreamChunk {
@@ -77,8 +81,27 @@ export class LLMService {
     this.ragService = ragService || null
   }
 
-  private hasApiKey(): boolean {
-    return !!this.apiKey && this.apiKey.length > 0
+  private hasApiKey(apiKey?: string): boolean {
+    const key = apiKey || this.apiKey
+    if (!key || key.length === 0) return false
+    if (key.includes('your-') && key.includes('-here')) return false
+    if (key.includes('YOUR_') && key.includes('_KEY')) return false
+    if (key.includes('api-key')) return false
+    return true
+  }
+
+  private getEffectiveApiKey(options?: ChatCompletionOptions): string | undefined {
+    return options?.userApiKey || this.apiKey
+  }
+
+  private getEffectiveBaseUrl(options?: ChatCompletionOptions): string {
+    return options?.userApiBaseUrl || this.baseUrl
+  }
+
+  private getEffectiveModel(query: string, modelType?: 'complex' | 'simple', options?: ChatCompletionOptions): string {
+    if (modelType === 'complex') return options?.userComplexModel || this.complexModel
+    if (modelType === 'simple') return options?.userSimpleModel || this.simpleModel
+    return this.isComplexQuestion(query) ? (options?.userComplexModel || this.complexModel) : (options?.userSimpleModel || this.simpleModel)
   }
 
   isComplexQuestion(query: string): boolean {
@@ -147,7 +170,8 @@ export class LLMService {
   }
 
   async chat(options: ChatCompletionOptions): Promise<string> {
-    if (!this.hasApiKey()) {
+    const effectiveApiKey = this.getEffectiveApiKey(options)
+    if (!this.hasApiKey(effectiveApiKey)) {
       return this.getDemoResponse()
     }
 
@@ -177,41 +201,87 @@ export class LLMService {
       content: systemPrompt
     }]
 
-    const model = this.selectModel(userInput, options.modelType)
+    const model = this.getEffectiveModel(userInput, options.modelType, options)
+    const baseUrl = this.getEffectiveBaseUrl(options)
+
+    let ragResults: any[] = []
+    let literatureResult: any = undefined
 
     if (options.useRAG && this.ragService && lastUserMessage) {
+      const ragPromise = this.ragService.searchWithRerank({
+        query: lastUserMessage.content,
+        category: options.ragCategory,
+        healthRecordId: options.healthRecordId,
+      }).catch((error) => {
+        log.error({ error }, 'RAG search error')
+        return []
+      })
+
+      const litPromise = new Promise<any>((resolve) => {
+        try {
+          if (userInput && userInput.length > 0) {
+            resolve(literatureService.deepSearch(userInput, 5))
+          } else {
+            resolve(undefined)
+          }
+        } catch (error) {
+          log.error({ error }, 'Literature search error')
+          resolve(undefined)
+        }
+      })
+
+      const [ragRes, litRes] = await Promise.all([ragPromise, litPromise])
+      ragResults = ragRes
+      literatureResult = litRes
+    } else {
       try {
-        const results = await this.ragService.searchWithRerank({
-          query: lastUserMessage.content,
-          category: options.ragCategory,
-          healthRecordId: options.healthRecordId,
-        })
-        const context = results.map(r => r.content).join('\n\n---\n\n')
-        
-        if (context) {
-          messages.push({
-            role: 'system',
-            content: `以下是与用户问题相关的参考资料：\n\n${context}`,
-          })
+        if (userInput && userInput.length > 0) {
+          literatureResult = literatureService.deepSearch(userInput, 5)
         }
       } catch (error) {
-        log.error({ error }, 'RAG search error')
+        log.error({ error }, 'Literature search error')
       }
+    }
+
+    const combinedContext: string[] = []
+
+    if (literatureResult && literatureResult.citations && literatureResult.citations.length > 0) {
+      const literatureContext = literatureResult.citations.slice(0, 3).map((c: any, i: number) => {
+        const refNum = i + 1
+        return `[${refNum}] ${c.title} (${c.journal}, ${c.year}) - ${c.citationContent}`
+      }).join('\n')
+      combinedContext.push(literatureContext)
+    }
+
+    if (ragResults.length > 0) {
+      const ragContext = ragResults.slice(0, 3).map((r, i) => {
+        const refNum = (Math.min(literatureResult?.citations?.length || 0, 3)) + i + 1
+        return `[${refNum}] ${r.content.substring(0, 200)}`
+      }).join('\n')
+      combinedContext.push(ragContext)
+    }
+
+    if (combinedContext.length > 0) {
+      const fullContext = combinedContext.join('\n')
+      messages.push({
+        role: 'system',
+        content: `参考资料（回答时标注引用编号[1][2]）:\n${fullContext}`,
+      })
     }
 
     messages.push(...options.messages)
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${effectiveApiKey}`,
       },
       body: JSON.stringify({
         model,
         messages,
         temperature: options.temperature ?? 0.7,
-        max_tokens: options.maxTokens ?? 2048,
+        max_tokens: options.maxTokens ?? 4096,
         stream: false,
       }),
     })
@@ -230,17 +300,25 @@ export class LLMService {
       responseContent = followUpPrefix + responseContent
     }
 
-    responseContent = credibilityService.formatResponseWithMetadata(
-      responseContent,
-      enhancedPrompt.sources,
-      !enhancedPrompt.needsFollowUp
-    )
+    responseContent += '\n\n' + credibilityService.getDisclaimer()
+
+    if (literatureResult && literatureResult.citations && literatureResult.citations.length > 0) {
+      responseContent += '\n\n---\n\n**📚 引用资料**\n'
+      literatureResult.citations.forEach((c: any, i: number) => {
+        const ifText = c.impactFactor ? ` (IF: ${c.impactFactor})` : ''
+        responseContent += `\n**[${i + 1}] [${c.typeLabel}] ${c.title}**${ifText}\n`
+        responseContent += `   📝 ${c.authors}\n`
+        responseContent += `   📖 ${c.journal}, ${c.year}\n`
+        responseContent += `   📌 **引用内容**: ${c.citationContent}\n`
+      })
+    }
 
     return responseContent
   }
 
   async *chatStream(options: ChatCompletionOptions): AsyncGenerator<StreamChunk> {
-    if (!this.hasApiKey()) {
+    const effectiveApiKey = this.getEffectiveApiKey(options)
+    if (!this.hasApiKey(effectiveApiKey)) {
       const demoText = this.getDemoResponse()
       for (const char of demoText) {
         yield { content: char, done: false }
@@ -272,7 +350,8 @@ export class LLMService {
       content: systemPrompt
     }]
 
-    const model = this.selectModel(userInput, options.modelType)
+    const model = this.getEffectiveModel(userInput, options.modelType, options)
+    const baseUrl = this.getEffectiveBaseUrl(options)
 
     const enhancedPrompt = credibilityService.buildEnhancedPrompt(userInput, sessionId)
 
@@ -298,41 +377,55 @@ export class LLMService {
           query: lastUserMessage.content,
           category: options.ragCategory,
           healthRecordId: options.healthRecordId,
-        })
+        }).catch(() => [])
       : Promise.resolve([])
 
-    let ragResults: Awaited<typeof ragPromise> = []
+    const litPromise = new Promise<any>((resolve) => {
+      try {
+        if (userInput && userInput.length > 0) {
+          resolve(literatureService.deepSearch(userInput, 3))
+        } else {
+          resolve(undefined)
+        }
+      } catch (e) {
+        log.error({ error: e }, 'Literature search error')
+        resolve(undefined)
+      }
+    })
+
+    const [ragRes, literatureSearchResult] = await Promise.all([ragPromise, litPromise])
+    let ragResults = ragRes
 
     const messages: ChatMessage[] = [...systemMessages]
 
-    if (options.useRAG && lastUserMessage) {
-      try {
-        if (this.ragService) {
-          ragResults = await ragPromise
-          log.debug({ count: ragResults.length }, 'RAG search results')
-        }
-        
-        if (ragResults.length > 0) {
-          const ragContext = ragResults.map((r, i) => `[资料${i + 1}] ${r.content}`).join('\n\n---\n\n')
-          messages.push({
-            role: 'system',
-            content: `以下是与用户问题相关的权威参考资料，请在回答时优先引用这些内容，并在相关段落末尾标注引用编号[1][2]等：
+    const combinedContext: string[] = []
 
-${ragContext}
-
-【回答要求】
-1. 请基于上述参考资料回答用户问题
-2. 在引用具体内容时，请在句末标注引用编号，如[1][2]
-3. 如果参考资料与问题不完全相关，请明确说明并提供一般性建议
-4. 保持回答的专业性和准确性`,
-          })
-        }
-      } catch (error) {
-        log.error({ error }, 'RAG search error')
-      }
+    if (literatureSearchResult && literatureSearchResult.citations.length > 0) {
+      const literatureContext = literatureSearchResult.citations.slice(0, 3).map((c: any, i: number) => {
+        const refNum = i + 1
+        return `[${refNum}] ${c.title} (${c.journal}, ${c.year}) - ${c.citationContent}`
+      }).join('\n')
+      combinedContext.push(literatureContext)
+      log.debug({ count: literatureSearchResult.citations.length }, 'Literature context added')
     }
 
-    const hasUsefulContext = ragResults.length > 0
+    if (ragResults.length > 0) {
+      const ragContext = ragResults.slice(0, 3).map((r, i) => {
+        const refNum = (Math.min(literatureSearchResult?.citations?.length || 0, 3)) + i + 1
+        return `[${refNum}] ${r.content.substring(0, 200)}`
+      }).join('\n')
+      combinedContext.push(ragContext)
+    }
+
+    if (combinedContext.length > 0) {
+      const fullContext = combinedContext.join('\n')
+      messages.push({
+        role: 'system',
+        content: `参考资料（回答时标注引用编号[1][2]）:\n${fullContext}`,
+      })
+    }
+
+    const hasUsefulContext = combinedContext.length > 0
     
     if (enhancedPrompt.needsFollowUp && !hasUsefulContext) {
       const sources = ragResults.map(r => ({ source: r.source, content: r.content }))
@@ -360,17 +453,17 @@ ${ragContext}
 
     messages.push(...options.messages)
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${effectiveApiKey}`,
       },
       body: JSON.stringify({
         model,
         messages,
         temperature: options.temperature ?? 0.7,
-        max_tokens: options.maxTokens ?? 2048,
+        max_tokens: options.maxTokens ?? 4096,
         stream: true,
       }),
     })
@@ -387,22 +480,19 @@ ${ragContext}
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
-    const sources = ragResults.map(r => ({ source: r.source, content: r.content }))
     
-    let literatureCitations: any[] = []
-    let literatureSearchResult: any = undefined
+    const literatureCitations = literatureSearchResult?.citations || []
     
-    try {
-      if (userInput && userInput.length > 0) {
-        try {
-          literatureSearchResult = literatureService.deepSearch(userInput, 8)
-          literatureCitations = literatureSearchResult.citations || []
-          log.debug({ count: literatureCitations.length }, 'Literature search completed')
-        } catch (litError) {
-          log.error({ error: litError }, 'Literature search error')
-        }
-      }
+    const sources = literatureCitations.length > 0
+      ? literatureCitations.map((c: any, i: number) => ({
+          source: `${c.title} (${c.journal}, ${c.year})`,
+          content: `[文献${i + 1}] ${c.title}\n作者: ${c.authors}\n来源: ${c.journal}, ${c.year}\n影响因子: ${c.impactFactor || 'N/A'}\n引用内容: ${c.citationContent}`,
+          type: c.typeLabel || '文献',
+          ...c
+        }))
+      : ragResults.map(r => ({ source: r.source, content: r.content }))
 
+    try {
       while (true) {
         const { done, value } = await reader.read()
         

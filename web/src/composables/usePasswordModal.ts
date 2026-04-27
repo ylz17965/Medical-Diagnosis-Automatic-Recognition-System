@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { userApi } from '@/services/api'
 
 interface PasswordForm {
   currentPassword: string
@@ -26,7 +27,7 @@ export function usePasswordModal() {
 
   const isValid = computed(() => {
     return form.value.currentPassword &&
-      form.value.newPassword.length >= 6 &&
+      form.value.newPassword.length >= 8 &&
       form.value.newPassword === form.value.confirmPassword
   })
 
@@ -65,8 +66,8 @@ export function usePasswordModal() {
       return false
     }
 
-    if (form.value.newPassword.length < 6) {
-      errors.value.newPassword = '密码至少6位'
+    if (form.value.newPassword.length < 8) {
+      errors.value.newPassword = '密码至少8位'
       return false
     }
 
@@ -84,10 +85,18 @@ export function usePasswordModal() {
     loading.value = true
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const result = await userApi.changePassword(
+        form.value.currentPassword,
+        form.value.newPassword
+      )
 
-      if (form.value.currentPassword !== '123456') {
-        errors.value.currentPassword = '当前密码错误'
+      if (!result.success) {
+        const msg = result.error?.message || '修改失败'
+        if (msg.includes('当前密码') || msg.includes('密码错误')) {
+          errors.value.currentPassword = msg
+        } else {
+          errors.value.submit = msg
+        }
         return false
       }
 
