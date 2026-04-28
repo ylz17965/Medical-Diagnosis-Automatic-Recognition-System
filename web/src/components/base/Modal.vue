@@ -9,6 +9,7 @@ interface Props {
   danger?: boolean
   closable?: boolean
   closeOnOverlay?: boolean
+  loading?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {

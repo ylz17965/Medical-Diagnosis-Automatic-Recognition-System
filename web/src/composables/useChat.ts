@@ -116,19 +116,15 @@ export function useChat() {
         userMessage,
         async (chunk) => {
           if (chunk.content) {
-            const chars = chunk.content.split('')
-            for (const char of chars) {
-              fullContent += char
-              if (messageEl) {
-                conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
-                  content: fullContent,
-                  loading: false,
-                  streaming: true
-                })
-                await nextTick()
-                onScrollCallback.value?.()
-                await new Promise(resolve => setTimeout(resolve, 30))
-              }
+            fullContent += chunk.content
+            if (messageEl) {
+              conversationStore.updateMessage(conversationStore.activeId, messageEl.id, {
+                content: fullContent,
+                loading: false,
+                streaming: true
+              })
+              await nextTick()
+              onScrollCallback.value?.()
             }
           }
           if (chunk.conversationId) {

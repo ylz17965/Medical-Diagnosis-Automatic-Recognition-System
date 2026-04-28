@@ -438,7 +438,7 @@ function handleResize() {
     </div>
 
     <div class="controls-info" v-if="currentFile">
-      <p>鼠标左键旋转 | 右键平移 | 滚轮缩放</p>
+      <p>鼠标左键旋转 | 滚轮缩放</p>
     </div>
 
     <div class="error-message" v-if="errorMessage">

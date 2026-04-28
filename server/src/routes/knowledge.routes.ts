@@ -17,6 +17,29 @@ const searchSchema = z.object({
   topK: z.number().min(1).max(20).optional(),
 })
 
+const batchImportSchema = z.object({
+  documents: z.array(z.object({
+    title: z.string().min(1).max(200),
+    content: z.string().min(1),
+    source: z.string().min(1),
+    category: z.string().default('general'),
+  })).min(1).max(50),
+})
+
+const getDocumentsQuerySchema = z.object({
+  category: z.string().optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+})
+
+const deleteDocumentParamsSchema = z.object({
+  id: z.string().min(1),
+})
+
+const batchDeleteSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(100),
+})
+
 export default async function knowledgeRoutes(fastify: FastifyInstance) {
   const ragService = new RAGService(fastify.prisma, fastify.redisCache)
 
@@ -67,22 +90,11 @@ export default async function knowledgeRoutes(fastify: FastifyInstance) {
       preHandler: [authenticate],
       schema: {
         tags: ['knowledge'],
-        querystring: {
-          type: 'object',
-          properties: {
-            category: { type: 'string' },
-            page: { type: 'number', default: 1 },
-            limit: { type: 'number', default: 20 },
-          },
-        },
+        querystring: getDocumentsQuerySchema,
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { category, page = 1, limit = 20 } = request.query as {
-        category?: string
-        page?: number
-        limit?: number
-      }
+      const { category, page, limit } = getDocumentsQuerySchema.parse(request.query)
 
       const where = category ? { category } : {}
 
@@ -103,11 +115,13 @@ export default async function knowledgeRoutes(fastify: FastifyInstance) {
 
       return reply.send({
         success: true,
-        data: documents.map(d => ({
-          ...d,
-          chunkCount: d._count.chunks,
-        })),
-        meta: { page, limit, total },
+        data: {
+          documents: documents.map(d => ({
+            ...d,
+            chunkCount: d._count.chunks,
+          })),
+          total,
+        },
       })
     }
   )
@@ -118,22 +132,39 @@ export default async function knowledgeRoutes(fastify: FastifyInstance) {
       preHandler: [authenticate],
       schema: {
         tags: ['knowledge'],
-        params: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-          },
-        },
+        params: deleteDocumentParamsSchema,
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { id } = request.params as { id: string }
+      const { id } = deleteDocumentParamsSchema.parse(request.params)
 
       await ragService.deleteDocument(id)
 
       return reply.send({
         success: true,
         message: '文档已删除',
+      })
+    }
+  )
+
+  fastify.post(
+    '/batch-delete',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['knowledge'],
+        body: batchDeleteSchema,
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { ids } = request.body as z.infer<typeof batchDeleteSchema>
+
+      const count = await ragService.deleteDocuments(ids)
+
+      return reply.send({
+        success: true,
+        data: { deleted: count },
+        message: `成功删除 ${count} 个文档`,
       })
     }
   )
@@ -151,10 +182,11 @@ export default async function knowledgeRoutes(fastify: FastifyInstance) {
       const body = request.body as z.infer<typeof searchSchema>
       const { query, category, topK } = body
 
-      const results = await ragService.searchSimilar({
+      const results = await ragService.searchWithRerank({
         query,
         category,
         topK,
+        useHybrid: true,
       })
 
       return reply.send({
@@ -170,34 +202,11 @@ export default async function knowledgeRoutes(fastify: FastifyInstance) {
       preHandler: [authenticate],
       schema: {
         tags: ['knowledge'],
-        body: {
-          type: 'object',
-          properties: {
-            documents: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  title: { type: 'string' },
-                  content: { type: 'string' },
-                  source: { type: 'string' },
-                  category: { type: 'string' },
-                },
-              },
-            },
-          },
-        },
+        body: batchImportSchema,
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { documents } = request.body as {
-        documents: Array<{
-          title: string
-          content: string
-          source: string
-          category?: string
-        }>
-      }
+      const { documents } = request.body as z.infer<typeof batchImportSchema>
 
       const results = []
       for (const doc of documents) {

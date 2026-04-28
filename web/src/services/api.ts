@@ -542,6 +542,13 @@ interface KnowledgeStats {
   categories: string[]
 }
 
+interface KnowledgeSearchResult {
+  content: string
+  source: string
+  score: number
+  metadata?: Record<string, unknown>
+}
+
 export const knowledgeApi = {
   getStats: () => fetchWithRetry<KnowledgeStats>('/knowledge/stats'),
 
@@ -565,8 +572,14 @@ export const knowledgeApi = {
       method: 'DELETE',
     }),
 
+  batchDelete: (ids: string[]) =>
+    fetchWithRetry<{ deleted: number }>('/knowledge/batch-delete', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    }),
+
   search: (query: string, category?: string, topK?: number) =>
-    fetchWithRetry<Source[]>('/knowledge/search', {
+    fetchWithRetry<KnowledgeSearchResult[]>('/knowledge/search', {
       method: 'POST',
       body: JSON.stringify({ query, category, topK }),
     }),

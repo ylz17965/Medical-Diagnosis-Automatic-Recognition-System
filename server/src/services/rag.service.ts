@@ -198,7 +198,7 @@ export class RAGService {
     if (!this.isReady) await this.initialize()
     const chunks = this.chunkText(params.content)
     if (chunks.length === 0) throw new Error('无法分块：内容为空')
-    const documentId = `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}}`
+    const documentId = `doc-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
     await this.prisma.knowledgeDocument.create({
       data: { id: documentId, title: params.title, content: params.content, source: params.source, category: params.category, metadata: JSON.parse(JSON.stringify(params.metadata || {})) },
     })
@@ -220,6 +220,14 @@ export class RAGService {
     await this.prisma.documentChunk.deleteMany({ where: { documentId } })
     await this.prisma.knowledgeDocument.delete({ where: { id: documentId } })
     log.info({ documentId }, 'Document deleted')
+  }
+
+  async deleteDocuments(documentIds: string[]): Promise<number> {
+    if (!this.isReady) await this.initialize()
+    await this.prisma.documentChunk.deleteMany({ where: { documentId: { in: documentIds } } })
+    const result = await this.prisma.knowledgeDocument.deleteMany({ where: { id: { in: documentIds } } })
+    log.info({ count: result.count }, 'Batch documents deleted')
+    return result.count
   }
 
   async searchSimilar(params: {
@@ -364,11 +372,15 @@ export class RAGService {
 
     if (initialResults.length === 0) return []
 
-    const results = initialResults.slice(0, params.topK || this.topK)
+    const reranked = await this.rerankerService.rerankWithDocuments(
+      params.query,
+      initialResults,
+      params.topK || this.topK
+    )
 
-    await this.redisCache.setCachedQueryResult(params.query, params.category, results)
+    await this.redisCache.setCachedQueryResult(params.query, params.category, reranked)
 
-    return results
+    return reranked
   }
 
   async buildContextForQuery(params: {

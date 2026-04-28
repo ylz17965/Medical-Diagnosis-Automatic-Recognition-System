@@ -414,7 +414,7 @@ onUnmounted(() => {
       <div class="input-section">
         <div class="input-container">
           <div class="model-selector">
-            <button class="model-selector-btn" @click="toggleModelDropdown" :aria-expanded="showModelDropdown" aria-haspopup="listbox">
+            <button class="model-selector-btn" @click.stop="toggleModelDropdown" :aria-expanded="showModelDropdown" aria-haspopup="listbox">
               <span class="model-label">{{ currentModelLabel }}</span>
               <IconChevronDown :class="['model-chevron', { 'is-open': showModelDropdown }]" />
             </button>
@@ -637,6 +637,7 @@ onUnmounted(() => {
 .messages-container {
   flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: var(--spacing-4);
   padding-right: 60px;
   display: flex;

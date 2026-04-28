@@ -63,12 +63,12 @@ await fastify.register(helmet, {
     : false,
 })
 
+const allowedOrigins = config.corsOrigin
+  ? config.corsOrigin.split(',').map(o => o.trim())
+  : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173']
+
 await fastify.register(cors, {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'x-session-id', 'x-api-key', 'x-api-base-url', 'x-model-complex', 'x-model-simple', 'x-model-vision', 'x-model-embedding'],

@@ -132,20 +132,23 @@ temp_doc_content2.txt
 智疗助手_完善内容.txt
 
 # ============================================
-# Word documents (generated, not needed)
+# Word documents - track filled versions only
 # ============================================
 *.doc
-*.docx
 generate_word.ps1
 generate_word.py
 
 # ============================================
-# Data collection scripts (not needed for deployment)
+# Temp python scripts (auto-generated fill scripts)
+# ============================================
+_*.py
+
+# ============================================
+# Data collection (not needed for deployment)
 # ============================================
 scripts/data_collection/
 scripts/demo/
 data/
-docs/
 agency-agents/
 agents/
 
