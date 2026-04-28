@@ -82,7 +82,7 @@ indexeddb/
 *.bak.*
 
 # ============================================
-# Uploads (user uploaded files)
+# Uploads
 # ============================================
 uploads/
 
@@ -94,7 +94,7 @@ uploads/
 prisma/*.db
 
 # ============================================
-# Trae AI skill lock
+# Trae AI
 # ============================================
 skills-lock.json
 
@@ -104,57 +104,78 @@ skills-lock.json
 job.txt
 
 # ============================================
-# Embedding checkpoints (generated during RAG build)
+# Server dev/debug scripts (not needed for running)
 # ============================================
+server/src/scripts/
+server/src/__tests__/
+server/src/tests/
+server/scripts/
+server/check-progress.ts
+server/clear-embeddings.ts
+server/embedding_server.py
+server/generate-embeddings*.ts
+server/generate_embeddings*.py
+server/requirements.txt
+server/test_cross_lingual.py
+server/README.md
+server/vitest.config.ts
 server/.embedding_checkpoint*.json
 server/RAG_REBUILD_PLAN.md
 
 # ============================================
-# Documentation (not needed for deployment)
-# ============================================
-INSTALL_GUIDE.md
-OPTIMIZATION_GUIDE.md
-COMMERCIALIZATION_PLAN.md
-PROJECT_DESCRIPTION.md
-LUNG_3D_VISUALIZATION_PLAN.md
-LUNG_3D_VISUALIZATION_OPTIMIZATION_PLAN.md
-作品申报材料.md
-CONTRIBUTING.md
-CONTRIBUTING_zh-CN.md
-
-# ============================================
-# Project specific temp files
-# ============================================
-denglu.html
-xiangmu.txt
-xiangmu_2.txt
-temp_doc_content2.txt
-智疗助手_完善内容.txt
-
-# ============================================
-# Word documents - track filled versions only
-# ============================================
-*.doc
-~$*.docx
-generate_word.ps1
-generate_word.py
-
-# ============================================
-# Temp python scripts (auto-generated fill scripts)
-# ============================================
-_*.py
-
-# ============================================
-# Data collection (not needed for deployment)
+# Data collection / demo scripts
 # ============================================
 scripts/data_collection/
 scripts/demo/
 data/
+
+# ============================================
+# Agents (not needed for deployment)
+# ============================================
 agency-agents/
 agents/
 
 # ============================================
-# Python (not needed for Node.js deployment)
+# Documentation (not needed for running)
+# ============================================
+docs/superpowers/
+CONTRIBUTING.md
+web/public/models/README.md
+COMMERCIALIZATION_PLAN.md
+INSTALL_GUIDE.md
+OPTIMIZATION_GUIDE.md
+LUNG_3D_VISUALIZATION_*
+PROJECT_DESCRIPTION.md
+作品申报材料.md
+
+# ============================================
+# Word temp files
+# ============================================
+~$*.docx
+
+# ============================================
+# Project specific temp files
+# ============================================
+temp_doc_content*.txt
+xiangmu*.txt
+智疗助手_完善内容.txt
+denglu.html
+
+# ============================================
+# Competition docs (root level only)
+# ============================================
+/*.doc
+/*.docx
+generate_word.ps1
+generate_word.py
+
+# ============================================
+# Temp python scripts (auto-generated)
+# ============================================
+_*.py
+
+# ============================================
+# Python
 # ============================================
 __pycache__/
 *.py[cod]
@@ -190,17 +211,17 @@ LIDC-IDRI/
 jsjsj_exercise_2_data/
 
 # ============================================
-# ONNX Models - KEEP (required for lung segmentation)
+# ONNX Models - KEEP (required)
 # ============================================
 # web/public/models/*.onnx
 
 # ============================================
-# ONNX Runtime WASM files (bundled by Vite in build)
+# ONNX Runtime WASM files
 # ============================================
 web/public/wasm/
 
 # ============================================
-# Model / ML checkpoints (not needed)
+# Model files (not needed)
 # ============================================
 *.pt
 *.pth
@@ -215,26 +236,12 @@ web/public/wasm/
 daemon.json
 
 # ============================================
-# Server dev scripts (not needed for deployment)
-# ============================================
-server/scripts/
-server/tests/
-server/src/tests/
-vitest.config.ts
-requirements.txt
-embedding_server.py
-generate_embeddings*.ts
-generate_embeddings*.py
-check-progress.ts
-clear-embeddings.ts
-test_cross_lingual.py
-
-# ============================================
-# Web dev scripts (not needed for deployment)
+# Web dev scripts
 # ============================================
 web/scripts/
+web/vitest.config.ts
 
 # ============================================
-# Git files (not needed)
+# Git attributes
 # ============================================
 .gitattributes

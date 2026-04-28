@@ -1,6 +1,6 @@
 # 智疗助手 (ZhiLiao Assistant)
 
-> 基于 AI 的医疗自助服务平台 — 专注于肺部疾病的智能诊断辅助，提供健康咨询、体检报告解读、用药指导、肺部 CT 3D 可视化、肺癌早筛等服务。
+> 基于 AI 的医疗健康咨询平台 — 基于 RAG 检索增强生成技术，提供可信的医疗健康问答、肺部 CT 三维体渲染可视化、知识库管理等功能。中国大学生计算机设计大赛参赛作品。
 
 ![Node](https://img.shields.io/badge/Node-%3E%3D20.0.0-339933?logo=node.js)
 ![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js)
@@ -16,15 +16,16 @@
 - [架构总览](#架构总览)
 - [技术栈](#技术栈)
 - [环境要求](#环境要求)
-- [快速开始 — Docker 部署（生产）](#快速开始--docker-部署生产)
-- [快速开始 — 手动部署（开发）](#快速开始--手动部署开发)
+- [快速开始](#快速开始)
 - [环境变量说明](#环境变量说明)
 - [可用脚本](#可用脚本)
 - [API 接口文档](#api-接口文档)
 - [核心功能详解](#核心功能详解)
 - [知识图谱](#知识图谱)
-- [深度学习分割](#深度学习分割)
+- [项目结构](#项目结构)
+- [获取 API Key](#获取-api-key)
 - [常见问题](#常见问题)
+- [许可证](#许可证)
 
 ---
 
@@ -426,131 +427,127 @@ npm run test           # 运行测试
 
 ## API 接口文档
 
-> 基础路径：`/api`
+> 基础路径：`/api/v1`
 
 ### 认证
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| POST | `/api/auth/register` | 手机号注册 | 否 |
-| POST | `/api/auth/login` | 登录（手机验证码 / 邮箱+密码） | 否 |
-| POST | `/api/auth/send-code` | 发送验证码 | 否 |
-| POST | `/api/auth/refresh` | 刷新令牌 | 否 |
-| POST | `/api/auth/reset-password` | 重置密码 | 否 |
-| POST | `/api/auth/logout` | 登出 | 是 |
+| POST | `/api/v1/auth/register` | 手机号注册 | 否 |
+| POST | `/api/v1/auth/login` | 登录（手机验证码 / 邮箱+密码） | 否 |
+| POST | `/api/v1/auth/send-code` | 发送验证码 | 否 |
+| POST | `/api/v1/auth/refresh` | 刷新令牌 | 否 |
+| POST | `/api/v1/auth/reset-password` | 重置密码 | 否 |
+| POST | `/api/v1/auth/logout` | 登出 | 是 |
 
 ### 聊天
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| POST | `/api/chat/message` | 发送消息 | 是 |
-| GET | `/api/chat/history/:conversationId` | 获取对话历史 | 是 |
-| POST | `/api/chat/stream` | 流式聊天（SSE） | 是 |
-| DELETE | `/api/chat/conversation/:id` | 删除对话 | 是 |
+| POST | `/api/v1/chat/stream` | 流式聊天（SSE） | 是 |
+| POST | `/api/v1/chat/complete` | 非流式聊天 | 是 |
+| GET | `/api/v1/chat/models` | 获取可用模型 | 是 |
+| GET | `/api/v1/chat/health` | 服务健康检查 | 否 |
+| POST | `/api/v1/chat/kg-sync` | 知识图谱同步 | 否 |
+| GET | `/api/v1/chat/kg-status` | 知识图谱状态 | 否 |
 
 ### 对话管理
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | `/api/conversation/list` | 对话列表 | 是 |
-| POST | `/api/conversation/create` | 创建对话 | 是 |
-| PUT | `/api/conversation/:id` | 更新对话 | 是 |
-| DELETE | `/api/conversation/:id` | 删除对话 | 是 |
+| GET | `/api/v1/conversations` | 对话列表 | 是 |
+| POST | `/api/v1/conversations` | 创建对话 | 是 |
+| GET | `/api/v1/conversations/:id` | 获取对话详情 | 是 |
+| DELETE | `/api/v1/conversations/:id` | 删除对话 | 是 |
 
 ### 用户
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | `/api/user/profile` | 获取个人资料 | 是 |
-| PUT | `/api/user/profile` | 更新个人资料 | 是 |
-| PUT | `/api/user/password` | 修改密码 | 是 |
+| GET | `/api/v1/users/me` | 获取个人资料 | 是 |
+| PATCH | `/api/v1/users/me` | 更新个人资料 | 是 |
+| DELETE | `/api/v1/users/me` | 注销账号 | 是 |
+| POST | `/api/v1/users/me/avatar` | 上传头像 | 是 |
 
 ### 知识库
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| POST | `/api/knowledge/upload` | 上传知识文档 | 是 |
-| GET | `/api/knowledge/documents` | 文档列表 | 是 |
-| DELETE | `/api/knowledge/documents/:id` | 删除文档 | 是 |
-| POST | `/api/knowledge/search` | 语义搜索知识库 | 是 |
-| POST | `/api/knowledge/query` | 知识库问答 | 是 |
-
-### 文件上传
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| POST | `/api/upload/file` | 上传文件 | 是 |
-| POST | `/api/upload/image` | 上传图片 | 是 |
-| DELETE | `/api/upload/:id` | 删除文件 | 是 |
+| GET | `/api/v1/knowledge/documents` | 文档列表（分页） | 是 |
+| POST | `/api/v1/knowledge/documents` | 上传知识文档 | 是 |
+| DELETE | `/api/v1/knowledge/documents/:id` | 删除文档 | 是 |
+| POST | `/api/v1/knowledge/batch-delete` | 批量删除文档 | 是 |
+| POST | `/api/v1/knowledge/search` | 语义搜索知识库 | 是 |
+| POST | `/api/v1/knowledge/batch` | 批量导入文档 | 是 |
+| GET | `/api/v1/knowledge/stats` | 知识库统计 | 是 |
 
 ### 图片分析
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| POST | `/api/image/analyze` | 图片分析（CT / 报告） | 是 |
-| POST | `/api/image/ocr` | OCR 文字识别 | 是 |
-
-### 智能体
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| POST | `/api/agent/chat` | 多智能体对话 | 是 |
-| GET | `/api/agent/status` | 智能体状态 | 是 |
-
-### 仪表盘
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET | `/api/dashboard/stats` | 统计概览 | 是 |
-| GET | `/api/dashboard/activity` | 活动记录 | 是 |
-| GET | `/api/dashboard/trends` | 趋势分析 | 是 |
-
-### 对话系统（状态机）
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| POST | `/api/dialog/query` | 状态机驱动对话 | 否 |
-| GET | `/api/dialog/status` | 查询对话状态 | 否 |
-
-### 可解释 RAG
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| POST | `/api/explainable-rag/query` | 可解释检索问答 | 是 |
-| POST | `/api/explainable-rag/search` | 可解释检索 | 是 |
-
-### 混合搜索
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| POST | `/api/hybrid-search/search` | 向量 + 关键词混合搜索 | 是 |
-
-### 联邦搜索
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| POST | `/api/federated/search` | 多节点联邦搜索 | 是 |
+| POST | `/api/v1/image/analyze` | 图片分析（药品/报告） | 是 |
+| POST | `/api/v1/image/ocr` | OCR 文字识别 | 是 |
+| POST | `/api/v1/image/stream` | 流式分析（药品/报告） | 是 |
 
 ### 知识图谱
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | `/api/knowledge-graph/diseases` | 疾病列表 | 否 |
-| GET | `/api/knowledge-graph/diseases/:name` | 疾病详情 | 否 |
-| POST | `/api/knowledge-graph/query` | 图谱查询 | 否 |
-| GET | `/api/knowledge-graph/related` | 关联查询 | 否 |
-| POST | `/api/knowledge-graph/reason` | 诊断推理 | 否 |
+| GET | `/api/v1/kg/search` | 图谱搜索 | 否 |
+| GET | `/api/v1/kg/entity/:id` | 实体详情 | 否 |
+| GET | `/api/v1/kg/relations` | 关系查询 | 否 |
 
-### 测试与评估（开发模式）
+### 混合搜索
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/v1/hybrid/search` | 向量 + 图谱混合搜索 | 是 |
+
+### 可解释 RAG
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/v1/explain/search` | 可解释检索 | 是 |
+
+### 对话状态机
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/v1/dialog/message` | 状态机驱动对话 | 否 |
+
+### 智能体
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/v1/agents/chat` | 多智能体对话 | 是 |
+
+### 仪表盘
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/api/v1/dashboard/stats` | 统计概览 | 是 |
+
+### 联邦搜索
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/v1/federated/search` | 联邦搜索 | 是 |
+| GET | `/api/v1/federated/status` | 联邦状态 | 是 |
+| POST | `/api/v1/federated/hospitals/register` | 注册医院节点 | 是 |
+
+### 测试与评估
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/test/run/all` | 运行全部测试 |
-| POST | `/api/test/run/medical-exam` | 医学考试测试 |
-| POST | `/api/test/run/dialogue` | 对话测试 |
-| POST | `/api/test/run/edge-cases` | 边界测试 |
-| GET | `/api/test/datasets/info` | 数据集信息 |
-| GET | `/api/test/report/latest` | 最新测试报告 |
+| GET | `/api/v1/tests/credibility` | 可信度测试 |
+| GET | `/api/v1/tests/evaluation` | 评估框架 |
+
+### 用户测试
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/user-test/questions` | 获取测试问题 |
+| POST | `/api/v1/user-test/submit` | 提交测试结果 |
 
 ---
 
@@ -700,24 +697,21 @@ python web/scripts/create_model.py
 ```
 Medical-Diagnosis-Automatic-Recognition-System/
 ├── web/                          # 前端 Vue 3 项目
-│   ├── public/models/            # ONNX 模型文件
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── base/             # UI 基础组件（7个）
-│   │   │   ├── business/         # 业务组件
-│   │   │   │   └── LungViewer/   # 肺部 CT 可视化模块
-│   │   │   ├── icons/            # SVG 图标（34个）
-│   │   │   └── navigation/       # 导航组件
-│   │   ├── composables/          # 组合式函数
-│   │   ├── layouts/              # 布局组件
-│   │   ├── router/               # 路由（5个页面）
-│   │   ├── services/             # API 客户端
-│   │   ├── stores/               # Pinia 状态管理
+│   │   │   ├── base/             # UI 基础组件（Button/Modal/Toast等）
+│   │   │   ├── business/         # 业务组件（MessageBubble/FeatureEntry/AnchorSidebar）
+│   │   │   └── icons/            # SVG 图标组件
+│   │   ├── composables/          # 组合式函数（useChat/useVTKVolumeRenderer等）
+│   │   ├── layouts/              # 布局组件（MainLayout）
+│   │   ├── router/               # Vue Router 路由（5个页面）
+│   │   ├── services/             # API 客户端（含SSE流式处理）
+│   │   ├── stores/               # Pinia 状态管理（user/conversation/settings）
 │   │   ├── styles/               # 设计令牌 + 全局样式
 │   │   ├── utils/                # 工具函数
-│   │   └── views/                # 页面视图（5个）
-│   ├── Dockerfile                # 多阶段 Docker 构建
-│   └── nginx.conf                # Nginx 配置
+│   │   └── views/                # 页面视图（Chat/LungCTView/KnowledgeView等）
+│   ├── Dockerfile
+│   └── nginx.conf
 │
 ├── server/                       # 后端 Node.js 项目
 │   ├── prisma/
@@ -730,23 +724,22 @@ Medical-Diagnosis-Automatic-Recognition-System/
 │   │   ├── knowledge_graph/      # 知识图谱模块
 │   │   ├── middleware/            # 中间件（JWT 认证 + 错误处理）
 │   │   ├── repositories/         # 数据访问层
-│   │   ├── routes/               # 路由（15 个路由文件）
-│   │   ├── services/             # 业务逻辑（17 个服务）
+│   │   ├── routes/               # 路由（15个路由文件）
+│   │   ├── services/             # 业务逻辑（17个服务）
 │   │   │   └── dialog/           # 对话状态机
-│   │   ├── tests/                # 评估框架
+│   │   ├── tests/                # 测试框架
 │   │   ├── types/                # Zod 验证 Schema
 │   │   ├── utils/                # 日志工具
 │   │   └── app.ts                # 应用入口
-│   ├── Dockerfile                # 多阶段 Docker 构建
-│   └── vitest.config.ts          # 测试配置
+│   └── Dockerfile
 │
 ├── scripts/
 │   └── start-dev.ps1             # Windows 开发环境启动脚本
-├── docker-compose.yml            # Docker Compose 生产配置
-├── docker-compose.example.yml    # Docker Compose 示例
-├── init-db.sql                   # 数据库初始化 SQL
-├── .env.example                  # 环境变量模板
-└── package.json                  # Monorepo 根配置
+├── docs/                         # 设计文档（比赛提交材料）
+├── docker-compose.yml
+├── init-db.sql
+├── .env.example
+└── package.json
 ```
 
 ---
