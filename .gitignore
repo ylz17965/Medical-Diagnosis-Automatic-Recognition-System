@@ -135,6 +135,7 @@ temp_doc_content2.txt
 # Word documents - track filled versions only
 # ============================================
 *.doc
+~$*.docx
 generate_word.ps1
 generate_word.py
 
